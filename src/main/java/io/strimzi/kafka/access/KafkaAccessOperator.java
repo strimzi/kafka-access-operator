@@ -17,11 +17,11 @@ public class KafkaAccessOperator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessOperator.class);
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         LOGGER.info("Kafka Access operator starting");
-        Config config = new ConfigBuilder().withNamespace(null).build();
-        KubernetesClient client = new DefaultKubernetesClient(config);
-        Operator operator = new Operator(client, DefaultConfigurationService.instance());
+        final Config config = new ConfigBuilder().withNamespace(null).build();
+        final KubernetesClient client = new DefaultKubernetesClient(config);
+        final Operator operator = new Operator(client, DefaultConfigurationService.instance());
         operator.register(new KafkaAccessReconciler(client));
         operator.installShutdownHook();
         operator.start();

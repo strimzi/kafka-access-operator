@@ -5,4 +5,15 @@
 package io.strimzi.kafka.access.model;
 
 public class KafkaAccessStatus {
+
+    private BindingStatus binding;
+
+    public BindingStatus getBinding() {
+        return binding;
+    }
+
+    public void setBinding(final BindingStatus bindingStatus) {
+        this.binding = bindingStatus;
+    }
+
 }

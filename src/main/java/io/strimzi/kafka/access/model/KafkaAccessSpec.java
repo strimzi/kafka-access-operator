@@ -5,4 +5,25 @@
 package io.strimzi.kafka.access.model;
 
 public class KafkaAccessSpec {
+
+    private KafkaReference kafka;
+
+    private KafkaUserReference user;
+
+    public KafkaReference getKafka() {
+        return kafka;
+    }
+
+    public void setKafka(final KafkaReference kafka) {
+        this.kafka = kafka;
+    }
+
+    public KafkaUserReference getUser() {
+        return user;
+    }
+
+    public void setUser(final KafkaUserReference kafkaUser) {
+        this.user = kafkaUser;
+    }
+
 }
