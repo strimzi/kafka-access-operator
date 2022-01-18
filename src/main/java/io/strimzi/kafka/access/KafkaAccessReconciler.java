@@ -32,7 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@ControllerConfiguration
+import static io.javaoperatorsdk.operator.api.reconciler.Constants.NO_FINALIZER;
+
+@ControllerConfiguration(finalizerName = NO_FINALIZER)
 public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSourceInitializer<KafkaAccess> {
 
     private static final String TYPE_SECRET_KEY = "type";
@@ -58,11 +60,12 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
     @Override
     public UpdateControl<KafkaAccess> reconcile(final KafkaAccess kafkaAccess, final Context context) {
         final String kafkaAccessName = kafkaAccess.getMetadata().getName();
-        LOGGER.info("Reconciling KafkaAccess " + kafkaAccessName);
+        final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
+        LOGGER.info(String.format("Reconciling KafkaAccess %s/%s", kafkaAccessNamespace, kafkaAccessName));
         final Map<String, String> data  = new HashMap<>(commonSecretData);
         kubernetesClient
             .secrets()
-            .inNamespace(kafkaAccess.getMetadata().getNamespace())
+            .inNamespace(kafkaAccessNamespace)
             .createOrReplace(
                     new SecretBuilder()
                         .withType(SECRET_TYPE)

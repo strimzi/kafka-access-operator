@@ -51,22 +51,13 @@ public class Utils {
             return Collections.emptySet();
         }
         return kafkaAccessList
-                .filter(kafkaAccess -> Optional.ofNullable(kafkaAccess.getSpec())
-                        .map(KafkaAccessSpec::getKafka)
-                        .map(KafkaReference::getName)
-                        .isPresent())
                 .filter(kafkaAccess -> {
-                    final Optional<String> expectedNamespace = Optional.ofNullable(kafkaAccess.getSpec())
-                            .map(KafkaAccessSpec::getKafka)
-                            .map(KafkaReference::getNamespace);
-                    if (expectedNamespace.isPresent()) {
-                        return kafkaNamespace.get().equals(expectedNamespace.get());
-                    } else {
-                        final String kafkaAccessNamespace = Optional.ofNullable(kafkaAccess.getMetadata())
-                                .map(ObjectMeta::getNamespace)
-                                .orElse(null);
-                        return kafkaNamespace.get().equals(kafkaAccessNamespace);
-                    }
+                    // If the KafkaReference omits a namespace, assume the Kafka is in the KafkaAccess namespace
+                    final String expectedNamespace = Optional.ofNullable(kafkaAccess.getSpec().getKafka().getNamespace())
+                            .orElse(Optional.ofNullable(kafkaAccess.getMetadata())
+                                    .map(ObjectMeta::getNamespace)
+                                    .orElse(null));
+                    return kafkaNamespace.get().equals(expectedNamespace);
                 })
                 .filter(kafkaAccess -> kafkaName.get().equals(kafkaAccess.getSpec().getKafka().getName()))
                 .map(kafkaAccess -> {

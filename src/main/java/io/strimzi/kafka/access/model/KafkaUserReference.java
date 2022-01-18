@@ -4,9 +4,13 @@
  */
 package io.strimzi.kafka.access.model;
 
+import javax.validation.constraints.NotNull;
+
 public class KafkaUserReference {
 
+    @NotNull
     private String kind;
+    @NotNull
     private String name;
     private String namespace;
 

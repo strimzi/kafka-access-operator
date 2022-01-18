@@ -63,7 +63,7 @@ public class KafkaAccessReconcilerTest {
         final OwnerReference ownerReference = new OwnerReferenceBuilder()
                 .withApiVersion(kafkaAccess.getApiVersion())
                 .withName(name)
-                .withKind(KafkaAccess.KIND)
+                .withKind(kafkaAccess.getKind())
                 .withUid(kafkaAccess.getMetadata().getUid())
                 .withBlockOwnerDeletion(false)
                 .withController(false)

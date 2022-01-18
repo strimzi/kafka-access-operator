@@ -4,10 +4,12 @@
  */
 package io.strimzi.kafka.access.model;
 
+import javax.validation.constraints.NotNull;
+
 public class KafkaAccessSpec {
 
+    @NotNull
     private KafkaReference kafka;
-
     private KafkaUserReference user;
 
     public KafkaReference getKafka() {
