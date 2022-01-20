@@ -16,4 +16,9 @@ import io.fabric8.kubernetes.model.annotation.Version;
 public class KafkaAccess extends CustomResource<KafkaAccessSpec, KafkaAccessStatus> implements Namespaced {
 
     public static final String KIND = "KafkaAccess";
+
+    @Override
+    protected KafkaAccessStatus initStatus() {
+        return new KafkaAccessStatus();
+    }
 }

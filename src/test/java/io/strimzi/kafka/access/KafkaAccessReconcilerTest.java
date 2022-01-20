@@ -5,11 +5,14 @@
 package io.strimzi.kafka.access;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
+import io.javaoperatorsdk.operator.api.reconciler.Context;
+import io.javaoperatorsdk.operator.api.reconciler.RetryInfo;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
 import io.strimzi.kafka.access.model.BindingStatus;
 import io.strimzi.kafka.access.model.KafkaAccess;
@@ -20,7 +23,9 @@ import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,9 +34,32 @@ import static org.assertj.core.api.Assertions.entry;
 @EnableKubernetesMockClient(crud = true)
 public class KafkaAccessReconcilerTest {
 
-    static KubernetesClient client;
+    KubernetesClient client;
 
-    KafkaAccessReconciler reconciler = new KafkaAccessReconciler(client);
+    static class MockContext implements Context {
+
+        Secret existingSecret;
+
+        public MockContext() {}
+
+        public MockContext(Secret existingSecret) {
+            this.existingSecret = existingSecret;
+        }
+
+        @Override
+        public Optional<RetryInfo> getRetryInfo() {
+            return Optional.empty();
+        }
+
+        @Override
+        public <T> Optional<T> getSecondaryResource(Class<T> aClass, String s) {
+            if (this.existingSecret == null) {
+                return Optional.empty();
+            } else {
+                return Optional.of((T) existingSecret);
+            }
+        }
+    }
 
     @Test
     @DisplayName("When reconcile is called with a KafkaAccess resource, then a secret is created with the " +
@@ -41,7 +69,8 @@ public class KafkaAccessReconcilerTest {
         final String namespace = "kafka-access-namespace";
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(name, namespace);
 
-        final UpdateControl<KafkaAccess> updateControl = reconciler.reconcile(kafkaAccess, null);
+        final KafkaAccessReconciler reconciler = new KafkaAccessReconciler(client);
+        final UpdateControl<KafkaAccess> updateControl = reconciler.reconcile(kafkaAccess, new MockContext());
 
         assertThat(updateControl.isUpdateStatus()).isTrue();
         final Optional<String> bindingName = Optional.ofNullable(kafkaAccess.getStatus())
@@ -69,6 +98,47 @@ public class KafkaAccessReconcilerTest {
                 .withController(false)
                 .build();
         assertThat(ownerReferences).containsExactly(ownerReference);
+    }
+
+    @Test
+    @DisplayName("When reconcile is called with a KafkaAccess resource that already has the secret name in the status, then " +
+            "the KafkaAccess status is not updated")
+    void testReconcileWithExistingStatusBinding() {
+        final String name = "kafka-access-name";
+        final String namespace = "kafka-access-namespace";
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccessWithStatus(name, namespace, name);
+        final Secret secret = ResourceProvider.getEmptyKafkaAccessSecret(name, namespace, name);
+        client.secrets().inNamespace(namespace).withName(name).create(secret);
+
+        final KafkaAccessReconciler reconciler = new KafkaAccessReconciler(client);
+        final UpdateControl<KafkaAccess> updateControl = reconciler.reconcile(kafkaAccess,
+                new MockContext(secret)
+        );
+
+        assertThat(updateControl.isUpdateStatus()).isFalse();
+    }
+
+    @Test
+    @DisplayName("When reconcile is called with a KafkaAccess resource that already has the secret created, then " +
+            "the secret is only updated and not completely replaced")
+    void testReconcileWithExistingSecret() {
+        final String name = "kafka-access-name";
+        final String namespace = "kafka-access-namespace";
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccessWithStatus(name, namespace, name);
+        final Secret secret = ResourceProvider.getEmptyKafkaAccessSecret(name, namespace, name);
+        final Map<String, String> customAnnotation = new HashMap<>();
+        customAnnotation.put("my-custom", "annotation");
+        secret.setMetadata(new ObjectMetaBuilder(secret.getMetadata()).addToAnnotations(customAnnotation).build());
+        client.secrets().inNamespace(namespace).withName(name).create(secret);
+
+        final KafkaAccessReconciler reconciler = new KafkaAccessReconciler(client);
+        reconciler.reconcile(kafkaAccess, new MockContext(secret));
+
+        final Secret updatedSecret = client.secrets().inNamespace(namespace).withName(name).get();
+        final Base64.Encoder encoder = Base64.getEncoder();
+        assertThat(updatedSecret.getData()).contains(entry("type", encoder.encodeToString("kafka".getBytes(StandardCharsets.UTF_8))),
+                entry("provider", encoder.encodeToString("strimzi".getBytes(StandardCharsets.UTF_8))));
+        assertThat(updatedSecret.getMetadata().getAnnotations()).containsAllEntriesOf(customAnnotation);
     }
 
 }

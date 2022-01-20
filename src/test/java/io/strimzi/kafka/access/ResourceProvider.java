@@ -10,14 +10,17 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.strimzi.api.kafka.model.Kafka;
 import io.strimzi.api.kafka.model.KafkaBuilder;
+import io.strimzi.kafka.access.model.BindingStatus;
 import io.strimzi.kafka.access.model.KafkaAccess;
 import io.strimzi.kafka.access.model.KafkaAccessSpec;
+import io.strimzi.kafka.access.model.KafkaAccessStatus;
 import io.strimzi.kafka.access.model.KafkaReference;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@SuppressWarnings("ClassDataAbstractionCoupling")
 public class ResourceProvider {
 
     public static KafkaAccess getKafkaAccess(final String kafkaAccessName, final String kafkaAccessNamespace) {
@@ -37,7 +40,21 @@ public class ResourceProvider {
         return kafkaAccess;
     }
 
-    public static Secret getKafkaAccessSecret(String secretName, String secretNamespace, String kafkaAccessName) {
+    public static KafkaAccess getKafkaAccessWithStatus(final String kafkaAccessName, final String kafkaAccessNamespace, final String bindingSecretName) {
+        final ObjectMeta metadata = new ObjectMeta();
+        metadata.setName(kafkaAccessName);
+        metadata.setNamespace(kafkaAccessNamespace);
+        final BindingStatus bindingStatus = new BindingStatus();
+        bindingStatus.setName(bindingSecretName);
+        final KafkaAccessStatus kafkaAccessStatus = new KafkaAccessStatus();
+        kafkaAccessStatus.setBinding(bindingStatus);
+        final KafkaAccess kafkaAccess = new KafkaAccess();
+        kafkaAccess.setMetadata(metadata);
+        kafkaAccess.setStatus(kafkaAccessStatus);
+        return kafkaAccess;
+    }
+
+    public static Secret getEmptyKafkaAccessSecret(String secretName, String secretNamespace, String kafkaAccessName) {
         final Map<String, String> labels = new HashMap<>();
         labels.put(Utils.MANAGED_BY_LABEL_KEY, Utils.KAFKA_ACCESS_LABEL_VALUE);
         final OwnerReference ownerReference = new OwnerReference();

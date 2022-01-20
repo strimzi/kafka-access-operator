@@ -96,7 +96,7 @@ public class UtilsTest {
 
         final Set<ResourceID> matches = Utils.getKafkaAccessResourceIDsForSecret(
                 Stream.of(kafkaAccess1, kafkaAccess2),
-                ResourceProvider.getKafkaAccessSecret(SECRET_NAME, NAMESPACE_1, ACCESS_NAME_1));
+                ResourceProvider.getEmptyKafkaAccessSecret(SECRET_NAME, NAMESPACE_1, ACCESS_NAME_1));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
     }
 
@@ -106,7 +106,7 @@ public class UtilsTest {
     void testCorrectKafkaAccessReturnedForKafkaAccessSecretEmptyCache() {
         final Set<ResourceID> matches = Utils.getKafkaAccessResourceIDsForSecret(
                 Stream.of(),
-                ResourceProvider.getKafkaAccessSecret(SECRET_NAME, NAMESPACE_1, ACCESS_NAME_1));
+                ResourceProvider.getEmptyKafkaAccessSecret(SECRET_NAME, NAMESPACE_1, ACCESS_NAME_1));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
     }
 

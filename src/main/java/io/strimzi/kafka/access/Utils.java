@@ -11,8 +11,6 @@ import io.javaoperatorsdk.operator.processing.event.ResourceID;
 import io.strimzi.api.kafka.model.Kafka;
 import io.strimzi.api.kafka.model.KafkaBuilder;
 import io.strimzi.kafka.access.model.KafkaAccess;
-import io.strimzi.kafka.access.model.KafkaAccessSpec;
-import io.strimzi.kafka.access.model.KafkaReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

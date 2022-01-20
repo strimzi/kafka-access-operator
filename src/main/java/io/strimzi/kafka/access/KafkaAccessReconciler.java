@@ -63,34 +63,53 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
         LOGGER.info(String.format("Reconciling KafkaAccess %s/%s", kafkaAccessNamespace, kafkaAccessName));
         final Map<String, String> data  = new HashMap<>(commonSecretData);
-        kubernetesClient
-            .secrets()
-            .inNamespace(kafkaAccessNamespace)
-            .createOrReplace(
-                    new SecretBuilder()
-                        .withType(SECRET_TYPE)
-                        .withNewMetadata()
-                        .withName(kafkaAccessName)
-                        .withLabels(commonSecretLabels)
-                        .withOwnerReferences(
-                                new OwnerReferenceBuilder()
-                                    .withApiVersion(kafkaAccess.getApiVersion())
-                                    .withKind(kafkaAccess.getKind())
+        context.getSecondaryResource(Secret.class)
+            .ifPresentOrElse(secret -> {
+                final Map<String, String> currentData = secret.getData();
+                if (!data.equals(currentData)) {
+                    kubernetesClient.secrets()
+                            .inNamespace(kafkaAccessNamespace)
+                            .withName(kafkaAccessName)
+                            .edit(s -> new SecretBuilder(s).withData(data).build());
+                }
+            }, () -> kubernetesClient
+                    .secrets()
+                    .inNamespace(kafkaAccessNamespace)
+                    .create(
+                            new SecretBuilder()
+                                    .withType(SECRET_TYPE)
+                                    .withNewMetadata()
                                     .withName(kafkaAccessName)
-                                    .withUid(kafkaAccess.getMetadata().getUid())
-                                    .withBlockOwnerDeletion(false)
-                                    .withController(false)
+                                    .withLabels(commonSecretLabels)
+                                    .withOwnerReferences(
+                                            new OwnerReferenceBuilder()
+                                                    .withApiVersion(kafkaAccess.getApiVersion())
+                                                    .withKind(kafkaAccess.getKind())
+                                                    .withName(kafkaAccessName)
+                                                    .withUid(kafkaAccess.getMetadata().getUid())
+                                                    .withBlockOwnerDeletion(false)
+                                                    .withController(false)
+                                                    .build()
+                                    )
+                                    .endMetadata()
+                                    .withData(data)
                                     .build()
-                        )
-                        .endMetadata()
-                        .withData(data)
-                        .build()
+                    )
             );
-        final KafkaAccessStatus status = Optional.ofNullable(kafkaAccess.getStatus())
-                .orElse(new KafkaAccessStatus());
-        status.setBinding(new BindingStatus(kafkaAccessName));
-        kafkaAccess.setStatus(status);
-        return UpdateControl.updateStatus(kafkaAccess);
+
+        final boolean bindingStatusCorrect = Optional.ofNullable(kafkaAccess.getStatus())
+                .map(KafkaAccessStatus::getBinding)
+                .map(BindingStatus::getName)
+                .map(kafkaAccessName::equals)
+                .orElse(false);
+        if (!bindingStatusCorrect) {
+            final KafkaAccessStatus status = new KafkaAccessStatus();
+            status.setBinding(new BindingStatus(kafkaAccessName));
+            kafkaAccess.setStatus(status);
+            return UpdateControl.updateStatus(kafkaAccess);
+        } else {
+            return UpdateControl.noUpdate();
+        }
     }
 
     @Override

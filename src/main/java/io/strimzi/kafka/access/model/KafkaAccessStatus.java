@@ -4,7 +4,9 @@
  */
 package io.strimzi.kafka.access.model;
 
-public class KafkaAccessStatus {
+import io.javaoperatorsdk.operator.api.ObservedGenerationAwareStatus;
+
+public class KafkaAccessStatus extends ObservedGenerationAwareStatus {
 
     private BindingStatus binding;
 
