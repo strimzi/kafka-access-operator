@@ -61,7 +61,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
     public UpdateControl<KafkaAccess> reconcile(final KafkaAccess kafkaAccess, final Context context) {
         final String kafkaAccessName = kafkaAccess.getMetadata().getName();
         final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
-        LOGGER.info(String.format("Reconciling KafkaAccess %s/%s", kafkaAccessNamespace, kafkaAccessName));
+        LOGGER.info("Reconciling KafkaAccess {}/{}", kafkaAccessNamespace, kafkaAccessName);
         final Map<String, String> data  = new HashMap<>(commonSecretData);
         context.getSecondaryResource(Secret.class)
             .ifPresentOrElse(secret -> {
