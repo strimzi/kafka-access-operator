@@ -82,10 +82,11 @@
         <spotbugs.version>4.0.3</spotbugs.version>
         <maven.javadoc.version>3.1.0</maven.javadoc.version>
         <maven.shade.version>3.1.0</maven.shade.version>
-        <javaoperatorsdk.version>2.0.0-RC1</javaoperatorsdk.version>
+        <javaoperatorsdk.version>2.0.1</javaoperatorsdk.version>
         <fabric8.version>5.11.2</fabric8.version>
         <strimzi.version>0.27.0</strimzi.version>
         <kafka.clients.version>3.0.0</kafka.clients.version>
+        <javax.version>2.0.1.Final</javax.version>
         <junit.version>5.8.2</junit.version>
         <assertj.version>3.21.0</assertj.version>
         <log4j.version>2.17.1</log4j.version>
@@ -143,6 +144,11 @@
             <version>${kafka.clients.version}</version>
         </dependency>
         <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>${javax.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
             <version>${log4j.version}</version>
@@ -156,6 +162,12 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-server-mock</artifactId>
+            <version>${fabric8.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
