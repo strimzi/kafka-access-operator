@@ -22,15 +22,14 @@ import io.strimzi.api.kafka.model.listener.arraylistener.GenericKafkaListenerBui
 import io.strimzi.api.kafka.model.listener.arraylistener.KafkaListenerType;
 import io.strimzi.api.kafka.model.status.KafkaStatus;
 import io.strimzi.api.kafka.model.status.KafkaStatusBuilder;
+import io.strimzi.api.kafka.model.status.KafkaUserStatus;
 import io.strimzi.api.kafka.model.status.ListenerAddress;
 import io.strimzi.api.kafka.model.status.ListenerAddressBuilder;
 import io.strimzi.api.kafka.model.status.ListenerStatus;
 import io.strimzi.api.kafka.model.status.ListenerStatusBuilder;
 import io.strimzi.kafka.access.internal.KafkaAccessParser;
-import io.strimzi.kafka.access.model.BindingStatus;
 import io.strimzi.kafka.access.model.KafkaAccess;
 import io.strimzi.kafka.access.model.KafkaAccessSpec;
-import io.strimzi.kafka.access.model.KafkaAccessStatus;
 import io.strimzi.kafka.access.model.KafkaReference;
 import io.strimzi.kafka.access.model.KafkaUserReference;
 
@@ -57,14 +56,6 @@ public class ResourceProvider {
         final KafkaAccess kafkaAccess = getKafkaAccess(kafkaAccessName, kafkaAccessNamespace);
         kafkaAccess.setSpec(spec);
         return kafkaAccess;
-    }
-
-    public static KafkaAccessStatus getKafkaAccessStatus(final String bindingSecretName) {
-        final BindingStatus bindingStatus = new BindingStatus();
-        bindingStatus.setName(bindingSecretName);
-        final KafkaAccessStatus kafkaAccessStatus = new KafkaAccessStatus();
-        kafkaAccessStatus.setBinding(bindingStatus);
-        return kafkaAccessStatus;
     }
 
     public static KafkaAccess getKafkaAccess(final String kafkaAccessName, final String kafkaAccessNamespace, final KafkaReference kafkaReference, final KafkaUserReference kafkaUserReference) {
@@ -205,7 +196,16 @@ public class ResourceProvider {
                 .build();
     }
 
-    public static KafkaUser getKafkaUserWithoutStatus(final String name, final String namespace, final KafkaUserAuthentication authentication) {
+    public static KafkaUser getKafkaUser(final String name, final String namespace) {
+        return new KafkaUserBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .withNamespace(namespace)
+                .endMetadata()
+                .build();
+    }
+
+    public static KafkaUser getKafkaUser(final String name, final String namespace, final KafkaUserAuthentication authentication) {
         final KafkaUserSpec spec = Optional.ofNullable(authentication)
                 .map(auth -> new KafkaUserSpecBuilder().withAuthentication(authentication).build())
                 .orElse(new KafkaUserSpecBuilder().build());
@@ -215,6 +215,36 @@ public class ResourceProvider {
                 .withNamespace(namespace)
                 .endMetadata()
                 .withSpec(spec)
+                .build();
+    }
+
+    public static KafkaUser getKafkaUserWithStatus(final String secretName, final String username, final KafkaUserAuthentication authentication) {
+        final KafkaUserSpec spec = Optional.ofNullable(authentication)
+                .map(auth -> new KafkaUserSpecBuilder().withAuthentication(authentication).build())
+                .orElse(new KafkaUserSpecBuilder().build());
+        final KafkaUserStatus status = new KafkaUserStatus();
+        Optional.ofNullable(secretName).ifPresent(status::setSecret);
+        Optional.ofNullable(username).ifPresent(status::setUsername);
+        return new KafkaUserBuilder()
+                .withSpec(spec)
+                .withStatus(status)
+                .build();
+    }
+
+    public static KafkaUser getKafkaUserWithStatus(final String name, final String namespace, final String secretName, final String username, final KafkaUserAuthentication authentication) {
+        final KafkaUserSpec spec = Optional.ofNullable(authentication)
+                .map(auth -> new KafkaUserSpecBuilder().withAuthentication(authentication).build())
+                .orElse(new KafkaUserSpecBuilder().build());
+        final KafkaUserStatus status = new KafkaUserStatus();
+        Optional.ofNullable(secretName).ifPresent(status::setSecret);
+        Optional.ofNullable(username).ifPresent(status::setUsername);
+        return new KafkaUserBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .withNamespace(namespace)
+                .endMetadata()
+                .withSpec(spec)
+                .withStatus(status)
                 .build();
     }
 }

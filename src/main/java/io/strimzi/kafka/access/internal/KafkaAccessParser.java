@@ -10,7 +10,9 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.javaoperatorsdk.operator.processing.event.ResourceID;
 import io.strimzi.api.kafka.model.Kafka;
 import io.strimzi.api.kafka.model.KafkaBuilder;
+import io.strimzi.api.kafka.model.KafkaUser;
 import io.strimzi.kafka.access.model.KafkaAccess;
+import io.strimzi.kafka.access.model.KafkaUserReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -41,23 +44,52 @@ public class KafkaAccessParser {
      *
      * @return                   Set of ResourceIDs for the KafkaAccess objects that reference the Kafka resource
      */
-    public static Set<ResourceID> getKafkaAccessResourceIDsForKafkaInstance(final Stream<KafkaAccess> kafkaAccessList, final Kafka kafka) {
+    public static Set<ResourceID> getKafkaAccessSetForKafka(final Stream<KafkaAccess> kafkaAccessList, final Kafka kafka) {
         final Optional<String> kafkaName = Optional.ofNullable(kafka.getMetadata()).map(ObjectMeta::getName);
         final Optional<String> kafkaNamespace = Optional.ofNullable(kafka.getMetadata()).map(ObjectMeta::getNamespace);
         if (kafkaName.isEmpty() || kafkaNamespace.isEmpty()) {
-            LOGGER.error("getKafkaAccessResourceIDsForKafkaInstance called with Kafka that is missing metadata, returning empty set");
+            LOGGER.error("getKafkaAccessSetForKafka called with Kafka resource that is missing metadata, returning empty set");
             return Collections.emptySet();
         }
+        return getResourceIDsForInstance(kafkaAccessList, kafkaAccess -> {
+            // If the KafkaReference omits a namespace, assume the Kafka is in the KafkaAccess namespace
+            final String expectedNamespace = Optional.ofNullable(kafkaAccess.getSpec().getKafka().getNamespace())
+                    .orElse(Optional.ofNullable(kafkaAccess.getMetadata())
+                            .map(ObjectMeta::getNamespace)
+                            .orElse(null));
+            return kafkaNamespace.get().equals(expectedNamespace) && kafkaName.get().equals(kafkaAccess.getSpec().getKafka().getName());
+        });
+    }
+
+    /**
+     * Filters the stream of KafkaAccess objects to find only the ones that reference the provided KafkaUser resource.
+     *
+     * @param kafkaAccessList    Stream of KafkaAccess objects in the current cache
+     * @param kafkaUser          KafkaUser resource to check for in the KafkaAccess objects
+     *
+     * @return                   Set of ResourceIDs for the KafkaAccess objects that reference the KafkaUser resource
+     */
+    public static Set<ResourceID> getKafkaAccessSetForKafkaUser(final Stream<KafkaAccess> kafkaAccessList, final KafkaUser kafkaUser) {
+        final Optional<String> kafkaUserName = Optional.ofNullable(kafkaUser.getMetadata()).map(ObjectMeta::getName);
+        final Optional<String> kafkaUserNamespace = Optional.ofNullable(kafkaUser.getMetadata()).map(ObjectMeta::getNamespace);
+        if (kafkaUserName.isEmpty() || kafkaUserNamespace.isEmpty()) {
+            LOGGER.error("getKafkaAccessSetForKafkaUser called with KafkaUser resource that is missing metadata, returning empty set");
+            return Collections.emptySet();
+        }
+        return getResourceIDsForInstance(kafkaAccessList, kafkaAccess -> {
+            // If the KafkaReference omits a namespace, assume the Kafka is in the KafkaAccess namespace
+            final String expectedNamespace = Optional.ofNullable(kafkaAccess.getSpec().getUser())
+                    .map(KafkaUserReference::getNamespace)
+                    .orElse(Optional.ofNullable(kafkaAccess.getMetadata())
+                            .map(ObjectMeta::getNamespace)
+                            .orElse(null));
+            return kafkaUserNamespace.get().equals(expectedNamespace) && kafkaUserName.get().equals(kafkaAccess.getSpec().getUser().getName());
+        });
+    }
+
+    private static Set<ResourceID> getResourceIDsForInstance(final Stream<KafkaAccess> kafkaAccessList, final Function<KafkaAccess, Boolean> filterMatching) {
         return kafkaAccessList
-                .filter(kafkaAccess -> {
-                    // If the KafkaReference omits a namespace, assume the Kafka is in the KafkaAccess namespace
-                    final String expectedNamespace = Optional.ofNullable(kafkaAccess.getSpec().getKafka().getNamespace())
-                            .orElse(Optional.ofNullable(kafkaAccess.getMetadata())
-                                    .map(ObjectMeta::getNamespace)
-                                    .orElse(null));
-                    return kafkaNamespace.get().equals(expectedNamespace);
-                })
-                .filter(kafkaAccess -> kafkaName.get().equals(kafkaAccess.getSpec().getKafka().getName()))
+                .filter(filterMatching::apply)
                 .map(kafkaAccess -> {
                     final Optional<ObjectMeta> metadata = Optional.ofNullable(kafkaAccess.getMetadata());
                     final Optional<String> kafkaAccessName = metadata.map(ObjectMeta::getName);
@@ -65,7 +97,7 @@ public class KafkaAccessParser {
                     if (kafkaAccessName.isPresent() && kafkaAccessNamespace.isPresent()) {
                         return new ResourceID(kafkaAccessName.get(), kafkaAccessNamespace.get());
                     } else {
-                        LOGGER.error("Found KafkaAccess with matching Kafka reference, but metadata is missing.");
+                        LOGGER.error("Found KafkaAccess with matching instance reference, but metadata is missing.");
                         return null;
                     }
                 }).filter(Objects::nonNull)
@@ -115,7 +147,7 @@ public class KafkaAccessParser {
                             .withNamespace(secretNamespace.get())
                             .endMetadata()
                             .build();
-                    resourceIDS.addAll(KafkaAccessParser.getKafkaAccessResourceIDsForKafkaInstance(kafkaAccessList, kafka));
+                    resourceIDS.addAll(KafkaAccessParser.getKafkaAccessSetForKafka(kafkaAccessList, kafka));
                 });
         }
 

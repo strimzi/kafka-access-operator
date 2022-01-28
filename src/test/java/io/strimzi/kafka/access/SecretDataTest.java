@@ -83,7 +83,7 @@ public class SecretDataTest {
         );
         Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
 
-        final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithoutStatus(KAFKA_NAME, KAFKA_NAMESPACE, new KafkaUserScramSha512ClientAuthentication());
+        final KafkaUser kafkaUser = ResourceProvider.getKafkaUser(KAFKA_NAME, KAFKA_NAMESPACE, new KafkaUserScramSha512ClientAuthentication());
         Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafkaUser).create();
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReferenceWithListener(KAFKA_NAME, LISTENER_2, KAFKA_NAMESPACE);
@@ -159,7 +159,7 @@ public class SecretDataTest {
         );
         Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
 
-        final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithoutStatus(KAFKA_NAME, KAFKA_NAMESPACE, new KafkaUserScramSha512ClientAuthentication());
+        final KafkaUser kafkaUser = ResourceProvider.getKafkaUser(KAFKA_NAME, KAFKA_NAMESPACE, new KafkaUserScramSha512ClientAuthentication());
         Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafkaUser).create();
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
