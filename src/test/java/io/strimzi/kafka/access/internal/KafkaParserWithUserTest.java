@@ -7,10 +7,13 @@ package io.strimzi.kafka.access.internal;
 import io.strimzi.api.kafka.model.Kafka;
 import io.strimzi.api.kafka.model.KafkaUserScramSha512ClientAuthentication;
 import io.strimzi.api.kafka.model.KafkaUserTlsClientAuthentication;
+import io.strimzi.api.kafka.model.KafkaUserTlsExternalClientAuthentication;
+import io.strimzi.api.kafka.model.listener.KafkaListenerAuthenticationOAuth;
 import io.strimzi.api.kafka.model.listener.KafkaListenerAuthenticationScramSha512;
 import io.strimzi.api.kafka.model.listener.KafkaListenerAuthenticationTls;
 import io.strimzi.api.kafka.model.listener.arraylistener.GenericKafkaListener;
 import io.strimzi.api.kafka.model.listener.arraylistener.KafkaListenerType;
+import io.strimzi.api.kafka.model.status.ListenerStatus;
 import io.strimzi.kafka.access.ResourceProvider;
 import io.strimzi.kafka.access.model.KafkaAccessSpec;
 import io.strimzi.kafka.access.model.KafkaReference;
@@ -20,213 +23,132 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class KafkaParserWithUserTest {
 
     private static final String CLUSTER_NAME = "my-cluster";
-    private static final String LISTENER_1 = "listener-1";
-    private static final String LISTENER_2 = "listener-2";
-    private static final String LISTENER_3 = "listener-3";
     private static final String BOOTSTRAP_HOST = "my-cluster.svc";
     private static final int BOOTSTRAP_PORT_9092 = 9092;
     private static final int BOOTSTRAP_PORT_9093 = 9093;
-    private static final int BOOTSTRAP_PORT_9094 = 9094;
 
-    @Test
-    @DisplayName("When listener is specified in CR and it is plain and KafkaUser is specified with no auth, then the listener with no auth is selected")
-    void testSpecifiedPlainListenerAndPlainUser() {
+    private static final GenericKafkaListener PLAIN_LISTENER = ResourceProvider.getListener("plain-listener", KafkaListenerType.INTERNAL, false);
+    private static final GenericKafkaListener PLAIN_LISTENER_WITH_TLS = ResourceProvider.getListener("plain-listener-with-tls", KafkaListenerType.INTERNAL, true);
+    private static final GenericKafkaListener SCRAM_LISTENER = ResourceProvider.getListener("scram-listener", KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512());
+    private static final GenericKafkaListener SCRAM_LISTENER_WITH_TLS = ResourceProvider.getListener("scram-listener-with-tls", KafkaListenerType.INTERNAL, true, new KafkaListenerAuthenticationScramSha512());
+    private static final GenericKafkaListener TLS_LISTENER = ResourceProvider.getListener("tls-listener", KafkaListenerType.INTERNAL, true, new KafkaListenerAuthenticationTls());
+    private static final GenericKafkaListener OAUTH_LISTENER = ResourceProvider.getListener("oauth-listener", KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationOAuth());
+    private static final GenericKafkaListener OAUTH_LISTENER_WITH_TLS = ResourceProvider.getListener("oauth-listener-with-tls", KafkaListenerType.INTERNAL, true, new KafkaListenerAuthenticationOAuth());
+
+    static Stream<Arguments> listenerSpecifiedWithMatchingAuthProvider() {
+        return Stream.of(
+                arguments(named(SCRAM_LISTENER.getName(), SCRAM_LISTENER), KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512),
+                arguments(named(SCRAM_LISTENER.getName(), SCRAM_LISTENER), KafkaParser.USER_AUTH_UNDEFINED),
+                arguments(named(SCRAM_LISTENER_WITH_TLS.getName(), SCRAM_LISTENER_WITH_TLS), KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512),
+                arguments(named(SCRAM_LISTENER_WITH_TLS.getName(), SCRAM_LISTENER_WITH_TLS), KafkaParser.USER_AUTH_UNDEFINED),
+
+                arguments(named(TLS_LISTENER.getName(), TLS_LISTENER), KafkaUserTlsClientAuthentication.TYPE_TLS),
+                arguments(named(TLS_LISTENER.getName(), TLS_LISTENER), KafkaUserTlsExternalClientAuthentication.TYPE_TLS_EXTERNAL),
+                arguments(named(TLS_LISTENER.getName(), TLS_LISTENER), KafkaParser.USER_AUTH_UNDEFINED),
+
+                arguments(named(OAUTH_LISTENER.getName(), OAUTH_LISTENER), KafkaParser.USER_AUTH_UNDEFINED),
+                arguments(named(OAUTH_LISTENER_WITH_TLS.getName(), OAUTH_LISTENER), KafkaParser.USER_AUTH_UNDEFINED)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("listenerSpecifiedWithMatchingAuthProvider")
+    @DisplayName("When listener is specified in CR and it has a specific auth and KafkaUser is specified with the same auth, then the listener is selected")
+    void testListenerSpecifiedWithMatchingAuth(final GenericKafkaListener selectedListener, final String kafkaUserAuthType) {
         final KafkaReference kafkaReference = new KafkaReference();
-        kafkaReference.setListener(LISTENER_1);
+        kafkaReference.setListener(selectedListener.getName());
         final KafkaAccessSpec spec = new KafkaAccessSpec();
         spec.setKafka(kafkaReference);
 
+        final List<GenericKafkaListener> listeners = List.of(PLAIN_LISTENER, PLAIN_LISTENER_WITH_TLS,
+                SCRAM_LISTENER, SCRAM_LISTENER_WITH_TLS,
+                TLS_LISTENER,
+                OAUTH_LISTENER, OAUTH_LISTENER_WITH_TLS
+        );
+        final List<ListenerStatus> listenerStatuses = new ArrayList<>();
+        listeners.forEach(listener -> {
+            if (listener.getName().equals(selectedListener.getName())) {
+                listenerStatuses.add(ResourceProvider.getListenerStatus(selectedListener.getName(), BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092));
+            } else {
+                listenerStatuses.add(ResourceProvider.getListenerStatus(listener.getName(), BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093));
+            }
+        });
         final Kafka kafka = ResourceProvider.getKafka(
                 CLUSTER_NAME,
-                List.of(
-                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false),
-                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512())
-                ),
-                List.of(
-                        ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092),
-                        ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
-                )
+                listeners,
+                listenerStatuses
         );
 
-        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec, KafkaParser.NONE_AUTH);
-        assertThat(listener.getName()).isEqualTo(LISTENER_1);
-        assertThat(listener.getType()).isEqualTo(KafkaListenerType.INTERNAL);
-        assertThat(listener.isTls()).isFalse();
-        assertThat(listener.getAuthenticationType()).isEqualTo(KafkaParser.NONE_AUTH);
+        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec, kafkaUserAuthType);
+        assertThat(listener.getName()).isEqualTo(selectedListener.getName());
+        assertThat(listener.getType()).isEqualTo(selectedListener.getType());
+        assertThat(listener.isTls()).isEqualTo(selectedListener.isTls());
+        assertThat(listener.getAuthenticationType()).isEqualTo(selectedListener.getAuth().getType());
         assertThat(listener.getBootstrapServer()).isEqualTo(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092));
     }
 
-    @Test
-    @DisplayName("When listener is specified in CR and it has SASL auth and KafkaUser is specified with SASL auth, then the listener with SASL auth is selected")
-    void testSpecifiedSASLListenerAndSASLUser() {
-        final KafkaReference kafkaReference = new KafkaReference();
-        kafkaReference.setListener(LISTENER_1);
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(kafkaReference);
-
-        final Kafka kafka = ResourceProvider.getKafka(
-                CLUSTER_NAME,
-                List.of(
-                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512()),
-                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false)
+    static Stream<Arguments> listenerWithMatchingAuthProvider() {
+        return Stream.of(
+                arguments(
+                        KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512,
+                        named(SCRAM_LISTENER.getName(), SCRAM_LISTENER),
+                        List.of(PLAIN_LISTENER, PLAIN_LISTENER_WITH_TLS, TLS_LISTENER, OAUTH_LISTENER, OAUTH_LISTENER_WITH_TLS)
                 ),
-                List.of(
-                        ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092),
-                        ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
+                arguments(
+                        KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512,
+                        named(SCRAM_LISTENER_WITH_TLS.getName(), SCRAM_LISTENER_WITH_TLS),
+                        List.of(PLAIN_LISTENER, PLAIN_LISTENER_WITH_TLS, TLS_LISTENER, OAUTH_LISTENER, OAUTH_LISTENER_WITH_TLS)
+                ),
+                arguments(
+                        KafkaUserTlsClientAuthentication.TYPE_TLS,
+                        named(TLS_LISTENER.getName(), TLS_LISTENER),
+                        List.of(PLAIN_LISTENER, PLAIN_LISTENER_WITH_TLS, SCRAM_LISTENER, SCRAM_LISTENER_WITH_TLS, OAUTH_LISTENER, OAUTH_LISTENER_WITH_TLS)
+                ),
+                arguments(
+                        KafkaUserTlsExternalClientAuthentication.TYPE_TLS_EXTERNAL,
+                        named(TLS_LISTENER.getName(), TLS_LISTENER),
+                        List.of(PLAIN_LISTENER, PLAIN_LISTENER_WITH_TLS, SCRAM_LISTENER, SCRAM_LISTENER_WITH_TLS, OAUTH_LISTENER, OAUTH_LISTENER_WITH_TLS)
                 )
         );
-
-        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec, KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512);
-        assertThat(listener.getName()).isEqualTo(LISTENER_1);
-        assertThat(listener.getType()).isEqualTo(KafkaListenerType.INTERNAL);
-        assertThat(listener.isTls()).isFalse();
-        assertThat(listener.getAuthenticationType()).isEqualTo(KafkaListenerAuthenticationScramSha512.SCRAM_SHA_512);
-        assertThat(listener.getBootstrapServer()).isEqualTo(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092));
     }
 
-    @Test
-    @DisplayName("When listener is specified in CR and it has SSL auth and KafkaUser is specified with SSL auth, then the listener with SSL auth is selected")
-    void testSpecifiedSSLListenerAndSSLUser() {
-        final KafkaReference kafkaReference = new KafkaReference();
-        kafkaReference.setListener(LISTENER_1);
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(kafkaReference);
-
-        final Kafka kafka = ResourceProvider.getKafka(
-                CLUSTER_NAME,
-                List.of(
-                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, true, new KafkaListenerAuthenticationTls()),
-                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, true)
-                ),
-                List.of(
-                        ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092),
-                        ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
-                )
-        );
-
-        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec, KafkaUserTlsClientAuthentication.TYPE_TLS);
-        assertThat(listener.getName()).isEqualTo(LISTENER_1);
-        assertThat(listener.getType()).isEqualTo(KafkaListenerType.INTERNAL);
-        assertThat(listener.isTls()).isTrue();
-        assertThat(listener.getAuthenticationType()).isEqualTo(KafkaListenerAuthenticationTls.TYPE_TLS);
-        assertThat(listener.getBootstrapServer()).isEqualTo(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092));
-    }
-
-    @Test
-    @DisplayName("When a Kafka User with no auth is specified in CR, then the listener with no auth is selected")
-    void testKafkaUserWithNoAuth() {
+    @ParameterizedTest
+    @MethodSource("listenerWithMatchingAuthProvider")
+    @DisplayName("When a Kafka User with a specific auth is specified in CR, then the listener with matching auth is selected")
+    void testListenerWithMatchingAuth(final String kafkaUserAuthType, final GenericKafkaListener expectedListener, final List<GenericKafkaListener> otherListeners) {
         final KafkaReference kafkaReference = new KafkaReference();
         final KafkaAccessSpec spec = new KafkaAccessSpec();
         spec.setKafka(kafkaReference);
 
+        final List<GenericKafkaListener> listeners = new ArrayList<>(otherListeners);
+        listeners.add(expectedListener);
+        final List<ListenerStatus> listenerStatuses = new ArrayList<>();
+        otherListeners.forEach(listener -> listenerStatuses.add(ResourceProvider.getListenerStatus(listener.getName(), BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)));
+        listenerStatuses.add(ResourceProvider.getListenerStatus(expectedListener.getName(), BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092));
         final Kafka kafka = ResourceProvider.getKafka(
                 CLUSTER_NAME,
-                List.of(
-                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false),
-                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512())
-                ),
-                List.of(
-                        ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092),
-                        ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
-                )
+                listeners,
+                listenerStatuses
         );
 
-        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec, KafkaParser.NONE_AUTH);
-        assertThat(listener.getName()).isEqualTo(LISTENER_1);
-        assertThat(listener.getType()).isEqualTo(KafkaListenerType.INTERNAL);
-        assertThat(listener.isTls()).isFalse();
-        assertThat(listener.getAuthenticationType()).isEqualTo(KafkaParser.NONE_AUTH);
-        assertThat(listener.getBootstrapServer()).isEqualTo(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092));
-    }
-
-    @Test
-    @DisplayName("When a Kafka User with SASL auth is specified in CR, then the listener with SASL auth is selected")
-    void testKafkaUserWithSaslAuth() {
-        final KafkaReference kafkaReference = new KafkaReference();
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(kafkaReference);
-
-        final Kafka kafka = ResourceProvider.getKafka(
-                CLUSTER_NAME,
-                List.of(
-                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512()),
-                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false)
-                ),
-                List.of(
-                        ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092),
-                        ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
-                )
-        );
-
-        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec, KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512);
-        assertThat(listener.getName()).isEqualTo(LISTENER_1);
-        assertThat(listener.getType()).isEqualTo(KafkaListenerType.INTERNAL);
-        assertThat(listener.isTls()).isFalse();
-        assertThat(listener.getAuthenticationType()).isEqualTo(KafkaListenerAuthenticationScramSha512.SCRAM_SHA_512);
-        assertThat(listener.getBootstrapServer()).isEqualTo(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092));
-    }
-
-    @Test
-    @DisplayName("When a Kafka User with SASL auth is specified in CR and the matching listener has tls enabled, then the listener with SASL auth is selected")
-    void testKafkaUserWithSaslAuthAndTls() {
-        final KafkaReference kafkaReference = new KafkaReference();
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(kafkaReference);
-
-        final Kafka kafka = ResourceProvider.getKafka(
-                CLUSTER_NAME,
-                List.of(
-                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, true, new KafkaListenerAuthenticationScramSha512()),
-                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false)
-                ),
-                List.of(
-                        ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092),
-                        ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
-                )
-        );
-
-        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec, KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512);
-        assertThat(listener.getName()).isEqualTo(LISTENER_1);
-        assertThat(listener.getType()).isEqualTo(KafkaListenerType.INTERNAL);
-        assertThat(listener.isTls()).isTrue();
-        assertThat(listener.getAuthenticationType()).isEqualTo(KafkaListenerAuthenticationScramSha512.SCRAM_SHA_512);
-        assertThat(listener.getBootstrapServer()).isEqualTo(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092));
-    }
-
-    @Test
-    @DisplayName("When a Kafka User with TLS auth is specified in CR, then the listener with TLS auth is selected")
-    void testKafkaUserWithSSLAuth() {
-        final KafkaReference kafkaReference = new KafkaReference();
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(kafkaReference);
-
-        final Kafka kafka = ResourceProvider.getKafka(
-                CLUSTER_NAME,
-                List.of(
-                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, true, new KafkaListenerAuthenticationTls()),
-                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, true)
-                ),
-                List.of(
-                        ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092),
-                        ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
-                )
-        );
-
-        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec, KafkaUserTlsClientAuthentication.TYPE_TLS);
-        assertThat(listener.getName()).isEqualTo(LISTENER_1);
-        assertThat(listener.getType()).isEqualTo(KafkaListenerType.INTERNAL);
-        assertThat(listener.isTls()).isTrue();
-        assertThat(listener.getAuthenticationType()).isEqualTo(KafkaListenerAuthenticationTls.TYPE_TLS);
+        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec, kafkaUserAuthType);
+        assertThat(listener.getName()).isEqualTo(expectedListener.getName());
+        assertThat(listener.getType()).isEqualTo(expectedListener.getType());
+        assertThat(listener.isTls()).isEqualTo(expectedListener.isTls());
+        assertThat(listener.getAuthenticationType()).isEqualTo(expectedListener.getAuth().getType());
         assertThat(listener.getBootstrapServer()).isEqualTo(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092));
     }
 
@@ -234,18 +156,15 @@ public class KafkaParserWithUserTest {
         return Stream.of(
                 arguments(
                         KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512,
-                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, true),
-                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false)
+                        List.of(PLAIN_LISTENER, PLAIN_LISTENER_WITH_TLS, TLS_LISTENER, OAUTH_LISTENER, OAUTH_LISTENER_WITH_TLS)
                 ),
                 arguments(
                         KafkaUserTlsClientAuthentication.TYPE_TLS,
-                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, true),
-                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false)
+                        List.of(PLAIN_LISTENER, PLAIN_LISTENER_WITH_TLS, SCRAM_LISTENER, SCRAM_LISTENER_WITH_TLS, OAUTH_LISTENER, OAUTH_LISTENER_WITH_TLS)
                 ),
                 arguments(
-                        KafkaParser.NONE_AUTH,
-                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, true, new KafkaListenerAuthenticationTls()),
-                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512())
+                        KafkaUserTlsExternalClientAuthentication.TYPE_TLS_EXTERNAL,
+                        List.of(PLAIN_LISTENER, PLAIN_LISTENER_WITH_TLS, SCRAM_LISTENER, SCRAM_LISTENER_WITH_TLS, OAUTH_LISTENER, OAUTH_LISTENER_WITH_TLS)
                 )
         );
     }
@@ -253,18 +172,15 @@ public class KafkaParserWithUserTest {
     @ParameterizedTest
     @MethodSource("noListenersMatchingAuthProvider")
     @DisplayName("When there is no listener that satisfies the auth type for the chosen Kafka User, then the parsing fails")
-    void testNoListenersMatchingAuth(final String kafkaUserAuthType, final GenericKafkaListener listener1, final GenericKafkaListener listener2) {
+    void testNoListenersMatchingAuth(final String kafkaUserAuthType, final List<GenericKafkaListener> listeners) {
         final KafkaReference kafkaReference = new KafkaReference();
         final KafkaAccessSpec spec = new KafkaAccessSpec();
         spec.setKafka(kafkaReference);
 
         final Kafka kafka = ResourceProvider.getKafka(
                 CLUSTER_NAME,
-                List.of(listener1, listener2),
-                List.of(
-                        ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092),
-                        ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
-                )
+                listeners,
+                Collections.emptyList()
         );
 
         final ParserException exception = assertThrows(ParserException.class, () -> KafkaParser.getKafkaListener(kafka, spec, kafkaUserAuthType));
@@ -273,19 +189,35 @@ public class KafkaParserWithUserTest {
 
     static Stream<Arguments> listenerAndUserIncompatibleProvider() {
         return Stream.of(
-                arguments(KafkaParser.NONE_AUTH, LISTENER_2),
-                arguments(KafkaParser.NONE_AUTH, LISTENER_3),
-                arguments(KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512, LISTENER_1),
-                arguments(KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512, LISTENER_3),
-                arguments(KafkaUserTlsClientAuthentication.TYPE_TLS, LISTENER_1),
-                arguments(KafkaUserTlsClientAuthentication.TYPE_TLS, LISTENER_2)
+                arguments(PLAIN_LISTENER.getName(), KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512),
+                arguments(PLAIN_LISTENER.getName(), KafkaUserTlsClientAuthentication.TYPE_TLS),
+                arguments(PLAIN_LISTENER.getName(), KafkaUserTlsExternalClientAuthentication.TYPE_TLS_EXTERNAL),
+                arguments(PLAIN_LISTENER.getName(), KafkaParser.USER_AUTH_UNDEFINED),
+                arguments(PLAIN_LISTENER_WITH_TLS.getName(), KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512),
+                arguments(PLAIN_LISTENER_WITH_TLS.getName(), KafkaUserTlsClientAuthentication.TYPE_TLS),
+                arguments(PLAIN_LISTENER_WITH_TLS.getName(), KafkaUserTlsExternalClientAuthentication.TYPE_TLS_EXTERNAL),
+                arguments(PLAIN_LISTENER_WITH_TLS.getName(), KafkaParser.USER_AUTH_UNDEFINED),
+
+                arguments(SCRAM_LISTENER.getName(), KafkaUserTlsClientAuthentication.TYPE_TLS),
+                arguments(SCRAM_LISTENER.getName(), KafkaUserTlsExternalClientAuthentication.TYPE_TLS_EXTERNAL),
+                arguments(SCRAM_LISTENER_WITH_TLS.getName(), KafkaUserTlsClientAuthentication.TYPE_TLS),
+                arguments(SCRAM_LISTENER_WITH_TLS.getName(), KafkaUserTlsExternalClientAuthentication.TYPE_TLS_EXTERNAL),
+
+                arguments(TLS_LISTENER.getName(), KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512),
+
+                arguments(OAUTH_LISTENER.getName(), KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512),
+                arguments(OAUTH_LISTENER.getName(), KafkaUserTlsClientAuthentication.TYPE_TLS),
+                arguments(OAUTH_LISTENER.getName(), KafkaUserTlsExternalClientAuthentication.TYPE_TLS_EXTERNAL),
+                arguments(OAUTH_LISTENER_WITH_TLS.getName(), KafkaUserScramSha512ClientAuthentication.TYPE_SCRAM_SHA_512),
+                arguments(OAUTH_LISTENER_WITH_TLS.getName(), KafkaUserTlsClientAuthentication.TYPE_TLS),
+                arguments(OAUTH_LISTENER_WITH_TLS.getName(), KafkaUserTlsExternalClientAuthentication.TYPE_TLS_EXTERNAL)
         );
     }
 
     @ParameterizedTest
     @MethodSource("listenerAndUserIncompatibleProvider")
     @DisplayName("When the selected listener and the selected KafkaUser have different auth types, then the parsing fails")
-    void testListenerAndUserIncompatible(final String kafkaUserAuthType, final String selectedListener) {
+    void testListenerAndUserIncompatible(final String selectedListener, final String kafkaUserAuthType) {
         final KafkaReference kafkaReference = new KafkaReference();
         kafkaReference.setListener(selectedListener);
         final KafkaAccessSpec spec = new KafkaAccessSpec();
@@ -293,19 +225,35 @@ public class KafkaParserWithUserTest {
 
         final Kafka kafka = ResourceProvider.getKafka(
                 CLUSTER_NAME,
-                List.of(
-                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, true),
-                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512()),
-                        ResourceProvider.getListener(LISTENER_3, KafkaListenerType.INTERNAL, true, new KafkaListenerAuthenticationTls())
+                List.of(PLAIN_LISTENER, PLAIN_LISTENER_WITH_TLS,
+                        SCRAM_LISTENER, SCRAM_LISTENER_WITH_TLS,
+                        TLS_LISTENER,
+                        OAUTH_LISTENER, OAUTH_LISTENER_WITH_TLS
                 ),
-                List.of(
-                        ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092),
-                        ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093),
-                        ResourceProvider.getListenerStatus(LISTENER_3, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9094)
-                )
+                Collections.emptyList()
         );
 
         final ParserException exception = assertThrows(ParserException.class, () -> KafkaParser.getKafkaListener(kafka, spec, kafkaUserAuthType));
         assertThat(exception.getMessage()).isEqualTo(String.format("Provided listener %s and Kafka User do not have compatible authentication configurations.", selectedListener));
+    }
+
+    @Test
+    @DisplayName("When a Kafka User with no auth is specified in CR and a listener isn't specified, then the parsing fails")
+    void testUndefinedUserAuthAndNoListener() {
+        final KafkaAccessSpec spec = new KafkaAccessSpec();
+        spec.setKafka(new KafkaReference());
+
+        final Kafka kafka = ResourceProvider.getKafka(
+                CLUSTER_NAME,
+                List.of(PLAIN_LISTENER, PLAIN_LISTENER_WITH_TLS,
+                        SCRAM_LISTENER, SCRAM_LISTENER_WITH_TLS,
+                        TLS_LISTENER,
+                        OAUTH_LISTENER, OAUTH_LISTENER_WITH_TLS
+                ),
+                Collections.emptyList()
+        );
+
+        final ParserException exception = assertThrows(ParserException.class, () -> KafkaParser.getKafkaListener(kafka, spec, KafkaParser.USER_AUTH_UNDEFINED));
+        assertThat(exception.getMessage()).isEqualTo("Cannot match KafkaUser with undefined auth to a Kafka listener, specify the listener in the KafkaAccess CR.");
     }
 }

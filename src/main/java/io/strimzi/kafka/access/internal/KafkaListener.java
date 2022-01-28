@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.strimzi.kafka.access.internal.KafkaParser.NONE_AUTH;
+import static io.strimzi.kafka.access.internal.KafkaParser.LISTENER_AUTH_NONE;
 
 /*
 Representation of a Kafka listener that returns the connection details for the listener
@@ -35,7 +35,7 @@ public class KafkaListener {
         this.name = genericListener.getName();
         this.type = genericListener.getType();
         this.tls = genericListener.isTls();
-        this.authenticationType = Optional.ofNullable(genericListener.getAuth()).map(KafkaListenerAuthentication::getType).orElse(NONE_AUTH);
+        this.authenticationType = Optional.ofNullable(genericListener.getAuth()).map(KafkaListenerAuthentication::getType).orElse(LISTENER_AUTH_NONE);
     }
 
     public KafkaListener withBootstrapServer(final String bootstrapServer) {
@@ -87,7 +87,7 @@ public class KafkaListener {
     private SecurityProtocol getSecurityProtocol() {
         final SecurityProtocol securityProtocol;
         switch (this.authenticationType) {
-            case NONE_AUTH:
+            case LISTENER_AUTH_NONE:
                 securityProtocol = this.tls ? SecurityProtocol.SSL : SecurityProtocol.PLAINTEXT;
                 break;
             case KafkaListenerAuthenticationTls.TYPE_TLS:

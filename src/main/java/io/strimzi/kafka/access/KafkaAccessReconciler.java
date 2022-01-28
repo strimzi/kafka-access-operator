@@ -110,7 +110,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                         .map(KafkaUser::getSpec)
                         .map(KafkaUserSpec::getAuthentication)
                         .map(KafkaUserAuthentication::getType)
-                        .orElseThrow(() -> new IllegalStateException("Reconcile failed: unable to determine auth type of KafkaUser " + kafkaUserName));
+                        .orElse(KafkaParser.USER_AUTH_UNDEFINED);
                 listener = KafkaParser.getKafkaListener(kafka, spec, kafkaUserType);
             } else {
                 listener = KafkaParser.getKafkaListener(kafka, spec);

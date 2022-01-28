@@ -53,7 +53,7 @@ public class KafkaParserTest {
         assertThat(listener.getName()).isEqualTo(LISTENER_1);
         assertThat(listener.getType()).isEqualTo(KafkaListenerType.INTERNAL);
         assertThat(listener.isTls()).isFalse();
-        assertThat(listener.getAuthenticationType()).isEqualTo(KafkaParser.NONE_AUTH);
+        assertThat(listener.getAuthenticationType()).isEqualTo(KafkaParser.LISTENER_AUTH_NONE);
         assertThat(listener.getBootstrapServer()).isEqualTo(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092));
     }
 
@@ -79,7 +79,7 @@ public class KafkaParserTest {
         assertThat(listener.getName()).isEqualTo(LISTENER_1);
         assertThat(listener.getType()).isEqualTo(KafkaListenerType.INTERNAL);
         assertThat(listener.isTls()).isTrue();
-        assertThat(listener.getAuthenticationType()).isEqualTo(KafkaParser.NONE_AUTH);
+        assertThat(listener.getAuthenticationType()).isEqualTo(KafkaParser.LISTENER_AUTH_NONE);
         assertThat(listener.getBootstrapServer()).isEqualTo(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092));
     }
 
