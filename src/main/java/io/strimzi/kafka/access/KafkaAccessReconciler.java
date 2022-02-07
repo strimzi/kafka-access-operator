@@ -31,7 +31,7 @@ import io.strimzi.kafka.access.model.KafkaAccessStatus;
 import io.strimzi.kafka.access.model.KafkaReference;
 import io.strimzi.kafka.access.model.KafkaUserReference;
 import io.strimzi.kafka.access.internal.KafkaParser;
-import io.strimzi.kafka.access.internal.ParserException;
+import io.strimzi.kafka.access.internal.CustomResourceParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,7 +115,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
             } else {
                 listener = KafkaParser.getKafkaListener(kafka, spec);
             }
-        } catch (ParserException e) {
+        } catch (CustomResourceParseException e) {
             throw new IllegalStateException("Reconcile failed due to ParserException " + e.getMessage());
         }
         final Map<String, String> data  = new HashMap<>(commonSecretData);

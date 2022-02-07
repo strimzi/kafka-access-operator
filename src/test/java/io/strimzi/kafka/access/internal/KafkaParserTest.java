@@ -155,7 +155,7 @@ public class KafkaParserTest {
                 )
         );
 
-        final ParserException exception = assertThrows(ParserException.class, () -> KafkaParser.getKafkaListener(kafka, spec));
+        final CustomResourceParseException exception = assertThrows(CustomResourceParseException.class, () -> KafkaParser.getKafkaListener(kafka, spec));
         assertThat(exception.getMessage()).isEqualTo(String.format("The specified listener %s is missing from the Kafka resource.", LISTENER_1));
     }
 
@@ -177,7 +177,7 @@ public class KafkaParserTest {
                 )
         );
 
-        final ParserException exception = assertThrows(ParserException.class, () -> KafkaParser.getKafkaListener(kafka, spec));
+        final CustomResourceParseException exception = assertThrows(CustomResourceParseException.class, () -> KafkaParser.getKafkaListener(kafka, spec));
         assertThat(exception.getMessage()).isEqualTo(String.format("The bootstrap server address for the listener %s is missing from the Kafka resource status.", LISTENER_1));
     }
 

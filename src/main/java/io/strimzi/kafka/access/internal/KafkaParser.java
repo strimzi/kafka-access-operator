@@ -67,7 +67,7 @@ public class KafkaParser {
             kafkaListener = getChosenListener(chosenListener.get(), chosenUserAuthType, genericKafkaListeners);
         } else {
             if (USER_AUTH_UNDEFINED.equals(chosenUserAuthType)) {
-                throw new ParserException("Cannot match KafkaUser with undefined auth to a Kafka listener, specify the listener in the KafkaAccess CR.");
+                throw new CustomResourceParseException("Cannot match KafkaUser with undefined auth to a Kafka listener, specify the listener in the KafkaAccess CR.");
             }
             final Stream<KafkaListener> possibleListeners = genericKafkaListeners
                     .stream()
@@ -85,7 +85,7 @@ public class KafkaParser {
                 .findFirst()
                 .map(ListenerStatus::getBootstrapServers);
         if (bootstrapServer.isEmpty()) {
-            throw new ParserException(String.format("The bootstrap server address for the listener %s is missing from the Kafka resource status.",
+            throw new CustomResourceParseException(String.format("The bootstrap server address for the listener %s is missing from the Kafka resource status.",
                     kafkaListener.getName())
             );
         }
@@ -98,11 +98,11 @@ public class KafkaParser {
                 .filter(genericKafkaListener -> chosenListener.equals(genericKafkaListener.getName()))
                 .findFirst()
                 .map(KafkaListener::new)
-                .orElseThrow(() -> new ParserException(String.format("The specified listener %s is missing from the Kafka resource.",
+                .orElseThrow(() -> new CustomResourceParseException(String.format("The specified listener %s is missing from the Kafka resource.",
                         chosenListener)
                 ));
         if (!listenerAndUserAuthCompatible(kafkaListener.getAuthenticationType(), chosenUserAuthType)) {
-            throw new ParserException(String.format("Provided listener %s and Kafka User do not have compatible authentication configurations.", kafkaListener.getName()));
+            throw new CustomResourceParseException(String.format("Provided listener %s and Kafka User do not have compatible authentication configurations.", kafkaListener.getName()));
         }
         return kafkaListener;
     }
@@ -118,7 +118,7 @@ public class KafkaParser {
             }
         });
         if (internalListeners.isEmpty() && externalListeners.isEmpty()) {
-            throw new ParserException("No listeners present in Kafka cluster that match auth requirement.");
+            throw new CustomResourceParseException("No listeners present in Kafka cluster that match auth requirement.");
         }
         final Map<String, KafkaListener> possibleListenerMap = internalListeners.isEmpty() ? externalListeners : internalListeners;
         final String listenerName = possibleListenerMap.keySet()

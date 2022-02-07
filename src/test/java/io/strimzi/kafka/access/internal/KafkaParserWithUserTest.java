@@ -183,7 +183,7 @@ public class KafkaParserWithUserTest {
                 Collections.emptyList()
         );
 
-        final ParserException exception = assertThrows(ParserException.class, () -> KafkaParser.getKafkaListener(kafka, spec, kafkaUserAuthType));
+        final CustomResourceParseException exception = assertThrows(CustomResourceParseException.class, () -> KafkaParser.getKafkaListener(kafka, spec, kafkaUserAuthType));
         assertThat(exception.getMessage()).isEqualTo("No listeners present in Kafka cluster that match auth requirement.");
     }
 
@@ -233,7 +233,7 @@ public class KafkaParserWithUserTest {
                 Collections.emptyList()
         );
 
-        final ParserException exception = assertThrows(ParserException.class, () -> KafkaParser.getKafkaListener(kafka, spec, kafkaUserAuthType));
+        final CustomResourceParseException exception = assertThrows(CustomResourceParseException.class, () -> KafkaParser.getKafkaListener(kafka, spec, kafkaUserAuthType));
         assertThat(exception.getMessage()).isEqualTo(String.format("Provided listener %s and Kafka User do not have compatible authentication configurations.", selectedListener));
     }
 
@@ -253,7 +253,7 @@ public class KafkaParserWithUserTest {
                 Collections.emptyList()
         );
 
-        final ParserException exception = assertThrows(ParserException.class, () -> KafkaParser.getKafkaListener(kafka, spec, KafkaParser.USER_AUTH_UNDEFINED));
+        final CustomResourceParseException exception = assertThrows(CustomResourceParseException.class, () -> KafkaParser.getKafkaListener(kafka, spec, KafkaParser.USER_AUTH_UNDEFINED));
         assertThat(exception.getMessage()).isEqualTo("Cannot match KafkaUser with undefined auth to a Kafka listener, specify the listener in the KafkaAccess CR.");
     }
 }
