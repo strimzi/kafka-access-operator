@@ -2,11 +2,12 @@
  * Copyright Strimzi authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.strimzi.kafka.access;
+package io.strimzi.kafka.access.internal;
 
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.javaoperatorsdk.operator.processing.event.ResourceID;
+import io.strimzi.kafka.access.ResourceProvider;
 import io.strimzi.kafka.access.model.KafkaAccess;
 import io.strimzi.kafka.access.model.KafkaReference;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +20,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class UtilsTest {
+public class KafkaAccessParserTest {
 
     static final String ACCESS_NAME_1 = "my-access-1";
     static final String ACCESS_NAME_2 = "my-access-2";
@@ -38,7 +39,7 @@ public class UtilsTest {
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference1);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_1, kafkaReference2);
 
-        final Set<ResourceID> matches = Utils.getKafkaAccessResourceIDsForKafkaInstance(
+        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessResourceIDsForKafkaInstance(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getKafka(KAFKA_NAME_1, NAMESPACE_2));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
@@ -52,7 +53,7 @@ public class UtilsTest {
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_2, kafkaReference);
 
-        final Set<ResourceID> matches = Utils.getKafkaAccessResourceIDsForKafkaInstance(
+        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessResourceIDsForKafkaInstance(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getKafka(KAFKA_NAME_1, NAMESPACE_2));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1), new ResourceID(ACCESS_NAME_2, NAMESPACE_2));
@@ -66,7 +67,7 @@ public class UtilsTest {
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReferenceNullNamespace);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_2, kafkaReferenceNullNamespace);
 
-        final Set<ResourceID> matches = Utils.getKafkaAccessResourceIDsForKafkaInstance(
+        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessResourceIDsForKafkaInstance(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getKafka(KAFKA_NAME_1, NAMESPACE_1));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
@@ -81,7 +82,7 @@ public class UtilsTest {
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference1);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_2, kafkaReference2);
 
-        final Set<ResourceID> matches = Utils.getKafkaAccessResourceIDsForKafkaInstance(
+        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessResourceIDsForKafkaInstance(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getKafka(KAFKA_NAME_1, NAMESPACE_1));
         assertThat(matches).isEmpty();
@@ -94,7 +95,7 @@ public class UtilsTest {
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_1);
 
-        final Set<ResourceID> matches = Utils.getKafkaAccessResourceIDsForSecret(
+        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessResourceIDsForSecret(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getEmptyKafkaAccessSecret(SECRET_NAME, NAMESPACE_1, ACCESS_NAME_1));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
@@ -104,7 +105,7 @@ public class UtilsTest {
     @DisplayName("When getKafkaAccessResourceIDsForSecret() is called with an empty cache and a secret that is managed " +
             "by a KafkaAccess, then the correct KafkaAccess is returned")
     void testCorrectKafkaAccessReturnedForKafkaAccessSecretEmptyCache() {
-        final Set<ResourceID> matches = Utils.getKafkaAccessResourceIDsForSecret(
+        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessResourceIDsForSecret(
                 Stream.of(),
                 ResourceProvider.getEmptyKafkaAccessSecret(SECRET_NAME, NAMESPACE_1, ACCESS_NAME_1));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
@@ -119,7 +120,7 @@ public class UtilsTest {
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference1);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_1, kafkaReference2);
 
-        final Set<ResourceID> matches = Utils.getKafkaAccessResourceIDsForSecret(
+        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessResourceIDsForSecret(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getStrimziSecret(SECRET_NAME, NAMESPACE_1, KAFKA_NAME_1));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
@@ -135,7 +136,7 @@ public class UtilsTest {
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_1, kafkaReference2);
 
         final Map<String, String> labels = new HashMap<>();
-        labels.put(Utils.MANAGED_BY_LABEL_KEY, "unknown");
+        labels.put(KafkaAccessParser.MANAGED_BY_LABEL_KEY, "unknown");
         final Secret secret = new SecretBuilder()
                 .withNewMetadata()
                 .withName(SECRET_NAME)
@@ -144,7 +145,7 @@ public class UtilsTest {
                 .endMetadata()
                 .build();
 
-        final Set<ResourceID> matches = Utils.getKafkaAccessResourceIDsForSecret(
+        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessResourceIDsForSecret(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 secret);
         assertThat(matches).isEmpty();
@@ -166,7 +167,7 @@ public class UtilsTest {
                 .endMetadata()
                 .build();
 
-        final Set<ResourceID> matches = Utils.getKafkaAccessResourceIDsForSecret(
+        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessResourceIDsForSecret(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 secret);
         assertThat(matches).isEmpty();

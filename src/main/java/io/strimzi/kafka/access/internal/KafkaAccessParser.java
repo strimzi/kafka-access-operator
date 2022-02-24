@@ -2,7 +2,7 @@
  * Copyright Strimzi authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.strimzi.kafka.access;
+package io.strimzi.kafka.access.internal;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReference;
@@ -24,14 +24,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Utils {
+public class KafkaAccessParser {
 
     public static final String MANAGED_BY_LABEL_KEY = "app.kubernetes.io/managed-by";
     public static final String INSTANCE_LABEL_KEY = "app.kubernetes.io/instance";
     public static final String STRIMZI_CLUSTER_LABEL_VALUE = "strimzi-cluster-operator";
     public static final String KAFKA_ACCESS_LABEL_VALUE = "kafka-access-operator";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessParser.class);
 
     /**
      * Filters the stream of KafkaAccess objects to find only the ones that reference the provided Kafka resource.
@@ -115,7 +115,7 @@ public class Utils {
                             .withNamespace(secretNamespace.get())
                             .endMetadata()
                             .build();
-                    resourceIDS.addAll(Utils.getKafkaAccessResourceIDsForKafkaInstance(kafkaAccessList, kafka));
+                    resourceIDS.addAll(KafkaAccessParser.getKafkaAccessResourceIDsForKafkaInstance(kafkaAccessList, kafka));
                 });
         }
 
