@@ -5,11 +5,11 @@
         "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
 
 <suppressions>
-
     <!-- Note that [/\\] must be used as the path separator for cross-platform support -->
 
-    <!-- cluster-operator -->
-<!--    <suppress checks="<check name>"-->
-<!--              files="package[/\\]name[/\\]MyClass.java"/>-->
-
+    <!-- Use this file to suppress warnings only when absolutely needed:
+               * To suppress a bunch of class (for example generated code)
+               * To suppress warning we do not want for the whole project
+               * To suppress file-level warnings
+         In all other cases, you should use the annotations on the methods or classes affected by it. -->
 </suppressions>

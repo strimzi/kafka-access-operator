@@ -14,7 +14,7 @@ import io.fabric8.kubernetes.model.annotation.Version;
 @Version("v1")
 @ShortNames("ka")
 public class KafkaAccess extends CustomResource<KafkaAccessSpec, KafkaAccessStatus> implements Namespaced {
-
+    private static final long serialVersionUID = 1L;
     public static final String KIND = "KafkaAccess";
 
     @Override
