@@ -7,3 +7,7 @@ Kubernetes operator that collects connection details for an [Apache Kafka®](htt
 operator into a Kubernetes secret. (See [proposal #33](https://github.com/strimzi/proposals/blob/main/033-service-binding.md) for more details.)
 
 This operator uses the [Java Operator SDK](https://github.com/java-operator-sdk/java-operator-sdk).
+
+## Building the operator
+
+The [Dev guide](https://github.com/strimzi/kafka-access-operator/blob/main/development-docs/DEV_GUIDE.md) describes how to build the Access Operator.

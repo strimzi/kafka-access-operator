@@ -19,3 +19,7 @@ target/
 
 # MacOS Desktop Services Store files
 **/.DS_Store
+
+# Generated files for docker image build
+.access-operator.tmp
+docker-images/tmp/**
