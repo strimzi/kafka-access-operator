@@ -1,5 +1,6 @@
 include ./Makefile.os
 include ./Makefile.maven
+include ./Makefile.docker
 
 PROJECT_NAME ?= access-operator
 GITHUB_VERSION ?= main
@@ -10,10 +11,10 @@ ifneq ($(RELEASE_VERSION),latest)
 endif
 
 .PHONY: all
-all: java_verify
+all: java_verify docker_build
 
 .PHONY: clean
-clean: java_clean
+clean: java_clean docker_clean
 
 .PHONY: next_version
 next_version:
