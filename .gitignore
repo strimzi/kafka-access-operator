@@ -22,4 +22,4 @@ target/
 
 # Generated files for docker image build
 .access-operator.tmp
-docker-images/tmp/**
+docker-image/tmp/**

@@ -5,9 +5,9 @@
 # default latest) variables are used to name the Docker image. DOCKER_REGISTRY identifies
 # the registry where the image will be pushed (default is Docker Hub).
 TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
-ARCHIVE_DIR=$(TOPDIR)docker-images/container-archives
+ARCHIVE_DIR=$(TOPDIR)docker-image/container-archives
 
-DOCKERFILE_DIR     ?= $(TOPDIR)docker-images
+DOCKERFILE_DIR     ?= $(TOPDIR)docker-image
 DOCKER_CMD         ?= docker
 DOCKER_REGISTRY    ?= docker.io
 DOCKER_ORG         ?= $(USER)
