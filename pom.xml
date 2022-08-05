@@ -137,6 +137,13 @@
             <artifactId>kubernetes-model-common</artifactId>
             <version>${fabric8.version}</version>
         </dependency>
+        <!-- Required to generate CRD file -->
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>crd-generator-apt</artifactId>
+            <version>${fabric8.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>io.strimzi</groupId>
             <artifactId>api</artifactId>
@@ -284,6 +291,10 @@
                         </goals>
                         <configuration>
                             <failOnWarning>true</failOnWarning>
+                            <ignoredDependencies>
+                                <!-- Required to generate CRD file -->
+                                <ignoredDependency>io.fabric8:crd-generator-apt:jar:${fabric8.version}</ignoredDependency>
+                            </ignoredDependencies>
                         </configuration>
                     </execution>
                 </executions>

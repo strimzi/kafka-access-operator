@@ -1,0 +1,8 @@
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaAccess
+metadata:
+  name: my-kafka-access
+spec:
+  kafka:
+    name: my-cluster
+    namespace: kafka

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: strimzi-access-operator
+  labels:
+    app: strimzi-access-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: strimzi-access-operator
+      strimzi.io/kind: access-operator
+  template:
+    metadata:
+      labels:
+        app: strimzi-access-operator
+        strimzi.io/kind: access-operator
+    spec:
+      serviceAccountName: strimzi-access-operator
+      containers:
+        - name: access-operator
+          image: strimzi/access-operator:latest
+          imagePullPolicy: Never
+          args:
+            - /opt/strimzi/bin/run_java.sh
+          resources:
+            limits:
+              memory: 256Mi
+              cpu: 500m
+            requests:
+              memory: 256Mi
+              cpu: 100m
