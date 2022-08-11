@@ -21,6 +21,9 @@ spec:
         - name: access-operator
           image: strimzi/access-operator:latest
           imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+              name: http
           args:
             - /opt/strimzi/bin/run_java.sh
           resources:
@@ -30,3 +33,15 @@ spec:
             requests:
               memory: 256Mi
               cpu: 100m
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30

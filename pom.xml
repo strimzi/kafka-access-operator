@@ -94,7 +94,8 @@
         <kafka.clients.version>3.0.0</kafka.clients.version>
         <javax-validation.version>2.0.1.Final</javax-validation.version>
         <slf4j.version>1.7.33</slf4j.version>
-
+        <jetty.version>11.0.11</jetty.version>
+        <jetty.jakarta-servlet-api.version>5.0.2</jetty.jakarta-servlet-api.version>
         <!-- Test dependencies -->
         <junit-jupiter.version>5.8.2</junit-jupiter.version>
         <assertj.version>3.21.0</assertj.version>
@@ -169,6 +170,21 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.toolchain</groupId>
+            <artifactId>jetty-jakarta-servlet-api</artifactId>
+            <version>${jetty.jakarta-servlet-api.version}</version>
         </dependency>
         <!-- Test dependencies -->
         <dependency>
