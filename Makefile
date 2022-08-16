@@ -11,7 +11,10 @@ ifneq ($(RELEASE_VERSION),latest)
 endif
 
 .PHONY: all
-all: java_verify copy_crd docker_build
+all: java_verify copy_crd docker_build docker_tag docker_push
+
+.PHONY: build
+build: java_verify copy_crd docker_build
 
 .PHONY: clean
 clean: java_clean
