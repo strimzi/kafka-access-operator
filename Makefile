@@ -14,7 +14,7 @@ endif
 all: java_verify docker_build
 
 .PHONY: clean
-clean: java_clean docker_clean
+clean: java_clean
 
 .PHONY: next_version
 next_version:
