@@ -6,4 +6,8 @@ spec:
   kafka:
     name: my-cluster
     namespace: kafka
-    listener: plain
+    listener: tls
+  user:
+    kind: KafkaUser
+    name: my-user
+    namespace: kafka

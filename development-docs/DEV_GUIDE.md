@@ -141,13 +141,27 @@ are available in the sections below this quick start guide.
         # Running against OpenShift
         oc -n strimzi create -f packaging/install
 
-7. Finally, you can deploy a KafkaAccess custom resource running:
+7. Deploy the Strimzi cluster operator and a Kafka instance. You can use the [Strimzi quickstart guide](https://strimzi.io/quickstarts/) to do this.
+
+8. Finally, you can deploy a KafkaAccess custom resource running:
 
         # Running against Kubernetes
         kubectl -n strimzi create -f packaging/examples/kafka-access.yaml
 
         # Running against OpenShift
         oc -n strimzi create -f packaging/examples/kafka-access.yaml
+
+   Make sure the `name`, `namespace` and `listener` in the KafkaAccess custom resource match those of your Kafka instance.
+   The `examples` directory also includes an example for connecting to a Kafka cluster with a specific KafkaUser.
+
+9. The operator will create a Kubernetes secret with the same name as the KafkaAccess containing your connection details.
+   You can run the following commands to see the contents with the values base64 decoded:
+
+        # Running against Kubernetes
+        kubectl -n strimzi get secret my-kafka-access -ojson | jq '.data|map_values(@base64d)'
+
+        # Running against OpenShift
+        oc -n strimzi get secret my-kafka-access -ojson | jq '.data|map_values(@base64d)'
 
 ## Build details
 

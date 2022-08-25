@@ -13,7 +13,7 @@ spec:
     singular: kafkaaccess
   scope: Namespaced
   versions:
-  - name: v1
+  - name: v1beta2
     schema:
       openAPIV3Schema:
         properties:
