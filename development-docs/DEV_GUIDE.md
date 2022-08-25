@@ -285,4 +285,4 @@ export DOCKER_BUILD_ARGS="--platform linux/amd64 --load"
 make all
 ```
 
-_Note: Strimzi currently does not officially support any other platforms then Linux on `amd64`._
+_Note: Strimzi Access Operator currently does not officially support any other platforms than Linux on `amd64`._
