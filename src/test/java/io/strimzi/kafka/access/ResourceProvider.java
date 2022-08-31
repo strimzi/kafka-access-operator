@@ -114,9 +114,20 @@ public class ResourceProvider {
 
     public static KafkaUserReference getKafkaUserReference(final String kafkaUserName, final String kafkaUserNamespace) {
         final KafkaUserReference kafkaUserReference = new KafkaUserReference();
+        kafkaUserReference.setKind(KafkaUser.RESOURCE_KIND);
+        kafkaUserReference.setApiGroup(KafkaUser.RESOURCE_GROUP);
         kafkaUserReference.setName(kafkaUserName);
         Optional.ofNullable(kafkaUserNamespace).ifPresent(kafkaUserReference::setNamespace);
         return kafkaUserReference;
+    }
+
+    public static KafkaUserReference getUserReference(final String kind, final String apiGroup, final String kafkaUserName, final String kafkaUserNamespace) {
+        final KafkaUserReference userReference = new KafkaUserReference();
+        userReference.setKind(kind);
+        userReference.setApiGroup(apiGroup);
+        userReference.setName(kafkaUserName);
+        Optional.ofNullable(kafkaUserNamespace).ifPresent(userReference::setNamespace);
+        return userReference;
     }
 
     public static Kafka getKafka(final String name, final String namespace) {

@@ -28,6 +28,8 @@ import io.strimzi.kafka.access.model.KafkaUserReference;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -36,11 +38,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@SuppressWarnings("ClassFanOutComplexity")
 @EnableKubernetesMockClient(crud = true)
 public class KafkaAccessReconcilerTest {
 
@@ -200,6 +204,41 @@ public class KafkaAccessReconcilerTest {
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
+
+        assertThrows(IllegalStateException.class, () -> new KafkaAccessReconciler(client).reconcile(kafkaAccess, new MockContext()));
+    }
+
+    private static Stream<KafkaUserReference> userReferences() {
+        return Stream.of(
+                ResourceProvider.getUserReference("SpecialUser", KafkaUser.RESOURCE_GROUP, KAFKA_NAME, KAFKA_NAMESPACE),
+                ResourceProvider.getUserReference(KafkaUser.RESOURCE_KIND, "special.user.group", KAFKA_NAME, KAFKA_NAMESPACE),
+                ResourceProvider.getUserReference("SpecialUser", "special.user.group", KAFKA_NAME, KAFKA_NAMESPACE));
+    }
+
+    @ParameterizedTest
+    @MethodSource("userReferences")
+    @DisplayName("When reconcile is called with a KafkaAccess resource that references a user that has an invalid kind or apiGroup, " +
+            "then the reconcile loop fails")
+    void testInvalidUserReference(KafkaUserReference userReference) {
+        final Kafka kafka = ResourceProvider.getKafka(
+                KAFKA_NAME,
+                KAFKA_NAMESPACE,
+                List.of(
+                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false),
+                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512())
+                ),
+                List.of(
+                        ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092),
+                        ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
+                )
+        );
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).withName(KAFKA_NAME).create(kafka);
+
+        final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithoutStatus(KAFKA_NAME, KAFKA_NAMESPACE, new KafkaUserScramSha512ClientAuthentication());
+        Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).withName(KAFKA_NAME).create(kafkaUser);
+
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, userReference);
 
         assertThrows(IllegalStateException.class, () -> new KafkaAccessReconciler(client).reconcile(kafkaAccess, new MockContext()));
     }

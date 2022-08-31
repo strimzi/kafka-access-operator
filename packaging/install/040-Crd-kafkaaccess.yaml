@@ -34,12 +34,15 @@ spec:
                 properties:
                   kind:
                     type: string
+                  apiGroup:
+                    type: string
                   name:
                     type: string
                   namespace:
                     type: string
                 required:
                 - kind
+                - apiGroup
                 - name
                 type: object
             required:

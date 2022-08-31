@@ -9,5 +9,6 @@ spec:
     listener: tls
   user:
     kind: KafkaUser
+    apiGroup: kafka.strimzi.io
     name: my-user
     namespace: kafka
