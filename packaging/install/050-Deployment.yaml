@@ -4,6 +4,7 @@ metadata:
   name: strimzi-access-operator
   labels:
     app: strimzi-access-operator
+  namespace: strimzi-access-operator
 spec:
   replicas: 1
   selector:

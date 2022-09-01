@@ -22,9 +22,7 @@ rules:
       - "kafka.strimzi.io"
     resources:
       - kafkas
-      - kafkas/status
       - kafkausers
-      - kafkausers/status
     verbs:
       - get
       - list

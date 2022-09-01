@@ -116,52 +116,35 @@ are available in the sections below this quick start guide.
    name but with the repository changed.
    > *Note*: please ensure you don't commit these changes accidentally.
 
-5. The ClusterRoleBinding file assumes you're installing into the namespace `strimzi`. If you wish to use a different one,
-   you'll need to replace it in the file
-   \
-   \
-   **Linux**
-
-       sed -Ei "s/namespace: strimzi/namespace: <desired_namespace>/g" packaging/install/030-ClusterRoleBinding.yaml
-
-   **macOS**
-
-        sed -E -i '' -e "s/namespace: strimzi/namespace: <desired_namespace>/g" packaging/install/030-ClusterRoleBinding.yaml
-
-   This updates the ClusterRoleBinding file to ensure that the roles binding to the service account use
-   the correct namespace.
-   > *Note*: please ensure you don't commit these changes accidentally.
-
-6. Then deploy the Operator by running the following (replace `strimzi` with your desired namespace if
-   necessary):
+5. Then deploy the Operator by running the following (this will create a namespace called `strimzi-access-operator` for your deployment, you can change the install files if needed to change the namespace):
 
         # Running against Kubernetes
-        kubectl -n strimzi create -f packaging/install
+        kubectl create -f packaging/install
 
         # Running against OpenShift
-        oc -n strimzi create -f packaging/install
+        oc create -f packaging/install
 
-7. Deploy the Strimzi cluster operator and a Kafka instance. You can use the [Strimzi quickstart guide](https://strimzi.io/quickstarts/) to do this.
+6. Deploy the Strimzi cluster operator and a Kafka instance. You can use the [Strimzi quickstart guide](https://strimzi.io/quickstarts/) to do this.
 
-8. Finally, you can deploy a KafkaAccess custom resource running:
+7. Finally, you can deploy a KafkaAccess custom resource running:
 
         # Running against Kubernetes
-        kubectl -n strimzi create -f packaging/examples/kafka-access.yaml
+        kubectl -n <namespace> create -f packaging/examples/kafka-access.yaml
 
         # Running against OpenShift
-        oc -n strimzi create -f packaging/examples/kafka-access.yaml
+        oc -n <namespace> create -f packaging/examples/kafka-access.yaml
 
    Make sure the `name`, `namespace` and `listener` in the KafkaAccess custom resource match those of your Kafka instance.
    The `examples` directory also includes an example for connecting to a Kafka cluster with a specific KafkaUser.
 
-9. The operator will create a Kubernetes secret with the same name as the KafkaAccess containing your connection details.
+8. The operator will create a Kubernetes secret with the same name and namespace as the KafkaAccess containing your connection details.
    You can run the following commands to see the contents with the values base64 decoded:
 
         # Running against Kubernetes
-        kubectl -n strimzi get secret my-kafka-access -ojson | jq '.data|map_values(@base64d)'
+        kubectl -n <namespace> get secret my-kafka-access -ojson | jq '.data|map_values(@base64d)'
 
         # Running against OpenShift
-        oc -n strimzi get secret my-kafka-access -ojson | jq '.data|map_values(@base64d)'
+        oc -n <namespace> get secret my-kafka-access -ojson | jq '.data|map_values(@base64d)'
 
 ## Build details
 
