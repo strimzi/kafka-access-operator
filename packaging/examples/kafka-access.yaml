@@ -1,4 +1,4 @@
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: access.strimzi.io/v1alpha1
 kind: KafkaAccess
 metadata:
   name: my-kafka-access

@@ -21,7 +21,7 @@ clean: java_clean
 
 .PHONY: crd_install
 crd_install:
-	$(CP) ./target/classes/META-INF/fabric8/kafkaaccesses.kafka.strimzi.io-v1.yml ./packaging/install/040-Crd-kafkaaccess.yaml
+	$(CP) ./target/classes/META-INF/fabric8/kafkaaccesses.access.strimzi.io-v1.yml ./packaging/install/040-Crd-kafkaaccess.yaml
 
 .PHONY: next_version
 next_version:
