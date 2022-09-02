@@ -18,6 +18,11 @@ spec:
         strimzi.io/kind: access-operator
     spec:
       serviceAccountName: strimzi-access-operator
+      volumes:
+        - name: strimzi-tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Mi
       containers:
         - name: access-operator
           image: quay.io/strimzi/access-operator:latest
@@ -26,6 +31,9 @@ spec:
               name: http
           args:
             - /opt/strimzi/bin/run_java.sh
+          volumeMounts:
+            - name: strimzi-tmp
+              mountPath: /tmp
           resources:
             limits:
               memory: 256Mi
@@ -45,3 +53,5 @@ spec:
               port: http
             initialDelaySeconds: 10
             periodSeconds: 30
+  strategy:
+    type: Recreate
