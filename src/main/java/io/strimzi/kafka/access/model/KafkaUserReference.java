@@ -11,6 +11,8 @@ public class KafkaUserReference {
     @NotNull
     private String kind;
     @NotNull
+    private String apiGroup;
+    @NotNull
     private String name;
     private String namespace;
 
@@ -39,4 +41,22 @@ public class KafkaUserReference {
         this.kind = kind;
     }
 
+    public String getApiGroup() {
+        return apiGroup;
+    }
+
+    public void setApiGroup(final String apiGroup) {
+        this.apiGroup = apiGroup;
+    }
+
+
+    @Override
+    public String toString() {
+        return "KafkaUserReference{" +
+                "kind='" + kind + '\'' +
+                ", apiGroup='" + apiGroup + '\'' +
+                ", name='" + name + '\'' +
+                ", namespace='" + namespace + '\'' +
+                '}';
+    }
 }

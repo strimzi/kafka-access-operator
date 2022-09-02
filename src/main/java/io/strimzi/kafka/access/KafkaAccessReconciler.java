@@ -103,6 +103,9 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         final KafkaListener listener;
         try {
             if (kafkaUserReference.isPresent()) {
+                if (!KafkaUser.RESOURCE_KIND.equals(kafkaUserReference.get().getKind()) || !KafkaUser.RESOURCE_GROUP.equals(kafkaUserReference.get().getApiGroup())) {
+                    throw new CustomResourceParseException(String.format("User kind must be %s and apiGroup must be %s", KafkaUser.RESOURCE_KIND, KafkaUser.RESOURCE_GROUP));
+                }
                 final String kafkaUserName = kafkaUserReference.get().getName();
                 final String kafkaUserNamespace = Optional.ofNullable(kafkaUserReference.get().getNamespace()).orElse(kafkaAccessNamespace);
                 final KafkaUser kafkaUser = getKafkaUser(kafkaUserName, kafkaUserNamespace);

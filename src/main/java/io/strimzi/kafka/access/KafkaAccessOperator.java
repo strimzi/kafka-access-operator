@@ -10,12 +10,16 @@ import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.Operator;
 import io.javaoperatorsdk.operator.config.runtime.DefaultConfigurationService;
+import io.strimzi.kafka.access.server.HealthServlet;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class KafkaAccessOperator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessOperator.class);
+    private static final int HEALTH_CHECK_PORT = 8080;
 
     public static void main(final String[] args) {
         LOGGER.info("Kafka Access operator starting");
@@ -25,6 +29,17 @@ public class KafkaAccessOperator {
         operator.register(new KafkaAccessReconciler(client));
         operator.installShutdownHook();
         operator.start();
-        LOGGER.info("Kafka Access operator started");
+        Server server = new Server(HEALTH_CHECK_PORT);
+        ServletHandler handler = new ServletHandler();
+        server.setHandler(handler);
+        handler.addServletWithMapping(HealthServlet.class, "/healthy");
+        handler.addServletWithMapping(HealthServlet.class, "/ready");
+        try {
+            server.start();
+            LOGGER.info("Kafka Access operator is now ready (health server listening)");
+            server.join();
+        } catch (Exception e) {
+            LOGGER.error("Failed to start health server", e);
+        }
     }
 }
