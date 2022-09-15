@@ -8,7 +8,7 @@ import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
+import io.javaoperatorsdk.operator.api.config.informer.InformerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.EventSourceContext;
@@ -36,17 +36,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.javaoperatorsdk.operator.api.reconciler.Constants.NO_FINALIZER;
-
 @SuppressWarnings("ClassFanOutComplexity")
-@ControllerConfiguration(finalizerName = NO_FINALIZER)
+@ControllerConfiguration
 public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSourceInitializer<KafkaAccess> {
 
     private static final String TYPE_SECRET_KEY = "type";
@@ -54,6 +50,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
     private static final String PROVIDER_SECRET_KEY = "provider";
     private static final String PROVIDER_SECRET_VALUE = "strimzi";
     private static final String SECRET_TYPE = "servicebinding.io/kafka";
+    private static final String ACCESS_SECRET_EVENT_SOURCE = "access-secret-event-source";
 
     private final KubernetesClient kubernetesClient;
     private final Map<String, String> commonSecretData = new HashMap<>();
@@ -70,7 +67,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
     }
 
     @Override
-    public UpdateControl<KafkaAccess> reconcile(final KafkaAccess kafkaAccess, final Context context) {
+    public UpdateControl<KafkaAccess> reconcile(final KafkaAccess kafkaAccess, final Context<KafkaAccess> context) {
         final String kafkaAccessName = kafkaAccess.getMetadata().getName();
         final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
         LOGGER.info("Reconciling KafkaAccess {}/{}", kafkaAccessNamespace, kafkaAccessName);
@@ -126,10 +123,10 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         return data;
     }
 
-    private void createOrUpdateSecret(final Context context, final Map<String, String> data, final KafkaAccess kafkaAccess) {
+    private void createOrUpdateSecret(final Context<KafkaAccess> context, final Map<String, String> data, final KafkaAccess kafkaAccess) {
         final String kafkaAccessName = kafkaAccess.getMetadata().getName();
         final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
-        context.getSecondaryResource(Secret.class)
+        context.getSecondaryResource(Secret.class, ACCESS_SECRET_EVENT_SOURCE)
                 .ifPresentOrElse(secret -> {
                     final Map<String, String> currentData = secret.getData();
                     if (!data.equals(currentData)) {
@@ -141,7 +138,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                 }, () -> kubernetesClient
                         .secrets()
                         .inNamespace(kafkaAccessNamespace)
-                        .create(
+                        .resource(
                                 new SecretBuilder()
                                         .withType(SECRET_TYPE)
                                         .withNewMetadata()
@@ -161,24 +158,32 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                                         .withData(data)
                                         .build()
                         )
+                        .create()
             );
     }
 
     @Override
-    public List<EventSource> prepareEventSources(final EventSourceContext<KafkaAccess> context) {
+    public Map<String, EventSource> prepareEventSources(final EventSourceContext<KafkaAccess> context) {
         LOGGER.info("Preparing event sources");
-        final List<EventSource> eventSources = new ArrayList<>();
-        eventSources.add(new InformerEventSource<>(kubernetesClient,
-                Kafka.class,
-                kafka -> KafkaAccessParser.getKafkaAccessResourceIDsForKafkaInstance(context.getPrimaryCache().list(), kafka)
-        ));
-        final SharedIndexInformer<Secret> secretInformer =
-                kubernetesClient.secrets().inAnyNamespace()
-                        .withLabelIn(KafkaAccessParser.MANAGED_BY_LABEL_KEY, KafkaAccessParser.STRIMZI_CLUSTER_LABEL_VALUE, KafkaAccessParser.KAFKA_ACCESS_LABEL_VALUE)
-                        .runnableInformer(0);
-        eventSources.add(new InformerEventSource<>(secretInformer,
-                secret -> KafkaAccessParser.getKafkaAccessResourceIDsForSecret(context.getPrimaryCache().list(), secret)
-        ));
+        InformerEventSource<Kafka, KafkaAccess> kafkaEventSource = new InformerEventSource<>(
+                InformerConfiguration.from(Kafka.class, context)
+                        .withSecondaryToPrimaryMapper(kafka -> KafkaAccessParser.getKafkaAccessResourceIDsForKafkaInstance(context.getPrimaryCache().list(), kafka))
+                        .build(),
+                context);
+        InformerEventSource<Secret, KafkaAccess> strimziSecretEventSource = new InformerEventSource<>(
+                InformerConfiguration.from(Secret.class)
+                        .withLabelSelector(String.format("%s=%s", KafkaAccessParser.MANAGED_BY_LABEL_KEY, KafkaAccessParser.STRIMZI_CLUSTER_LABEL_VALUE))
+                        .withSecondaryToPrimaryMapper(secret -> KafkaAccessParser.getKafkaAccessResourceIDsForSecret(context.getPrimaryCache().list(), secret))
+                        .build(),
+                context);
+        InformerEventSource<Secret, KafkaAccess> kafkaAccessSecretEventSource = new InformerEventSource<>(
+                InformerConfiguration.from(Secret.class)
+                        .withLabelSelector(String.format("%s=%s", KafkaAccessParser.MANAGED_BY_LABEL_KEY, KafkaAccessParser.KAFKA_ACCESS_LABEL_VALUE))
+                        .withSecondaryToPrimaryMapper(secret -> KafkaAccessParser.getKafkaAccessResourceIDsForSecret(context.getPrimaryCache().list(), secret))
+                        .build(),
+                context);
+        Map<String, EventSource> eventSources = EventSourceInitializer.nameEventSources(kafkaEventSource, strimziSecretEventSource);
+        eventSources.put(ACCESS_SECRET_EVENT_SOURCE, kafkaAccessSecretEventSource);
         LOGGER.info("Finished preparing event sources");
         return eventSources;
     }
