@@ -56,7 +56,7 @@ spec:
                     type: string
                 type: object
               observedGeneration:
-                type: number
+                type: integer
             type: object
         type: object
     served: true

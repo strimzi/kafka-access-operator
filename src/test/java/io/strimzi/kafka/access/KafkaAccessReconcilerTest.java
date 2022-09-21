@@ -11,9 +11,11 @@ import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
+import io.javaoperatorsdk.operator.api.config.ControllerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.RetryInfo;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
+import io.javaoperatorsdk.operator.api.reconciler.dependent.managed.ManagedDependentResourceContext;
 import io.strimzi.api.kafka.Crds;
 import io.strimzi.api.kafka.model.Kafka;
 import io.strimzi.api.kafka.model.KafkaUser;
@@ -38,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,7 +63,7 @@ public class KafkaAccessReconcilerTest {
 
     KubernetesClient client;
 
-    static class MockContext implements Context {
+    static class MockContext implements Context<KafkaAccess> {
 
         Secret existingSecret;
 
@@ -76,12 +79,27 @@ public class KafkaAccessReconcilerTest {
         }
 
         @Override
+        public <T> Set<T> getSecondaryResources(Class<T> aClass) {
+            return null;
+        }
+
+        @Override
         public <T> Optional<T> getSecondaryResource(Class<T> aClass, String s) {
             if (this.existingSecret == null) {
                 return Optional.empty();
             } else {
                 return Optional.of((T) existingSecret);
             }
+        }
+
+        @Override
+        public ControllerConfiguration<KafkaAccess> getControllerConfiguration() {
+            return null;
+        }
+
+        @Override
+        public ManagedDependentResourceContext managedDependentResourceContext() {
+            return null;
         }
     }
 
@@ -95,7 +113,7 @@ public class KafkaAccessReconcilerTest {
                 List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false)),
                 List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
         );
-        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).withName(KAFKA_NAME).create(kafka);
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference);
@@ -150,10 +168,10 @@ public class KafkaAccessReconcilerTest {
                         ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
                 )
         );
-        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).withName(KAFKA_NAME).create(kafka);
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
 
         final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithoutStatus(KAFKA_NAME, KAFKA_NAMESPACE, new KafkaUserScramSha512ClientAuthentication());
-        Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).withName(KAFKA_NAME).create(kafkaUser);
+        Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafkaUser).create();
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_NAME, KAFKA_NAMESPACE);
@@ -199,7 +217,7 @@ public class KafkaAccessReconcilerTest {
                         ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
                 )
         );
-        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).withName(KAFKA_NAME).create(kafka);
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_NAME, KAFKA_NAMESPACE);
@@ -232,10 +250,10 @@ public class KafkaAccessReconcilerTest {
                         ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
                 )
         );
-        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).withName(KAFKA_NAME).create(kafka);
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
 
         final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithoutStatus(KAFKA_NAME, KAFKA_NAMESPACE, new KafkaUserScramSha512ClientAuthentication());
-        Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).withName(KAFKA_NAME).create(kafkaUser);
+        Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafkaUser).create();
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, userReference);
@@ -256,9 +274,9 @@ public class KafkaAccessReconcilerTest {
                 List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false)),
                 List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
         );
-        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).withName(KAFKA_NAME).create(kafka);
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
         final Secret secret = ResourceProvider.getEmptyKafkaAccessSecret(NAME, NAMESPACE, NAME);
-        client.secrets().inNamespace(NAMESPACE).withName(NAME).create(secret);
+        client.secrets().inNamespace(NAMESPACE).resource(secret).create();
 
         final KafkaAccessReconciler reconciler = new KafkaAccessReconciler(client);
         final UpdateControl<KafkaAccess> updateControl = reconciler.reconcile(kafkaAccess,
@@ -281,12 +299,12 @@ public class KafkaAccessReconcilerTest {
                 List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false)),
                 List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
         );
-        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).withName(KAFKA_NAME).create(kafka);
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
         final Secret secret = ResourceProvider.getEmptyKafkaAccessSecret(NAME, NAMESPACE, NAME);
         final Map<String, String> customAnnotation = new HashMap<>();
         customAnnotation.put("my-custom", "annotation");
         secret.setMetadata(new ObjectMetaBuilder(secret.getMetadata()).addToAnnotations(customAnnotation).build());
-        client.secrets().inNamespace(NAMESPACE).withName(NAME).create(secret);
+        client.secrets().inNamespace(NAMESPACE).resource(secret).create();
 
         final KafkaAccessReconciler reconciler = new KafkaAccessReconciler(client);
         reconciler.reconcile(kafkaAccess, new MockContext(secret));

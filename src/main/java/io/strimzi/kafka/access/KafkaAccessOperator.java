@@ -4,12 +4,9 @@
  */
 package io.strimzi.kafka.access;
 
-import io.fabric8.kubernetes.client.Config;
-import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.javaoperatorsdk.operator.Operator;
-import io.javaoperatorsdk.operator.config.runtime.DefaultConfigurationService;
 import io.strimzi.kafka.access.server.HealthServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHandler;
@@ -23,9 +20,8 @@ public class KafkaAccessOperator {
 
     public static void main(final String[] args) {
         LOGGER.info("Kafka Access operator starting");
-        final Config config = new ConfigBuilder().withNamespace(null).build();
-        final KubernetesClient client = new DefaultKubernetesClient(config);
-        final Operator operator = new Operator(client, DefaultConfigurationService.instance());
+        final KubernetesClient client = new KubernetesClientBuilder().build();
+        final Operator operator = new Operator(client);
         operator.register(new KafkaAccessReconciler(client));
         operator.installShutdownHook();
         operator.start();

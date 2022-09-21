@@ -192,7 +192,7 @@ public class ResourceProvider {
                 .withPort(bootstrapPort)
                 .build();
         return new ListenerStatusBuilder()
-                .withType(name)
+                .withName(name)
                 .withAddresses(List.of(listenerAddress))
                 .build();
     }
