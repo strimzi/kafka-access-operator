@@ -11,11 +11,7 @@ import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
-import io.javaoperatorsdk.operator.api.config.ControllerConfiguration;
-import io.javaoperatorsdk.operator.api.reconciler.Context;
-import io.javaoperatorsdk.operator.api.reconciler.RetryInfo;
-import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
-import io.javaoperatorsdk.operator.api.reconciler.dependent.managed.ManagedDependentResourceContext;
+import io.javaoperatorsdk.operator.Operator;
 import io.strimzi.api.kafka.Crds;
 import io.strimzi.api.kafka.model.Kafka;
 import io.strimzi.api.kafka.model.KafkaUser;
@@ -28,10 +24,10 @@ import io.strimzi.kafka.access.model.KafkaAccessStatus;
 import io.strimzi.kafka.access.model.KafkaReference;
 import io.strimzi.kafka.access.model.KafkaUserReference;
 import org.apache.kafka.clients.CommonClientConfigs;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -40,14 +36,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Stream;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SuppressWarnings("ClassFanOutComplexity")
 @EnableKubernetesMockClient(crud = true)
 public class KafkaAccessReconcilerTest {
 
@@ -62,45 +55,18 @@ public class KafkaAccessReconcilerTest {
     private static final int BOOTSTRAP_PORT_9093 = 9093;
 
     KubernetesClient client;
+    Operator operator;
 
-    static class MockContext implements Context<KafkaAccess> {
+    @BeforeEach
+    void beforeEach() {
+        operator = new Operator(client);
+        operator.register(new KafkaAccessReconciler(client));
+        operator.start();
+    }
 
-        Secret existingSecret;
-
-        public MockContext() {}
-
-        public MockContext(Secret existingSecret) {
-            this.existingSecret = existingSecret;
-        }
-
-        @Override
-        public Optional<RetryInfo> getRetryInfo() {
-            return Optional.empty();
-        }
-
-        @Override
-        public <T> Set<T> getSecondaryResources(Class<T> aClass) {
-            return null;
-        }
-
-        @Override
-        public <T> Optional<T> getSecondaryResource(Class<T> aClass, String s) {
-            if (this.existingSecret == null) {
-                return Optional.empty();
-            } else {
-                return Optional.of((T) existingSecret);
-            }
-        }
-
-        @Override
-        public ControllerConfiguration<KafkaAccess> getControllerConfiguration() {
-            return null;
-        }
-
-        @Override
-        public ManagedDependentResourceContext managedDependentResourceContext() {
-            return null;
-        }
+    @AfterEach
+    void afterEach() {
+        operator.stop();
     }
 
     @Test
@@ -118,14 +84,19 @@ public class KafkaAccessReconcilerTest {
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference);
 
-        final UpdateControl<KafkaAccess> updateControl = new KafkaAccessReconciler(client).reconcile(kafkaAccess, new MockContext());
+        client.resources(KafkaAccess.class).resource(kafkaAccess).create();
+        client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
+            final Optional<String> bindingName = Optional.ofNullable(updatedKafkaAccess)
+                    .map(KafkaAccess::getStatus)
+                    .map(KafkaAccessStatus::getBinding)
+                    .map(BindingStatus::getName);
+            return bindingName.isPresent() && NAME.equals(bindingName.get());
+        }, 200, TimeUnit.MILLISECONDS);
 
-        assertThat(updateControl.isUpdateStatus()).isTrue();
-        final Optional<String> bindingName = Optional.ofNullable(kafkaAccess.getStatus())
-                .map(KafkaAccessStatus::getBinding)
-                .map(BindingStatus::getName);
-        assertThat(bindingName).isPresent();
-        assertThat(bindingName.get()).isEqualTo(NAME);
+        String uid = Optional.ofNullable(client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get())
+                .map(KafkaAccess::getMetadata)
+                .map(ObjectMeta::getUid)
+                .orElse("");
 
         final Secret secret = client.secrets().inNamespace(NAMESPACE).withName(NAME).get();
         assertThat(secret).isNotNull();
@@ -137,7 +108,7 @@ public class KafkaAccessReconcilerTest {
                 .withApiVersion(kafkaAccess.getApiVersion())
                 .withName(NAME)
                 .withKind(kafkaAccess.getKind())
-                .withUid(kafkaAccess.getMetadata().getUid())
+                .withUid(uid)
                 .withBlockOwnerDeletion(false)
                 .withController(false)
                 .build();
@@ -177,9 +148,14 @@ public class KafkaAccessReconcilerTest {
         final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
 
-        final UpdateControl<KafkaAccess> updateControl = new KafkaAccessReconciler(client).reconcile(kafkaAccess, new MockContext());
-
-        assertThat(updateControl.isUpdateStatus()).isTrue();
+        client.resources(KafkaAccess.class).resource(kafkaAccess).create();
+        client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
+            final Optional<String> bindingName = Optional.ofNullable(updatedKafkaAccess)
+                    .map(KafkaAccess::getStatus)
+                    .map(KafkaAccessStatus::getBinding)
+                    .map(BindingStatus::getName);
+            return bindingName.isPresent() && NAME.equals(bindingName.get());
+        }, 200, TimeUnit.MILLISECONDS);
 
         final Secret secret = client.secrets().inNamespace(NAMESPACE).withName(NAME).get();
         assertThat(secret).isNotNull();
@@ -192,107 +168,11 @@ public class KafkaAccessReconcilerTest {
     }
 
     @Test
-    @DisplayName("When reconcile is called with a KafkaAccess resource and the referenced Kafka resource is missing, " +
-            "then the reconcile loop fails")
-    void testReconcileMissingKafka() {
-        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
-        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference);
-
-        assertThrows(IllegalStateException.class, () -> new KafkaAccessReconciler(client).reconcile(kafkaAccess, new MockContext()));
-    }
-
-    @Test
-    @DisplayName("When reconcile is called with a KafkaAccess resource and the referenced KafkaUser resource is missing, " +
-            "then the reconcile loop fails")
-    void testReconcileMissingKafkaUser() {
-        final Kafka kafka = ResourceProvider.getKafka(
-                KAFKA_NAME,
-                KAFKA_NAMESPACE,
-                List.of(
-                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false),
-                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512())
-                ),
-                List.of(
-                        ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092),
-                        ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
-                )
-        );
-        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
-
-        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
-        final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_NAME, KAFKA_NAMESPACE);
-        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
-
-        assertThrows(IllegalStateException.class, () -> new KafkaAccessReconciler(client).reconcile(kafkaAccess, new MockContext()));
-    }
-
-    private static Stream<KafkaUserReference> userReferences() {
-        return Stream.of(
-                ResourceProvider.getUserReference("SpecialUser", KafkaUser.RESOURCE_GROUP, KAFKA_NAME, KAFKA_NAMESPACE),
-                ResourceProvider.getUserReference(KafkaUser.RESOURCE_KIND, "special.user.group", KAFKA_NAME, KAFKA_NAMESPACE),
-                ResourceProvider.getUserReference("SpecialUser", "special.user.group", KAFKA_NAME, KAFKA_NAMESPACE));
-    }
-
-    @ParameterizedTest
-    @MethodSource("userReferences")
-    @DisplayName("When reconcile is called with a KafkaAccess resource that references a user that has an invalid kind or apiGroup, " +
-            "then the reconcile loop fails")
-    void testInvalidUserReference(KafkaUserReference userReference) {
-        final Kafka kafka = ResourceProvider.getKafka(
-                KAFKA_NAME,
-                KAFKA_NAMESPACE,
-                List.of(
-                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false),
-                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512())
-                ),
-                List.of(
-                        ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092),
-                        ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
-                )
-        );
-        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
-
-        final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithoutStatus(KAFKA_NAME, KAFKA_NAMESPACE, new KafkaUserScramSha512ClientAuthentication());
-        Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafkaUser).create();
-
-        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
-        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, userReference);
-
-        assertThrows(IllegalStateException.class, () -> new KafkaAccessReconciler(client).reconcile(kafkaAccess, new MockContext()));
-    }
-
-    @Test
-    @DisplayName("When reconcile is called with a KafkaAccess resource that already has the secret name in the status, then " +
-            "the KafkaAccess status is not updated")
-    void testReconcileWithExistingStatusBinding() {
-        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
-        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference);
-        kafkaAccess.setStatus(ResourceProvider.getKafkaAccessStatus(NAME));
-        final Kafka kafka = ResourceProvider.getKafka(
-                KAFKA_NAME,
-                KAFKA_NAMESPACE,
-                List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false)),
-                List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
-        );
-        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
-        final Secret secret = ResourceProvider.getEmptyKafkaAccessSecret(NAME, NAMESPACE, NAME);
-        client.secrets().inNamespace(NAMESPACE).resource(secret).create();
-
-        final KafkaAccessReconciler reconciler = new KafkaAccessReconciler(client);
-        final UpdateControl<KafkaAccess> updateControl = reconciler.reconcile(kafkaAccess,
-                new MockContext(secret)
-        );
-
-        assertThat(updateControl.isUpdateStatus()).isFalse();
-    }
-
-    @Test
     @DisplayName("When reconcile is called with a KafkaAccess resource that already has the secret created, then " +
             "the secret is only updated and not completely replaced")
     void testReconcileWithExistingSecret() {
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference);
-        kafkaAccess.setStatus(ResourceProvider.getKafkaAccessStatus(NAME));
         final Kafka kafka = ResourceProvider.getKafka(
                 KAFKA_NAME,
                 KAFKA_NAMESPACE,
@@ -306,8 +186,14 @@ public class KafkaAccessReconcilerTest {
         secret.setMetadata(new ObjectMetaBuilder(secret.getMetadata()).addToAnnotations(customAnnotation).build());
         client.secrets().inNamespace(NAMESPACE).resource(secret).create();
 
-        final KafkaAccessReconciler reconciler = new KafkaAccessReconciler(client);
-        reconciler.reconcile(kafkaAccess, new MockContext(secret));
+        client.resources(KafkaAccess.class).resource(kafkaAccess).create();
+        client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
+            final Optional<String> bindingName = Optional.ofNullable(updatedKafkaAccess)
+                    .map(KafkaAccess::getStatus)
+                    .map(KafkaAccessStatus::getBinding)
+                    .map(BindingStatus::getName);
+            return bindingName.isPresent() && NAME.equals(bindingName.get());
+        }, 200, TimeUnit.MILLISECONDS);
 
         final Secret updatedSecret = client.secrets().inNamespace(NAMESPACE).withName(NAME).get();
         final Base64.Encoder encoder = Base64.getEncoder();

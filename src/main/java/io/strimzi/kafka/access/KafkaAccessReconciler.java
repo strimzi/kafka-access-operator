@@ -90,7 +90,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         }
     }
 
-    private Map<String, String> secretData(final KafkaAccessSpec spec, final String kafkaAccessNamespace) {
+    protected Map<String, String> secretData(final KafkaAccessSpec spec, final String kafkaAccessNamespace) {
         final KafkaReference kafkaReference = spec.getKafka();
         final String kafkaClusterNamespace = Optional.ofNullable(kafkaReference.getNamespace()).orElse(kafkaAccessNamespace);
         final Optional<KafkaUserReference> kafkaUserReference = Optional.ofNullable(spec.getUser());

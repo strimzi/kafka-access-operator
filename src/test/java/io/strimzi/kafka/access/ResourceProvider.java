@@ -112,6 +112,14 @@ public class ResourceProvider {
         return kafkaReference;
     }
 
+    public static KafkaReference getKafkaReferenceWithListener(final String kafkaName, final String listenerName, final String kafkaNamespace) {
+        final KafkaReference kafkaReference = new KafkaReference();
+        kafkaReference.setName(kafkaName);
+        kafkaReference.setListener(listenerName);
+        Optional.ofNullable(kafkaNamespace).ifPresent(kafkaReference::setNamespace);
+        return kafkaReference;
+    }
+
     public static KafkaUserReference getKafkaUserReference(final String kafkaUserName, final String kafkaUserNamespace) {
         final KafkaUserReference kafkaUserReference = new KafkaUserReference();
         kafkaUserReference.setKind(KafkaUser.RESOURCE_KIND);
