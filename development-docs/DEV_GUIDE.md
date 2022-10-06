@@ -27,6 +27,9 @@ To build this project you must first install several command line utilities.
 - [`make`](https://www.gnu.org/software/make/) - Make build system
 - [`mvn`](https://maven.apache.org/index.html) (version 3.5 and above) - Maven CLI
 - [`docker`](https://docs.docker.com/install/) - Docker command line client
+- [`yq`](https://github.com/mikefarah/yq) - (version 4.2.1 and above) YAML manipulation tool.
+   - **Warning:** There are several different `yq` YAML projects in the wild.
+     Use [this one](https://github.com/mikefarah/yq). You need version 4.2.1 or above.
 
 In order to use `make` these all need to be available on your `$PATH`.
 
