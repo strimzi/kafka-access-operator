@@ -59,6 +59,7 @@ public class KafkaAccessReconcilerTest {
     private static final String KAFKA_USER_NAME = "my-kafka-user";
     private static final int BOOTSTRAP_PORT_9092 = 9092;
     private static final int BOOTSTRAP_PORT_9093 = 9093;
+    private static final long TEST_TIMEOUT = 500;
 
     KubernetesClient client;
     Operator operator;
@@ -97,7 +98,7 @@ public class KafkaAccessReconcilerTest {
                     .map(KafkaAccessStatus::getBinding)
                     .map(BindingStatus::getName);
             return bindingName.isPresent() && NAME.equals(bindingName.get());
-        }, 200, TimeUnit.MILLISECONDS);
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
         String uid = Optional.ofNullable(client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get())
                 .map(KafkaAccess::getMetadata)
@@ -161,7 +162,7 @@ public class KafkaAccessReconcilerTest {
                     .map(KafkaAccessStatus::getBinding)
                     .map(BindingStatus::getName);
             return bindingName.isPresent() && NAME.equals(bindingName.get());
-        }, 200, TimeUnit.MILLISECONDS);
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
         final Secret secret = client.secrets().inNamespace(NAMESPACE).withName(NAME).get();
         assertThat(secret).isNotNull();
@@ -220,7 +221,7 @@ public class KafkaAccessReconcilerTest {
                     .map(KafkaAccessStatus::getBinding)
                     .map(BindingStatus::getName);
             return bindingName.isPresent() && NAME.equals(bindingName.get());
-        }, 200, TimeUnit.MILLISECONDS);
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
         final Secret secret = client.secrets().inNamespace(NAMESPACE).withName(NAME).get();
         assertThat(secret).isNotNull();
@@ -262,7 +263,7 @@ public class KafkaAccessReconcilerTest {
                     .map(KafkaAccessStatus::getBinding)
                     .map(BindingStatus::getName);
             return bindingName.isPresent() && NAME.equals(bindingName.get());
-        }, 200, TimeUnit.MILLISECONDS);
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
         final Secret updatedSecret = client.secrets().inNamespace(NAMESPACE).withName(NAME).get();
         final Base64.Encoder encoder = Base64.getEncoder();
