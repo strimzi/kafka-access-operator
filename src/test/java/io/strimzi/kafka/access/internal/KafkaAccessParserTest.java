@@ -240,4 +240,41 @@ public class KafkaAccessParserTest {
                 secret);
         assertThat(matches).isEmpty();
     }
+
+    @Test
+    @DisplayName("When getKafkaUserForKafkaAccess() is called with a KafkaAccess that does not reference a KafkaUser, " +
+            "then an empty set is returned")
+    void testKafkaAccessWithMissingKafkaUser() {
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_1);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference);
+
+        final Set<ResourceID> matches = KafkaAccessParser.getKafkaUserForKafkaAccess(kafkaAccess);
+        assertThat(matches).isEmpty();
+    }
+
+    @Test
+    @DisplayName("When getKafkaUserForKafkaAccess() is called with a KafkaAccess that references a KafkaUser, " +
+            "then the returned set includes the KafkaUser")
+    void testKafkaAccessWithKafkaUser() {
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_1);
+        final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_USER_NAME_1, NAMESPACE_2);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference, kafkaUserReference);
+
+        final Set<ResourceID> matches = KafkaAccessParser.getKafkaUserForKafkaAccess(kafkaAccess);
+        assertThat(matches).hasSize(1);
+        assertThat(matches).containsExactly(new ResourceID(KAFKA_USER_NAME_1, NAMESPACE_2));
+    }
+
+    @Test
+    @DisplayName("When getKafkaUserForKafkaAccess() is called with a KafkaAccess that references a KafkaUser but no namespace, " +
+            "then the returned set includes the KafkaUser with the namespace of the KafkaAccess")
+    void testKafkaAccessWithKafkaUserMissingNamespace() {
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_1);
+        final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_USER_NAME_1, null);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference, kafkaUserReference);
+
+        final Set<ResourceID> matches = KafkaAccessParser.getKafkaUserForKafkaAccess(kafkaAccess);
+        assertThat(matches).hasSize(1);
+        assertThat(matches).containsExactly(new ResourceID(KAFKA_USER_NAME_1, NAMESPACE_1));
+    }
 }

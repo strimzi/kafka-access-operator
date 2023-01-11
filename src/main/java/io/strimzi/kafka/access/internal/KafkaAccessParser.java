@@ -12,6 +12,7 @@ import io.strimzi.api.kafka.model.Kafka;
 import io.strimzi.api.kafka.model.KafkaBuilder;
 import io.strimzi.api.kafka.model.KafkaUser;
 import io.strimzi.kafka.access.model.KafkaAccess;
+import io.strimzi.kafka.access.model.KafkaAccessSpec;
 import io.strimzi.kafka.access.model.KafkaUserReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -151,6 +152,30 @@ public class KafkaAccessParser {
                 });
         }
 
+        return resourceIDS;
+    }
+
+    /**
+     * Finds the KafkaUser that is referenced by this KafkaAccess object.
+     *
+     * @param kafkaAccess    KafkaAccess object to parse
+     *
+     * @return               Set of ResourceIDs containing the KafkaUser that is referenced by the KafkaAccess
+     */
+    public static Set<ResourceID> getKafkaUserForKafkaAccess(final KafkaAccess kafkaAccess) {
+        final Set<ResourceID> resourceIDS = new HashSet<>();
+        Optional.ofNullable(kafkaAccess.getSpec())
+                .map(KafkaAccessSpec::getUser)
+                .ifPresent(kafkaUserReference -> {
+                    String name = kafkaUserReference.getName();
+                    String namespace = Optional.ofNullable(kafkaUserReference.getNamespace())
+                            .orElseGet(() -> Optional.ofNullable(kafkaAccess.getMetadata()).map(ObjectMeta::getNamespace).orElse(null));
+                    if (name == null || namespace == null) {
+                        LOGGER.error("Found KafkaUser for KafkaAccess instance, but metadata is missing.");
+                    } else {
+                        resourceIDS.add(new ResourceID(name, namespace));
+                    }
+                });
         return resourceIDS;
     }
 }

@@ -184,6 +184,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         InformerEventSource<KafkaUser, KafkaAccess> kafkaUserEventSource = new InformerEventSource<>(
                 InformerConfiguration.from(KafkaUser.class, context)
                         .withSecondaryToPrimaryMapper(kafkaUser -> KafkaAccessParser.getKafkaAccessSetForKafkaUser(context.getPrimaryCache().list(), kafkaUser))
+                        .withPrimaryToSecondaryMapper(kafkaAccess -> KafkaAccessParser.getKafkaUserForKafkaAccess((KafkaAccess) kafkaAccess))
                         .build(),
                 context);
         InformerEventSource<Secret, KafkaAccess> strimziSecretEventSource = new InformerEventSource<>(
