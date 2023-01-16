@@ -22,8 +22,10 @@ import io.strimzi.api.kafka.model.Kafka;
 import io.strimzi.api.kafka.model.KafkaUser;
 import io.strimzi.api.kafka.model.KafkaUserAuthentication;
 import io.strimzi.api.kafka.model.KafkaUserSpec;
+import io.strimzi.api.kafka.model.status.KafkaUserStatus;
 import io.strimzi.kafka.access.internal.KafkaListener;
 import io.strimzi.kafka.access.internal.KafkaAccessParser;
+import io.strimzi.kafka.access.internal.KafkaUserData;
 import io.strimzi.kafka.access.model.BindingStatus;
 import io.strimzi.kafka.access.model.KafkaAccess;
 import io.strimzi.kafka.access.model.KafkaAccessSpec;
@@ -111,6 +113,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
 
         final Kafka kafka = getKafka(kafkaReference.getName(), kafkaClusterNamespace);
 
+        final Map<String, String> data  = new HashMap<>(commonSecretData);
         final KafkaListener listener;
         try {
             if (kafkaUserReference.isPresent()) {
@@ -126,13 +129,21 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                         .map(KafkaUserAuthentication::getType)
                         .orElse(KafkaParser.USER_AUTH_UNDEFINED);
                 listener = KafkaParser.getKafkaListener(kafka, spec, kafkaUserType);
+                if (kafkaUser != null) {
+                    final KafkaUserData userData = Optional.ofNullable(kafkaUser.getStatus())
+                            .map(KafkaUserStatus::getSecret)
+                            .map(secretName -> kubernetesClient.secrets().inNamespace(kafkaUserNamespace).withName(secretName).get())
+                            .map(secret -> new KafkaUserData(kafkaUser).withSecret(secret))
+                            .orElse(new KafkaUserData(kafkaUser));
+                    data.putAll(userData.getConnectionSecretData());
+                }
+
             } else {
                 listener = KafkaParser.getKafkaListener(kafka, spec);
             }
         } catch (CustomResourceParseException e) {
             throw new IllegalStateException("Reconcile failed due to ParserException " + e.getMessage());
         }
-        final Map<String, String> data  = new HashMap<>(commonSecretData);
         data.putAll(listener.getConnectionSecretData());
         return data;
     }
@@ -188,7 +199,13 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         LOGGER.info("Preparing event sources");
         InformerEventSource<Kafka, KafkaAccess> kafkaEventSource = new InformerEventSource<>(
                 InformerConfiguration.from(Kafka.class, context)
-                        .withSecondaryToPrimaryMapper(kafka -> KafkaAccessParser.getKafkaAccessResourceIDsForKafkaInstance(context.getPrimaryCache().list(), kafka))
+                        .withSecondaryToPrimaryMapper(kafka -> KafkaAccessParser.getKafkaAccessSetForKafka(context.getPrimaryCache().list(), kafka))
+                        .build(),
+                context);
+        InformerEventSource<KafkaUser, KafkaAccess> kafkaUserEventSource = new InformerEventSource<>(
+                InformerConfiguration.from(KafkaUser.class, context)
+                        .withSecondaryToPrimaryMapper(kafkaUser -> KafkaAccessParser.getKafkaAccessSetForKafkaUser(context.getPrimaryCache().list(), kafkaUser))
+                        .withPrimaryToSecondaryMapper(kafkaAccess -> KafkaAccessParser.getKafkaUserForKafkaAccess((KafkaAccess) kafkaAccess))
                         .build(),
                 context);
         InformerEventSource<Secret, KafkaAccess> strimziSecretEventSource = new InformerEventSource<>(
@@ -203,7 +220,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                         .withSecondaryToPrimaryMapper(secret -> KafkaAccessParser.getKafkaAccessResourceIDsForSecret(context.getPrimaryCache().list(), secret))
                         .build(),
                 context);
-        Map<String, EventSource> eventSources = EventSourceInitializer.nameEventSources(kafkaEventSource, strimziSecretEventSource);
+        Map<String, EventSource> eventSources = EventSourceInitializer.nameEventSources(kafkaEventSource, kafkaUserEventSource, strimziSecretEventSource);
         eventSources.put(ACCESS_SECRET_EVENT_SOURCE, kafkaAccessSecretEventSource);
         LOGGER.info("Finished preparing event sources");
         return eventSources;

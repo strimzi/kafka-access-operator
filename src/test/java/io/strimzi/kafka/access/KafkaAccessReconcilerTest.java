@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 import io.javaoperatorsdk.operator.Operator;
@@ -16,7 +17,9 @@ import io.strimzi.api.kafka.Crds;
 import io.strimzi.api.kafka.model.Kafka;
 import io.strimzi.api.kafka.model.KafkaUser;
 import io.strimzi.api.kafka.model.KafkaUserScramSha512ClientAuthentication;
+import io.strimzi.api.kafka.model.KafkaUserTlsExternalClientAuthentication;
 import io.strimzi.api.kafka.model.listener.KafkaListenerAuthenticationScramSha512;
+import io.strimzi.api.kafka.model.listener.KafkaListenerAuthenticationTls;
 import io.strimzi.api.kafka.model.listener.arraylistener.KafkaListenerType;
 import io.strimzi.kafka.access.model.BindingStatus;
 import io.strimzi.kafka.access.model.KafkaAccess;
@@ -26,6 +29,7 @@ import io.strimzi.kafka.access.model.KafkaUserReference;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -42,6 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 
 @EnableKubernetesMockClient(crud = true)
+@SuppressWarnings({"ClassDataAbstractionCoupling", "ClassFanOutComplexity"})
 public class KafkaAccessReconcilerTest {
 
     private static final String NAME = "kafka-access-name";
@@ -51,8 +56,10 @@ public class KafkaAccessReconcilerTest {
     private static final String BOOTSTRAP_HOST = "my-kafka-name.svc";
     private static final String KAFKA_NAME = "my-kafka-name";
     private static final String KAFKA_NAMESPACE = "kafka-namespace";
+    private static final String KAFKA_USER_NAME = "my-kafka-user";
     private static final int BOOTSTRAP_PORT_9092 = 9092;
     private static final int BOOTSTRAP_PORT_9093 = 9093;
+    private static final long TEST_TIMEOUT = 500;
 
     KubernetesClient client;
     Operator operator;
@@ -91,7 +98,7 @@ public class KafkaAccessReconcilerTest {
                     .map(KafkaAccessStatus::getBinding)
                     .map(BindingStatus::getName);
             return bindingName.isPresent() && NAME.equals(bindingName.get());
-        }, 200, TimeUnit.MILLISECONDS);
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
         String uid = Optional.ofNullable(client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get())
                 .map(KafkaAccess::getMetadata)
@@ -132,7 +139,7 @@ public class KafkaAccessReconcilerTest {
                 KAFKA_NAMESPACE,
                 List.of(
                         ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false),
-                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512())
+                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationTls())
                 ),
                 List.of(
                         ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092),
@@ -141,7 +148,7 @@ public class KafkaAccessReconcilerTest {
         );
         Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
 
-        final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithoutStatus(KAFKA_NAME, KAFKA_NAMESPACE, new KafkaUserScramSha512ClientAuthentication());
+        final KafkaUser kafkaUser = ResourceProvider.getKafkaUser(KAFKA_NAME, KAFKA_NAMESPACE, new KafkaUserTlsExternalClientAuthentication());
         Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafkaUser).create();
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
@@ -155,7 +162,7 @@ public class KafkaAccessReconcilerTest {
                     .map(KafkaAccessStatus::getBinding)
                     .map(BindingStatus::getName);
             return bindingName.isPresent() && NAME.equals(bindingName.get());
-        }, 200, TimeUnit.MILLISECONDS);
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
         final Secret secret = client.secrets().inNamespace(NAMESPACE).withName(NAME).get();
         assertThat(secret).isNotNull();
@@ -165,6 +172,69 @@ public class KafkaAccessReconcilerTest {
                 CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
                 encoder.encodeToString(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093).getBytes(StandardCharsets.UTF_8))
         );
+    }
+
+    @Test
+    @DisplayName("When reconcile is called with a KafkaAccess resource that references a SASL KafkaUser, then a secret is created with the " +
+            "bootstrapServer for the correct listener, the SASL username, password and Jaas config, and the KafkaAccess status is updated")
+    void testReconcileWithSASLKafkaUser() {
+        final Base64.Encoder encoder = Base64.getEncoder();
+        final String username = "my-user";
+        final String encodedUsername = encoder.encodeToString(username.getBytes(StandardCharsets.UTF_8));
+        final String password = "password";
+        final String encodedPassword = encoder.encodeToString(password.getBytes(StandardCharsets.UTF_8));
+        final String saslJaasConfig = String.format("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"%s\" password=\"%s\";", username, password);
+        final String encodedSaslJaasConfig = encoder.encodeToString(saslJaasConfig.getBytes(StandardCharsets.UTF_8));
+        final Kafka kafka = ResourceProvider.getKafka(
+                KAFKA_NAME,
+                KAFKA_NAMESPACE,
+                List.of(
+                        ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false),
+                        ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512())
+                ),
+                List.of(
+                        ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092),
+                        ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
+                )
+        );
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
+
+        final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithStatus(KAFKA_USER_NAME, KAFKA_NAMESPACE, KAFKA_USER_NAME, username, new KafkaUserScramSha512ClientAuthentication());
+        Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafkaUser).create();
+
+        final Map<String, String> userSecretData = new HashMap<>();
+        userSecretData.put("password", encodedPassword);
+        userSecretData.put(SaslConfigs.SASL_JAAS_CONFIG, encodedSaslJaasConfig);
+        final Secret userSecret = new SecretBuilder().withNewMetadata().withName(KAFKA_USER_NAME).withNamespace(KAFKA_NAMESPACE).endMetadata()
+                .withData(userSecretData)
+                .build();
+        client.secrets().inNamespace(KAFKA_NAMESPACE).resource(userSecret).create();
+
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
+        final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_USER_NAME, KAFKA_NAMESPACE);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
+
+        client.resources(KafkaAccess.class).resource(kafkaAccess).create();
+        client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
+            final Optional<String> bindingName = Optional.ofNullable(updatedKafkaAccess)
+                    .map(KafkaAccess::getStatus)
+                    .map(KafkaAccessStatus::getBinding)
+                    .map(BindingStatus::getName);
+            return bindingName.isPresent() && NAME.equals(bindingName.get());
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        final Secret secret = client.secrets().inNamespace(NAMESPACE).withName(NAME).get();
+        assertThat(secret).isNotNull();
+
+        assertThat(secret.getData())
+                .containsEntry(
+                        CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
+                        encoder.encodeToString(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093).getBytes(StandardCharsets.UTF_8))
+                )
+                .containsEntry("username", encodedUsername)
+                .containsEntry("user", encodedUsername)
+                .containsEntry("password", encodedPassword)
+                .containsEntry(SaslConfigs.SASL_JAAS_CONFIG, encodedSaslJaasConfig);
     }
 
     @Test
@@ -193,7 +263,7 @@ public class KafkaAccessReconcilerTest {
                     .map(KafkaAccessStatus::getBinding)
                     .map(BindingStatus::getName);
             return bindingName.isPresent() && NAME.equals(bindingName.get());
-        }, 200, TimeUnit.MILLISECONDS);
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
         final Secret updatedSecret = client.secrets().inNamespace(NAMESPACE).withName(NAME).get();
         final Base64.Encoder encoder = Base64.getEncoder();
