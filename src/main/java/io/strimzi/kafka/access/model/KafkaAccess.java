@@ -10,11 +10,21 @@ import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.ShortNames;
 import io.fabric8.kubernetes.model.annotation.Version;
 
+import java.io.Serial;
+
+/**
+ *
+ */
 @Group("access.strimzi.io")
 @Version("v1alpha1")
 @ShortNames("ka")
 public class KafkaAccess extends CustomResource<KafkaAccessSpec, KafkaAccessStatus> implements Namespaced {
+    @Serial
     private static final long serialVersionUID = 1L;
+
+    /**
+     *
+     */
     public static final String KIND = "KafkaAccess";
 
     @Override

@@ -24,11 +24,29 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ *
+ */
 public class KafkaAccessParser {
 
+    /**
+     *
+     */
     public static final String MANAGED_BY_LABEL_KEY = "app.kubernetes.io/managed-by";
+
+    /**
+     *
+     */
     public static final String INSTANCE_LABEL_KEY = "app.kubernetes.io/instance";
+
+    /**
+     *
+     */
     public static final String STRIMZI_CLUSTER_LABEL_VALUE = "strimzi-cluster-operator";
+
+    /**
+     *
+     */
     public static final String KAFKA_ACCESS_LABEL_VALUE = "kafka-access-operator";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessParser.class);

@@ -13,11 +13,19 @@ import org.eclipse.jetty.servlet.ServletHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The main operator class for Strimzi Access Operator
+ */
 public class KafkaAccessOperator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessOperator.class);
     private static final int HEALTH_CHECK_PORT = 8080;
 
+    /**
+     * Initializes the operator and runs a servlet for health checking
+     *
+     * @param args      Main method arguments
+     */
     public static void main(final String[] args) {
         LOGGER.info("Kafka Access operator starting");
         final KubernetesClient client = new KubernetesClientBuilder().build();

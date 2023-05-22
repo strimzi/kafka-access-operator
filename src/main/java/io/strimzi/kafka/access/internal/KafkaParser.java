@@ -26,9 +26,24 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ *
+ */
 public class KafkaParser {
+
+    /**
+     *
+     */
     public static final String LISTENER_AUTH_NONE = "listener-auth-none";
+
+    /**
+     *
+     */
     public static final String USER_AUTH_NONE = "user-auth-none";
+
+    /**
+     *
+     */
     public static final String USER_AUTH_UNDEFINED = "user-auth-undefined";
 
     /**

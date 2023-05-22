@@ -20,9 +20,10 @@ import java.util.Optional;
 
 import static io.strimzi.kafka.access.internal.KafkaParser.LISTENER_AUTH_NONE;
 
-/*
-Representation of a Kafka listener that returns the connection details for the listener
+/**
+ * Representation of a Kafka listener that returns the connection details for the listener
  */
+
 public class KafkaListener {
 
     private final String name;
@@ -31,6 +32,9 @@ public class KafkaListener {
     private final String authenticationType;
     private String bootstrapServer;
 
+    /**
+     * @param genericListener
+     */
     public KafkaListener(final GenericKafkaListener genericListener) {
         this.name = genericListener.getName();
         this.type = genericListener.getType();
@@ -38,27 +42,46 @@ public class KafkaListener {
         this.authenticationType = Optional.ofNullable(genericListener.getAuth()).map(KafkaListenerAuthentication::getType).orElse(LISTENER_AUTH_NONE);
     }
 
+    /**
+     * @param bootstrapServer
+     * @return
+     */
     public KafkaListener withBootstrapServer(final String bootstrapServer) {
         this.bootstrapServer = bootstrapServer;
         return this;
     }
 
+    /**
+     * @return
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * @return
+     */
     public KafkaListenerType getType() {
         return type;
     }
 
+    /**
+     * @return
+     */
     public String getBootstrapServer() {
         return bootstrapServer;
     }
 
+    /**
+     * @return
+     */
     public boolean isTls() {
         return tls;
     }
 
+    /**
+     * @return
+     */
     public String getAuthenticationType() {
         return authenticationType;
     }
@@ -84,6 +107,9 @@ public class KafkaListener {
         return data;
     }
 
+    /**
+     * @return
+     */
     private SecurityProtocol getSecurityProtocol() {
         final SecurityProtocol securityProtocol;
         switch (this.authenticationType) {

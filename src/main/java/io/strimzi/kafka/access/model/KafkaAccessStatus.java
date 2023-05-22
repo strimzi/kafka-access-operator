@@ -6,14 +6,23 @@ package io.strimzi.kafka.access.model;
 
 import io.javaoperatorsdk.operator.api.ObservedGenerationAwareStatus;
 
+/**
+ *
+ */
 public class KafkaAccessStatus extends ObservedGenerationAwareStatus {
 
     private BindingStatus binding;
 
+    /**
+     * @return
+     */
     public BindingStatus getBinding() {
         return binding;
     }
 
+    /**
+     * @param bindingStatus
+     */
     public void setBinding(final BindingStatus bindingStatus) {
         this.binding = bindingStatus;
     }
