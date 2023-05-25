@@ -25,27 +25,27 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- *
+ * Representation of a KafkaAccess parser that collects the resource IDs from different sources
  */
 public class KafkaAccessParser {
 
     /**
-     *
+     *  The managed-by label
      */
     public static final String MANAGED_BY_LABEL_KEY = "app.kubernetes.io/managed-by";
 
     /**
-     *
+     *  The instance label
      */
     public static final String INSTANCE_LABEL_KEY = "app.kubernetes.io/instance";
 
     /**
-     *
+     * The Strimzi cluster operator label
      */
     public static final String STRIMZI_CLUSTER_LABEL_VALUE = "strimzi-cluster-operator";
 
     /**
-     *
+     * The Strimzi access operator label
      */
     public static final String KAFKA_ACCESS_LABEL_VALUE = "kafka-access-operator";
 

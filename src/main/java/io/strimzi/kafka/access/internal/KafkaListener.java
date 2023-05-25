@@ -23,7 +23,6 @@ import static io.strimzi.kafka.access.internal.KafkaParser.LISTENER_AUTH_NONE;
 /**
  * Representation of a Kafka listener that returns the connection details for the listener
  */
-
 public class KafkaListener {
 
     private final String name;
@@ -33,7 +32,9 @@ public class KafkaListener {
     private String bootstrapServer;
 
     /**
-     * @param genericListener
+     * Constructor
+     *
+     * @param genericListener The generic listener for Kafka
      */
     public KafkaListener(final GenericKafkaListener genericListener) {
         this.name = genericListener.getName();
@@ -43,8 +44,10 @@ public class KafkaListener {
     }
 
     /**
-     * @param bootstrapServer
-     * @return
+     * Decorates a KafkaListener instance with boostrap server information
+     *
+     * @param bootstrapServer The bootstrap server address
+     * @return  A decorated KafkaListener instance
      */
     public KafkaListener withBootstrapServer(final String bootstrapServer) {
         this.bootstrapServer = bootstrapServer;
@@ -52,35 +55,45 @@ public class KafkaListener {
     }
 
     /**
-     * @return
+     * Gets the name of the Kafka listener
+     *
+     * @return A name for the Kafka listener
      */
     public String getName() {
         return name;
     }
 
     /**
-     * @return
+     * Gets the type of the Kafka listener
+     *
+     * @return A type of the Kafka listener
      */
     public KafkaListenerType getType() {
         return type;
     }
 
     /**
-     * @return
+     * Gets the bootstrap server address
+     *
+     * @return A bootstrap server address
      */
     public String getBootstrapServer() {
         return bootstrapServer;
     }
 
     /**
-     * @return
+     * Returns the boolean value for whether the TLS is enabled or not
+     *
+     * @return A boolean value for TLS
      */
     public boolean isTls() {
         return tls;
     }
 
     /**
-     * @return
+     * Gets the authentication type
+     *
+     * @return An authentication type
      */
     public String getAuthenticationType() {
         return authenticationType;
@@ -107,9 +120,6 @@ public class KafkaListener {
         return data;
     }
 
-    /**
-     * @return
-     */
     private SecurityProtocol getSecurityProtocol() {
         final SecurityProtocol securityProtocol;
         switch (this.authenticationType) {

@@ -12,7 +12,7 @@ public class BindingStatus {
     private String name;
 
     /**
-     * Constructor with no param
+     * Default constructor
      */
     public BindingStatus() {
     }

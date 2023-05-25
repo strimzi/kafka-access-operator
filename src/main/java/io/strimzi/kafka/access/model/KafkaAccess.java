@@ -13,7 +13,7 @@ import io.fabric8.kubernetes.model.annotation.Version;
 import java.io.Serial;
 
 /**
- *
+ * The KafkaAccess custom resource model
  */
 @Group("access.strimzi.io")
 @Version("v1alpha1")
@@ -23,7 +23,7 @@ public class KafkaAccess extends CustomResource<KafkaAccessSpec, KafkaAccessStat
     private static final long serialVersionUID = 1L;
 
     /**
-     *
+     * The `kind` definition of the KafkaAccess custom resource
      */
     public static final String KIND = "KafkaAccess";
 

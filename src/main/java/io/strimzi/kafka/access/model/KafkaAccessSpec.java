@@ -7,7 +7,7 @@ package io.strimzi.kafka.access.model;
 import javax.validation.constraints.NotNull;
 
 /**
- *
+ * The spec model of the KafkaAccess resource
  */
 public class KafkaAccessSpec {
 
@@ -16,28 +16,36 @@ public class KafkaAccessSpec {
     private KafkaUserReference user;
 
     /**
-     * @return
+     * Gets the KafkaReference instance
+     *
+     * @return The KafkaReference instance
      */
     public KafkaReference getKafka() {
         return kafka;
     }
 
     /**
-     * @param kafka
+     * Sets the KafkaReference instance
+     *
+     * @param kafka The KafkaReference model
      */
     public void setKafka(final KafkaReference kafka) {
         this.kafka = kafka;
     }
 
     /**
-     * @return
+     * Gets the KafkaUserReference instance
+     *
+     * @return The KafkaUserReference instance
      */
     public KafkaUserReference getUser() {
         return user;
     }
 
     /**
-     * @param kafkaUser
+     * Sets the KafkaUserReference instance
+     *
+     * @param kafkaUser The KafkaUserReference model
      */
     public void setUser(final KafkaUserReference kafkaUser) {
         this.user = kafkaUser;
