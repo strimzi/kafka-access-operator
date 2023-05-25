@@ -22,7 +22,7 @@ public class KafkaUserReference {
     /**
      * Gets the name of the Kafka user reference
      *
-     * @return The name of the Kafka user reference
+     * @return A name for the Kafka user reference
      */
     public String getName() {
         return name;
@@ -40,7 +40,7 @@ public class KafkaUserReference {
     /**
      * Gets the namespace of the Kafka user reference
      *
-     * @return The namespace of the Kafka user reference
+     * @return A namespace definition for the Kafka user reference
      */
     public String getNamespace() {
         return namespace;
@@ -59,7 +59,7 @@ public class KafkaUserReference {
     /**
      * Gets the resource kind of the Kafka user reference
      *
-     * @return The resource kind of the Kafka user reference
+     * @return A resource `kind` definition for the Kafka user reference
      */
     public String getKind() {
         return kind;
@@ -77,7 +77,7 @@ public class KafkaUserReference {
     /**
      * Gets the resource API group of the Kafka user reference
      *
-     * @return The resource API group of the Kafka user reference
+     * @return A resource API group definition for the Kafka user reference
      */
     public String getApiGroup() {
         return apiGroup;
@@ -96,7 +96,7 @@ public class KafkaUserReference {
     /**
      * Returns the serialized string of the KafkaUserReference object
      *
-     * @return The serialized string of the KafkaUserReference object
+     * @return A serialized string of the KafkaUserReference object
      */
     @Override
     public String toString() {

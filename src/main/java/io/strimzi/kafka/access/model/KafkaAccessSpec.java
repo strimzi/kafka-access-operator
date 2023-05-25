@@ -18,7 +18,7 @@ public class KafkaAccessSpec {
     /**
      * Gets the KafkaReference instance
      *
-     * @return The KafkaReference instance
+     * @return A KafkaReference instance
      */
     public KafkaReference getKafka() {
         return kafka;
@@ -36,7 +36,7 @@ public class KafkaAccessSpec {
     /**
      * Gets the KafkaUserReference instance
      *
-     * @return The KafkaUserReference instance
+     * @return A KafkaUserReference instance
      */
     public KafkaUserReference getUser() {
         return user;

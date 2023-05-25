@@ -30,22 +30,22 @@ import java.util.stream.Stream;
 public class KafkaAccessParser {
 
     /**
-     *  The managed-by label
+     *  The constant for managed-by label
      */
     public static final String MANAGED_BY_LABEL_KEY = "app.kubernetes.io/managed-by";
 
     /**
-     *  The instance label
+     *  The constant for instance label
      */
     public static final String INSTANCE_LABEL_KEY = "app.kubernetes.io/instance";
 
     /**
-     * The Strimzi cluster operator label
+     * The constant for Strimzi cluster operator label
      */
     public static final String STRIMZI_CLUSTER_LABEL_VALUE = "strimzi-cluster-operator";
 
     /**
-     * The Strimzi access operator label
+     * The constant for Strimzi access operator label
      */
     public static final String KAFKA_ACCESS_LABEL_VALUE = "kafka-access-operator";
 

@@ -37,7 +37,7 @@ public class KafkaReference {
     /**
      * Gets the namespace of the Kafka reference
      *
-     * @return The namespace of the Kafka reference
+     * @return A namespace definition for the Kafka reference
      */
     public String getNamespace() {
         return namespace;
@@ -55,7 +55,7 @@ public class KafkaReference {
     /**
      * Gets the listener of the Kafka reference
      *
-     * @return The listener of the Kafka reference
+     * @return A listener definition for the Kafka reference
      */
     public String getListener() {
         return listener;

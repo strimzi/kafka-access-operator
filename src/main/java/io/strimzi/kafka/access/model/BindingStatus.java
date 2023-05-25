@@ -29,7 +29,7 @@ public class BindingStatus {
     /**
      * Gets the name of the BindingStatus instance
      *
-     * @return  The name of the BindingStatus instance
+     * @return  A name for the BindingStatus instance
      */
     public String getName() {
         return name;

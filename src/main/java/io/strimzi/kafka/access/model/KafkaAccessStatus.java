@@ -16,7 +16,7 @@ public class KafkaAccessStatus extends ObservedGenerationAwareStatus {
     /**
      * Gets the BindingStatus instance
      *
-     * @return The BindingStatus instance
+     * @return A BindingStatus instance
      */
     public BindingStatus getBinding() {
         return binding;
