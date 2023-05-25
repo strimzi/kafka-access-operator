@@ -24,7 +24,7 @@ public class KafkaAccessOperator {
     /**
      * Initializes the operator and runs a servlet for health checking
      *
-     * @param args Main method arguments
+     * @param args      Main method arguments
      */
     public static void main(final String[] args) {
         LOGGER.info("Kafka Access operator starting");

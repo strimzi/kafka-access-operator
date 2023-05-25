@@ -21,7 +21,7 @@ import java.util.Optional;
 import static io.strimzi.kafka.access.internal.KafkaParser.USER_AUTH_UNDEFINED;
 
 /**
- * Representation of a Kafka user data that returns the secret details
+ *  Representation of a Kafka user data that returns the secret details
  */
 public class KafkaUserData {
 
@@ -46,8 +46,8 @@ public class KafkaUserData {
     /**
      * Decorates a KafkaUserData instance with secret information
      *
-     * @param secret The Kubernetes secret
-     * @return A KafkaUserData instance
+     * @param secret    The Kubernetes secret
+     * @return          A KafkaUserData instance
      */
     public KafkaUserData withSecret(final Secret secret) {
         Optional.ofNullable(secret.getData())

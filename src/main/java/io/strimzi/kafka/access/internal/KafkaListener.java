@@ -47,7 +47,7 @@ public class KafkaListener {
      * Decorates a KafkaListener instance with boostrap server information
      *
      * @param bootstrapServer The bootstrap server address
-     * @return A decorated KafkaListener instance
+     * @return  A decorated KafkaListener instance
      */
     public KafkaListener withBootstrapServer(final String bootstrapServer) {
         this.bootstrapServer = bootstrapServer;

@@ -34,12 +34,12 @@ import java.util.stream.Stream;
 public class KafkaAccessParser {
 
     /**
-     * The constant for managed-by label
+     *  The constant for managed-by label
      */
     public static final String MANAGED_BY_LABEL_KEY = "app.kubernetes.io/managed-by";
 
     /**
-     * The constant for instance label
+     *  The constant for instance label
      */
     public static final String INSTANCE_LABEL_KEY = "app.kubernetes.io/instance";
 
@@ -58,9 +58,10 @@ public class KafkaAccessParser {
     /**
      * Filters the stream of KafkaAccess objects to find only the ones that reference the provided Kafka resource.
      *
-     * @param kafkaAccessList Stream of KafkaAccess objects in the current cache
-     * @param kafka           Kafka resource to check for in the KafkaAccess objects
-     * @return Set of ResourceIDs for the KafkaAccess objects that reference the Kafka resource
+     * @param kafkaAccessList    Stream of KafkaAccess objects in the current cache
+     * @param kafka              Kafka resource to check for in the KafkaAccess objects
+     *
+     * @return                   Set of ResourceIDs for the KafkaAccess objects that reference the Kafka resource
      */
     public static Set<ResourceID> getKafkaAccessSetForKafka(final Stream<KafkaAccess> kafkaAccessList, final Kafka kafka) {
         final Optional<String> kafkaName = Optional.ofNullable(kafka.getMetadata()).map(ObjectMeta::getName);
@@ -82,9 +83,10 @@ public class KafkaAccessParser {
     /**
      * Filters the stream of KafkaAccess objects to find only the ones that reference the provided KafkaUser resource.
      *
-     * @param kafkaAccessList Stream of KafkaAccess objects in the current cache
-     * @param kafkaUser       KafkaUser resource to check for in the KafkaAccess objects
-     * @return Set of ResourceIDs for the KafkaAccess objects that reference the KafkaUser resource
+     * @param kafkaAccessList    Stream of KafkaAccess objects in the current cache
+     * @param kafkaUser          KafkaUser resource to check for in the KafkaAccess objects
+     *
+     * @return                   Set of ResourceIDs for the KafkaAccess objects that reference the KafkaUser resource
      */
     public static Set<ResourceID> getKafkaAccessSetForKafkaUser(final Stream<KafkaAccess> kafkaAccessList, final KafkaUser kafkaUser) {
         final Optional<String> kafkaUserName = Optional.ofNullable(kafkaUser.getMetadata()).map(ObjectMeta::getName);
@@ -124,9 +126,10 @@ public class KafkaAccessParser {
     /**
      * Filters the stream of KafkaAccess objects to find only the ones that should be informed that the secret has changed.
      *
-     * @param kafkaAccessList Stream of KafkaAccess objects in the current cache
-     * @param secret          Secret to check if it is related to one or more KafkaAccess objects
-     * @return Set of ResourceIDs for the KafkaAccess objects that reference the Kafka resource
+     * @param kafkaAccessList    Stream of KafkaAccess objects in the current cache
+     * @param secret             Secret to check if it is related to one or more KafkaAccess objects
+     *
+     * @return                   Set of ResourceIDs for the KafkaAccess objects that reference the Kafka resource
      */
     public static Set<ResourceID> getKafkaAccessResourceIDsForSecret(final Stream<KafkaAccess> kafkaAccessList, final Secret secret) {
         final Set<ResourceID> resourceIDS = new HashSet<>();
@@ -145,26 +148,26 @@ public class KafkaAccessParser {
 
         if (KAFKA_ACCESS_LABEL_VALUE.equals(labels.get(MANAGED_BY_LABEL_KEY))) {
             Optional.ofNullable(secret.getMetadata())
-                    .map(ObjectMeta::getOwnerReferences)
-                    .orElse(Collections.emptyList())
-                    .stream()
-                    .filter(ownerReference -> KafkaAccess.KIND.equals(ownerReference.getKind()))
-                    .findFirst()
-                    .map(OwnerReference::getName)
-                    .ifPresent(s -> resourceIDS.add(new ResourceID(s, secretNamespace.get())));
+                .map(ObjectMeta::getOwnerReferences)
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(ownerReference -> KafkaAccess.KIND.equals(ownerReference.getKind()))
+                .findFirst()
+                .map(OwnerReference::getName)
+                .ifPresent(s -> resourceIDS.add(new ResourceID(s, secretNamespace.get())));
         }
 
         if (STRIMZI_CLUSTER_LABEL_VALUE.equals(labels.get(MANAGED_BY_LABEL_KEY))) {
             Optional.ofNullable(labels.get(INSTANCE_LABEL_KEY))
-                    .ifPresent(clusterName -> {
-                        final Kafka kafka = new KafkaBuilder()
-                                .withNewMetadata()
-                                .withName(clusterName)
-                                .withNamespace(secretNamespace.get())
-                                .endMetadata()
-                                .build();
-                        resourceIDS.addAll(KafkaAccessParser.getKafkaAccessSetForKafka(kafkaAccessList, kafka));
-                    });
+                .ifPresent(clusterName -> {
+                    final Kafka kafka = new KafkaBuilder()
+                            .withNewMetadata()
+                            .withName(clusterName)
+                            .withNamespace(secretNamespace.get())
+                            .endMetadata()
+                            .build();
+                    resourceIDS.addAll(KafkaAccessParser.getKafkaAccessSetForKafka(kafkaAccessList, kafka));
+                });
         }
 
         return resourceIDS;
@@ -173,8 +176,9 @@ public class KafkaAccessParser {
     /**
      * Finds the KafkaUser that is referenced by this KafkaAccess object.
      *
-     * @param kafkaAccess KafkaAccess object to parse
-     * @return Set of ResourceIDs containing the KafkaUser that is referenced by the KafkaAccess
+     * @param kafkaAccess    KafkaAccess object to parse
+     *
+     * @return               Set of ResourceIDs containing the KafkaUser that is referenced by the KafkaAccess
      */
     public static Set<ResourceID> getKafkaUserForKafkaAccess(final KafkaAccess kafkaAccess) {
         final Set<ResourceID> resourceIDS = new HashSet<>();

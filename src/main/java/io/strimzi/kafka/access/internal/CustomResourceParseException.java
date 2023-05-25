@@ -12,8 +12,7 @@ public class CustomResourceParseException extends RuntimeException {
     /**
      * Default constructor
      */
-    public CustomResourceParseException() {
-    }
+    public CustomResourceParseException() {}
 
     /**
      * Constructor
@@ -28,7 +27,7 @@ public class CustomResourceParseException extends RuntimeException {
      * Constructor
      *
      * @param message The exception message
-     * @param cause   The exception cause
+     * @param cause The exception cause
      */
     public CustomResourceParseException(final String message, final Throwable cause) {
         super(message, cause);
