@@ -20,11 +20,19 @@ import java.util.Optional;
 
 import static io.strimzi.kafka.access.internal.KafkaParser.USER_AUTH_UNDEFINED;
 
+/**
+ *  Representation of a Kafka user data that returns the secret details
+ */
 public class KafkaUserData {
 
     private final Map<String, String> rawUserData = new HashMap<>();
     private final String authType;
 
+    /**
+     * Constructor
+     *
+     * @param kafkaUser The KafkaUser resource
+     */
     public KafkaUserData(final KafkaUser kafkaUser) {
         Optional.ofNullable(kafkaUser.getStatus())
                 .map(KafkaUserStatus::getUsername)
@@ -35,6 +43,12 @@ public class KafkaUserData {
                 .orElse(USER_AUTH_UNDEFINED);
     }
 
+    /**
+     * Decorates a KafkaUserData instance with secret information
+     *
+     * @param secret    The Kubernetes secret
+     * @return          A KafkaUserData instance
+     */
     public KafkaUserData withSecret(final Secret secret) {
         Optional.ofNullable(secret.getData())
                 .ifPresent(rawUserData::putAll);
