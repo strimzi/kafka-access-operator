@@ -20,7 +20,7 @@ public class BindingStatus {
     /**
      * Constructor
      *
-     * @param secretName    The Kubernetes secret name
+     * @param secretName The Kubernetes secret name
      */
     public BindingStatus(final String secretName) {
         this.setName(secretName);
@@ -29,7 +29,7 @@ public class BindingStatus {
     /**
      * Gets the name of the BindingStatus instance
      *
-     * @return  A name for the BindingStatus instance
+     * @return A name for the BindingStatus instance
      */
     public String getName() {
         return name;

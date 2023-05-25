@@ -64,7 +64,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessOperator.class);
 
     /**
-     * @param kubernetesClient      The Kubernetes client
+     * @param kubernetesClient The Kubernetes client
      */
     public KafkaAccessReconciler(final KubernetesClient kubernetesClient) {
         this.kubernetesClient = kubernetesClient;
@@ -77,10 +77,9 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
     /**
      * Does the reconciliation
      *
-     * @param kafkaAccess       The KafkaAccess resource model
-     * @param context           The Operator SDK context
-     *
-     * @return                  A new instance of UpdateControl for the particular reconciler actions
+     * @param kafkaAccess The KafkaAccess resource model
+     * @param context     The Operator SDK context
+     * @return A new instance of UpdateControl for the particular reconciler actions
      */
     @Override
     public UpdateControl<KafkaAccess> reconcile(final KafkaAccess kafkaAccess, final Context<KafkaAccess> context) {
@@ -88,7 +87,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
         LOGGER.info("Reconciling KafkaAccess {}/{}", kafkaAccessNamespace, kafkaAccessName);
 
-        final Map<String, String> data  = secretData(kafkaAccess.getSpec(), kafkaAccessNamespace);
+        final Map<String, String> data = secretData(kafkaAccess.getSpec(), kafkaAccessNamespace);
         createOrUpdateSecret(context, data, kafkaAccess);
 
         final boolean bindingStatusCorrect = Optional.ofNullable(kafkaAccess.getStatus())
@@ -113,7 +112,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
 
         final Kafka kafka = getKafka(kafkaReference.getName(), kafkaClusterNamespace);
 
-        final Map<String, String> data  = new HashMap<>(commonSecretData);
+        final Map<String, String> data = new HashMap<>(commonSecretData);
         final KafkaListener listener;
         try {
             if (kafkaUserReference.isPresent()) {
@@ -153,46 +152,45 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
         context.getSecondaryResource(Secret.class, ACCESS_SECRET_EVENT_SOURCE)
                 .ifPresentOrElse(secret -> {
-                    final Map<String, String> currentData = secret.getData();
-                    if (!data.equals(currentData)) {
-                        kubernetesClient.secrets()
-                                .inNamespace(kafkaAccessNamespace)
-                                .withName(kafkaAccessName)
-                                .edit(s -> new SecretBuilder(s).withData(data).build());
-                    }
-                }, () -> kubernetesClient
-                        .secrets()
-                        .inNamespace(kafkaAccessNamespace)
-                        .resource(
-                                new SecretBuilder()
-                                        .withType(SECRET_TYPE)
-                                        .withNewMetadata()
+                            final Map<String, String> currentData = secret.getData();
+                            if (!data.equals(currentData)) {
+                                kubernetesClient.secrets()
+                                        .inNamespace(kafkaAccessNamespace)
                                         .withName(kafkaAccessName)
-                                        .withLabels(commonSecretLabels)
-                                        .withOwnerReferences(
-                                                new OwnerReferenceBuilder()
-                                                        .withApiVersion(kafkaAccess.getApiVersion())
-                                                        .withKind(kafkaAccess.getKind())
-                                                        .withName(kafkaAccessName)
-                                                        .withUid(kafkaAccess.getMetadata().getUid())
-                                                        .withBlockOwnerDeletion(false)
-                                                        .withController(false)
-                                                        .build()
-                                        )
-                                        .endMetadata()
-                                        .withData(data)
-                                        .build()
-                        )
-                        .create()
-            );
+                                        .edit(s -> new SecretBuilder(s).withData(data).build());
+                            }
+                        }, () -> kubernetesClient
+                                .secrets()
+                                .inNamespace(kafkaAccessNamespace)
+                                .resource(
+                                        new SecretBuilder()
+                                                .withType(SECRET_TYPE)
+                                                .withNewMetadata()
+                                                .withName(kafkaAccessName)
+                                                .withLabels(commonSecretLabels)
+                                                .withOwnerReferences(
+                                                        new OwnerReferenceBuilder()
+                                                                .withApiVersion(kafkaAccess.getApiVersion())
+                                                                .withKind(kafkaAccess.getKind())
+                                                                .withName(kafkaAccessName)
+                                                                .withUid(kafkaAccess.getMetadata().getUid())
+                                                                .withBlockOwnerDeletion(false)
+                                                                .withController(false)
+                                                                .build()
+                                                )
+                                                .endMetadata()
+                                                .withData(data)
+                                                .build()
+                                )
+                                .create()
+                );
     }
 
     /**
      * Prepares the event sources required for triggering the reconciliation
      *
-     * @param context       The EventSourceContext for KafkaAccess resource
-     *
-     * @return              A new map of event sources
+     * @param context The EventSourceContext for KafkaAccess resource
+     * @return A new map of event sources
      */
     @Override
     public Map<String, EventSource> prepareEventSources(final EventSourceContext<KafkaAccess> context) {

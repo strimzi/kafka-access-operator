@@ -18,6 +18,7 @@ import io.strimzi.api.kafka.model.status.KafkaStatus;
 import io.strimzi.api.kafka.model.status.ListenerStatus;
 import io.strimzi.kafka.access.model.KafkaAccessSpec;
 import io.strimzi.kafka.access.model.KafkaReference;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,7 +33,7 @@ import java.util.stream.Stream;
 public class KafkaParser {
 
     /**
-     *  The constant for listener authentication type
+     * The constant for listener authentication type
      */
     public static final String LISTENER_AUTH_NONE = "listener-auth-none";
 
@@ -42,17 +43,16 @@ public class KafkaParser {
     public static final String USER_AUTH_NONE = "user-auth-none";
 
     /**
-     *  The constant for undefined authentication type
+     * The constant for undefined authentication type
      */
     public static final String USER_AUTH_UNDEFINED = "user-auth-undefined";
 
     /**
      * Selects a KafkaListener from the Kafka resource based on the KafkaAccessSpec
      *
-     * @param kafka                The Kafka resource
-     * @param kafkaAccessSpec      The KafkaAccessSpec resource
-     *
-     * @return                     A new instance of KafkaListener for the chosen listener
+     * @param kafka           The Kafka resource
+     * @param kafkaAccessSpec The KafkaAccessSpec resource
+     * @return A new instance of KafkaListener for the chosen listener
      */
     public static KafkaListener getKafkaListener(final Kafka kafka, final KafkaAccessSpec kafkaAccessSpec) {
         return getKafkaListener(kafka, kafkaAccessSpec, null);
@@ -61,11 +61,10 @@ public class KafkaParser {
     /**
      * Selects a KafkaListener from the Kafka resource based on the KafkaAccessSpec and the request authentication type
      *
-     * @param kafka                The Kafka resource
-     * @param kafkaAccessSpec      The KafkaAccessSpec resource
-     * @param kafkaUserAuth        The KafkaUser authentication type
-     *
-     * @return                     A new instance of KafkaListener for the chosen listener
+     * @param kafka           The Kafka resource
+     * @param kafkaAccessSpec The KafkaAccessSpec resource
+     * @param kafkaUserAuth   The KafkaUser authentication type
+     * @return A new instance of KafkaListener for the chosen listener
      */
     public static KafkaListener getKafkaListener(final Kafka kafka, final KafkaAccessSpec kafkaAccessSpec, final String kafkaUserAuth) {
         final Optional<String> chosenListener = Optional.ofNullable(kafkaAccessSpec.getKafka())
