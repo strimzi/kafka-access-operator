@@ -73,8 +73,8 @@
     <properties>
         <!-- Build dependencies -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <maven.checkstyle.version>3.1.2</maven.checkstyle.version>
         <maven.compiler.version>3.8.1</maven.compiler.version>
         <checkstyle.version>9.0.1</checkstyle.version>
@@ -82,7 +82,7 @@
         <maven.license.version>2.11</maven.license.version>
         <spotbugs.version>4.5.3</spotbugs.version>
         <spotbugs-maven-plugin.version>4.5.3.0</spotbugs-maven-plugin.version>
-        <maven.javadoc.version>3.1.0</maven.javadoc.version>
+        <maven.javadoc.version>3.5.0</maven.javadoc.version>
         <maven.shade.version>3.1.0</maven.shade.version>
         <maven.dependency.version>3.3.0</maven.dependency.version>
         <maven.assembly.version>3.3.0</maven.assembly.version>

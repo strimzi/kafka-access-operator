@@ -20,8 +20,8 @@ import java.util.Optional;
 
 import static io.strimzi.kafka.access.internal.KafkaParser.LISTENER_AUTH_NONE;
 
-/*
-Representation of a Kafka listener that returns the connection details for the listener
+/**
+ * Representation of a Kafka listener that returns the connection details for the listener
  */
 public class KafkaListener {
 
@@ -31,6 +31,11 @@ public class KafkaListener {
     private final String authenticationType;
     private String bootstrapServer;
 
+    /**
+     * Constructor
+     *
+     * @param genericListener The generic listener for Kafka
+     */
     public KafkaListener(final GenericKafkaListener genericListener) {
         this.name = genericListener.getName();
         this.type = genericListener.getType();
@@ -38,27 +43,58 @@ public class KafkaListener {
         this.authenticationType = Optional.ofNullable(genericListener.getAuth()).map(KafkaListenerAuthentication::getType).orElse(LISTENER_AUTH_NONE);
     }
 
+    /**
+     * Decorates a KafkaListener instance with boostrap server information
+     *
+     * @param bootstrapServer The bootstrap server address
+     * @return  A decorated KafkaListener instance
+     */
     public KafkaListener withBootstrapServer(final String bootstrapServer) {
         this.bootstrapServer = bootstrapServer;
         return this;
     }
 
+    /**
+     * Gets the name of the Kafka listener
+     *
+     * @return A name for the Kafka listener
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Gets the type of the Kafka listener
+     *
+     * @return A type of the Kafka listener
+     */
     public KafkaListenerType getType() {
         return type;
     }
 
+    /**
+     * Gets the bootstrap server address
+     *
+     * @return A bootstrap server address
+     */
     public String getBootstrapServer() {
         return bootstrapServer;
     }
 
+    /**
+     * Returns the boolean value for whether the TLS is enabled or not
+     *
+     * @return A boolean value for TLS
+     */
     public boolean isTls() {
         return tls;
     }
 
+    /**
+     * Gets the authentication type
+     *
+     * @return An authentication type
+     */
     public String getAuthenticationType() {
         return authenticationType;
     }

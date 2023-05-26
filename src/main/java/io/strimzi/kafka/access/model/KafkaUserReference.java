@@ -6,6 +6,9 @@ package io.strimzi.kafka.access.model;
 
 import javax.validation.constraints.NotNull;
 
+/**
+ * The Kafka user reference, which keeps state for a KafkaUser resource of Strimzi Kafka Operator
+ */
 public class KafkaUserReference {
 
     @NotNull
@@ -16,40 +19,85 @@ public class KafkaUserReference {
     private String name;
     private String namespace;
 
+    /**
+     * Gets the name of the Kafka user reference
+     *
+     * @return A name for the Kafka user reference
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the name of the Kafka user reference
+     *
+     * @param name The name of the Kafka user reference
+     */
     public void setName(final String name) {
         this.name = name;
     }
 
+    /**
+     * Gets the namespace of the Kafka user reference
+     *
+     * @return A namespace definition for the Kafka user reference
+     */
     public String getNamespace() {
         return namespace;
     }
 
+    /**
+     * Sets the namespace of the Kafka user reference
+     *
+     * @param namespace The namespace of the Kafka user reference
+     */
     public void setNamespace(final String namespace) {
         this.namespace = namespace;
     }
 
 
+    /**
+     * Gets the resource kind of the Kafka user reference
+     *
+     * @return A resource `kind` definition for the Kafka user reference
+     */
     public String getKind() {
         return kind;
     }
 
+    /**
+     * Sets the resource kind of the Kafka user reference
+     *
+     * @param kind The resource kind of the Kafka user reference
+     */
     public void setKind(final String kind) {
         this.kind = kind;
     }
 
+    /**
+     * Gets the resource API group of the Kafka user reference
+     *
+     * @return A resource API group definition for the Kafka user reference
+     */
     public String getApiGroup() {
         return apiGroup;
     }
 
+    /**
+     * Sets the resource API group of the Kafka user reference
+     *
+     * @param apiGroup The resource API group of the Kafka user reference
+     */
     public void setApiGroup(final String apiGroup) {
         this.apiGroup = apiGroup;
     }
 
 
+    /**
+     * Returns the serialized string of the KafkaUserReference object
+     *
+     * @return A serialized string of the KafkaUserReference object
+     */
     @Override
     public String toString() {
         return "KafkaUserReference{" +

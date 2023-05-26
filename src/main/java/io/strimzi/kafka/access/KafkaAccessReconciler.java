@@ -43,6 +43,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * The custom reconciler of Strimzi Access Operator
+ */
 @SuppressWarnings("ClassFanOutComplexity")
 @ControllerConfiguration
 public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSourceInitializer<KafkaAccess> {
@@ -60,6 +63,9 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessOperator.class);
 
+    /**
+     * @param kubernetesClient      The Kubernetes client
+     */
     public KafkaAccessReconciler(final KubernetesClient kubernetesClient) {
         this.kubernetesClient = kubernetesClient;
         final Base64.Encoder encoder = Base64.getEncoder();
@@ -68,6 +74,14 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         commonSecretLabels.put(KafkaAccessParser.MANAGED_BY_LABEL_KEY, KafkaAccessParser.KAFKA_ACCESS_LABEL_VALUE);
     }
 
+    /**
+     * Does the reconciliation
+     *
+     * @param kafkaAccess       The KafkaAccess resource model
+     * @param context           The Operator SDK context
+     *
+     * @return                  A new instance of UpdateControl for the particular reconciler actions
+     */
     @Override
     public UpdateControl<KafkaAccess> reconcile(final KafkaAccess kafkaAccess, final Context<KafkaAccess> context) {
         final String kafkaAccessName = kafkaAccess.getMetadata().getName();
@@ -173,6 +187,13 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
             );
     }
 
+    /**
+     * Prepares the event sources required for triggering the reconciliation
+     *
+     * @param context       The EventSourceContext for KafkaAccess resource
+     *
+     * @return              A new map of event sources
+     */
     @Override
     public Map<String, EventSource> prepareEventSources(final EventSourceContext<KafkaAccess> context) {
         LOGGER.info("Preparing event sources");

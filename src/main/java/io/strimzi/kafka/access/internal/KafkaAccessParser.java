@@ -28,11 +28,29 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Representation of a KafkaAccess parser that collects the resource IDs from different sources
+ */
 public class KafkaAccessParser {
 
+    /**
+     *  The constant for managed-by label
+     */
     public static final String MANAGED_BY_LABEL_KEY = "app.kubernetes.io/managed-by";
+
+    /**
+     *  The constant for instance label
+     */
     public static final String INSTANCE_LABEL_KEY = "app.kubernetes.io/instance";
+
+    /**
+     * The constant for Strimzi cluster operator label
+     */
     public static final String STRIMZI_CLUSTER_LABEL_VALUE = "strimzi-cluster-operator";
+
+    /**
+     * The constant for Strimzi access operator label
+     */
     public static final String KAFKA_ACCESS_LABEL_VALUE = "kafka-access-operator";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessParser.class);

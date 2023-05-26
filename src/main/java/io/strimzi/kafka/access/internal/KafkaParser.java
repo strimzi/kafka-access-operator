@@ -26,9 +26,24 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * Representation of a Kafka parser that gets the relevant Kafka listener from different sources
+ */
 public class KafkaParser {
+
+    /**
+     *  The constant for listener authentication type
+     */
     public static final String LISTENER_AUTH_NONE = "listener-auth-none";
+
+    /**
+     * The constant for no authentication type
+     */
     public static final String USER_AUTH_NONE = "user-auth-none";
+
+    /**
+     *  The constant for undefined authentication type
+     */
     public static final String USER_AUTH_UNDEFINED = "user-auth-undefined";
 
     /**
