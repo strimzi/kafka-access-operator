@@ -214,13 +214,19 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                         .withSecondaryToPrimaryMapper(secret -> KafkaAccessParser.secretSecondaryToPrimaryMapper(context.getPrimaryCache().list(), secret))
                         .build(),
                 context);
+        InformerEventSource<Secret, KafkaAccess> strimziKafkaUserSecretEventSource = new InformerEventSource<>(
+                InformerConfiguration.from(Secret.class)
+                        .withLabelSelector(String.format("%s=%s", KafkaAccessParser.MANAGED_BY_LABEL_KEY, KafkaAccessParser.STRIMZI_USER_LABEL_VALUE))
+                        .withSecondaryToPrimaryMapper(secret -> KafkaAccessParser.secretSecondaryToPrimaryMapper(context.getPrimaryCache().list(), secret))
+                        .build(),
+                context);
         InformerEventSource<Secret, KafkaAccess> kafkaAccessSecretEventSource = new InformerEventSource<>(
                 InformerConfiguration.from(Secret.class)
                         .withLabelSelector(String.format("%s=%s", KafkaAccessParser.MANAGED_BY_LABEL_KEY, KafkaAccessParser.KAFKA_ACCESS_LABEL_VALUE))
                         .withSecondaryToPrimaryMapper(secret -> KafkaAccessParser.secretSecondaryToPrimaryMapper(context.getPrimaryCache().list(), secret))
                         .build(),
                 context);
-        Map<String, EventSource> eventSources = EventSourceInitializer.nameEventSources(kafkaEventSource, kafkaUserEventSource, strimziSecretEventSource);
+        Map<String, EventSource> eventSources = EventSourceInitializer.nameEventSources(kafkaEventSource, kafkaUserEventSource, strimziSecretEventSource, strimziKafkaUserSecretEventSource);
         eventSources.put(ACCESS_SECRET_EVENT_SOURCE, kafkaAccessSecretEventSource);
         LOGGER.info("Finished preparing event sources");
         return eventSources;

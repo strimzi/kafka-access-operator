@@ -44,9 +44,19 @@ public class KafkaAccessParser {
     public static final String INSTANCE_LABEL_KEY = "app.kubernetes.io/instance";
 
     /**
+     *  The constant for Strimzi cluster label
+     */
+    public static final String STRIMZI_CLUSTER_LABEL_KEY = "strimzi.io/cluster";
+
+    /**
      * The constant for Strimzi cluster operator label
      */
     public static final String STRIMZI_CLUSTER_LABEL_VALUE = "strimzi-cluster-operator";
+
+    /**
+     * The constant for Strimzi user operator label
+     */
+    public static final String STRIMZI_USER_LABEL_VALUE = "strimzi-user-operator";
 
     /**
      * The constant for Strimzi access operator label
@@ -146,28 +156,38 @@ public class KafkaAccessParser {
                 .map(ObjectMeta::getLabels)
                 .orElse(new HashMap<>());
 
-        if (KAFKA_ACCESS_LABEL_VALUE.equals(labels.get(MANAGED_BY_LABEL_KEY))) {
-            Optional.ofNullable(secret.getMetadata())
-                .map(ObjectMeta::getOwnerReferences)
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(ownerReference -> KafkaAccess.KIND.equals(ownerReference.getKind()))
-                .findFirst()
-                .map(OwnerReference::getName)
-                .ifPresent(s -> resourceIDS.add(new ResourceID(s, secretNamespace.get())));
+        final String managedByLabel = labels.get(MANAGED_BY_LABEL_KEY);
+        if (managedByLabel == null) {
+            LOGGER.error("Secret missing managed-by label, returning empty list.");
+            return resourceIDS;
         }
-
-        if (STRIMZI_CLUSTER_LABEL_VALUE.equals(labels.get(MANAGED_BY_LABEL_KEY))) {
-            Optional.ofNullable(labels.get(INSTANCE_LABEL_KEY))
-                .ifPresent(clusterName -> {
-                    final Kafka kafka = new KafkaBuilder()
-                            .withNewMetadata()
-                            .withName(clusterName)
-                            .withNamespace(secretNamespace.get())
-                            .endMetadata()
-                            .build();
-                    resourceIDS.addAll(KafkaAccessParser.kafkaSecondaryToPrimaryMapper(kafkaAccessList, kafka));
-                });
+        if (KAFKA_ACCESS_LABEL_VALUE.equals(managedByLabel)) {
+            Optional.ofNullable(secret.getMetadata())
+                    .map(ObjectMeta::getOwnerReferences)
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .filter(ownerReference -> KafkaAccess.KIND.equals(ownerReference.getKind()))
+                    .findFirst()
+                    .map(OwnerReference::getName)
+                    .ifPresent(s -> resourceIDS.add(new ResourceID(s, secretNamespace.get())));
+        } else {
+            final String clusterName = switch (managedByLabel) {
+                case STRIMZI_CLUSTER_LABEL_VALUE -> labels.get(INSTANCE_LABEL_KEY);
+                case STRIMZI_USER_LABEL_VALUE -> labels.get(STRIMZI_CLUSTER_LABEL_KEY);
+                default -> {
+                    LOGGER.error("Secret managed by unknown resource {}.", managedByLabel);
+                    yield null;
+                }
+            };
+            if (clusterName != null) {
+                final Kafka kafka = new KafkaBuilder()
+                        .withNewMetadata()
+                        .withName(clusterName)
+                        .withNamespace(secretNamespace.get())
+                        .endMetadata()
+                        .build();
+                resourceIDS.addAll(KafkaAccessParser.kafkaSecondaryToPrimaryMapper(kafkaAccessList, kafka));
+            }
         }
 
         return resourceIDS;

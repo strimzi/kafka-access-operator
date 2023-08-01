@@ -195,6 +195,21 @@ public class KafkaAccessParserTest {
     }
 
     @Test
+    @DisplayName("When secretSecondaryToPrimaryMapper() is called with a secret that is managed by Strimzi User Operator, " +
+            "then the correct KafkaAccess is returned")
+    void testCorrectKafkaAccessReturnedForStrimziUserSecret() {
+        final KafkaReference kafkaReference1 = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_1);
+        final KafkaReference kafkaReference2 = ResourceProvider.getKafkaReference(KAFKA_NAME_2, NAMESPACE_1);
+        final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference1);
+        final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_1, kafkaReference2);
+
+        final Set<ResourceID> matches = KafkaAccessParser.secretSecondaryToPrimaryMapper(
+                Stream.of(kafkaAccess1, kafkaAccess2),
+                ResourceProvider.getStrimziUserSecret(SECRET_NAME, NAMESPACE_1, KAFKA_NAME_1));
+        assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
+    }
+
+    @Test
     @DisplayName("When secretSecondaryToPrimaryMapper() is called with a secret that is managed by an unknown operator, " +
             "then an empty set is returned")
     void testEmptySetForSecretManagedByUnknown() {

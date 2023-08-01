@@ -87,10 +87,21 @@ public class ResourceProvider {
         final Map<String, String> labels = new HashMap<>();
         labels.put(KafkaAccessParser.MANAGED_BY_LABEL_KEY, KafkaAccessParser.STRIMZI_CLUSTER_LABEL_VALUE);
         labels.put(KafkaAccessParser.INSTANCE_LABEL_KEY, kafkaInstanceName);
+        return buildSecret(secretName, secretNamespace, labels);
+    }
+
+    public static Secret getStrimziUserSecret(final String secretName, final String secretNamespace, final String kafkaInstanceName) {
+        final Map<String, String> labels = new HashMap<>();
+        labels.put(KafkaAccessParser.MANAGED_BY_LABEL_KEY, KafkaAccessParser.STRIMZI_USER_LABEL_VALUE);
+        labels.put(KafkaAccessParser.STRIMZI_CLUSTER_LABEL_KEY, kafkaInstanceName);
+        return buildSecret(secretName, secretNamespace, labels);
+    }
+
+    private static Secret buildSecret(final String name, final String namespace, final Map<String, String> labels) {
         return new SecretBuilder()
                 .withNewMetadata()
-                    .withName(secretName)
-                    .withNamespace(secretNamespace)
+                    .withName(name)
+                    .withNamespace(namespace)
                     .withLabels(labels)
                 .endMetadata()
                 .build();
