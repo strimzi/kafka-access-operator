@@ -34,7 +34,7 @@ public class KafkaAccessParserTest {
     static final String NAMESPACE_2 = "my-namespace-2";
 
     @Test
-    @DisplayName("When getKafkaAccessSetForKafka() is called with a list of two KafkaAccess objects and one " +
+    @DisplayName("When kafkaSecondaryToPrimaryMapper() is called with a list of two KafkaAccess objects and one " +
             "references the Kafka, then the correct KafkaAccess is returned")
     void testCorrectKafkaAccessReturnedForKafka() {
         final KafkaReference kafkaReference1 = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_2);
@@ -42,42 +42,42 @@ public class KafkaAccessParserTest {
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference1);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_1, kafkaReference2);
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessSetForKafka(
+        final Set<ResourceID> matches = KafkaAccessParser.kafkaSecondaryToPrimaryMapper(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getKafka(KAFKA_NAME_1, NAMESPACE_2));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
     }
 
     @Test
-    @DisplayName("When getKafkaAccessSetForKafka() is called with a list of two KafkaAccess objects and both " +
+    @DisplayName("When kafkaSecondaryToPrimaryMapper() is called with a list of two KafkaAccess objects and both " +
             "reference the Kafka, then both KafkaAccess instances are returned")
     void testTwoCorrectKafkaAccessReturnedForKafka() {
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_2);
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_2, kafkaReference);
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessSetForKafka(
+        final Set<ResourceID> matches = KafkaAccessParser.kafkaSecondaryToPrimaryMapper(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getKafka(KAFKA_NAME_1, NAMESPACE_2));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1), new ResourceID(ACCESS_NAME_2, NAMESPACE_2));
     }
 
     @Test
-    @DisplayName("When getKafkaAccessSetForKafka() is called with a list of two KafkaAccess objects and the " +
+    @DisplayName("When kafkaSecondaryToPrimaryMapper() is called with a list of two KafkaAccess objects and the " +
             "KafkaAccess doesn't explicitly list the namespace, then the KafkaAccess in the same namespace as the Kafka is returned")
     void testKafkaAccessInMatchingNamespaceReturnedForKafka() {
         final KafkaReference kafkaReferenceNullNamespace = ResourceProvider.getKafkaReference(KAFKA_NAME_1, null);
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReferenceNullNamespace);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_2, kafkaReferenceNullNamespace);
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessSetForKafka(
+        final Set<ResourceID> matches = KafkaAccessParser.kafkaSecondaryToPrimaryMapper(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getKafka(KAFKA_NAME_1, NAMESPACE_1));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
     }
 
     @Test
-    @DisplayName("When getKafkaAccessSetForKafka() is called with a list of KafkaAccess objects and none " +
+    @DisplayName("When kafkaSecondaryToPrimaryMapper() is called with a list of KafkaAccess objects and none " +
             "reference the Kafka, then an empty set is returned")
     void testKafkaAccessNoneMatchKafka() {
         final KafkaReference kafkaReference1 = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_2);
@@ -85,14 +85,14 @@ public class KafkaAccessParserTest {
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference1);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_2, kafkaReference2);
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessSetForKafka(
+        final Set<ResourceID> matches = KafkaAccessParser.kafkaSecondaryToPrimaryMapper(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getKafka(KAFKA_NAME_1, NAMESPACE_1));
         assertThat(matches).isEmpty();
     }
 
     @Test
-    @DisplayName("When getKafkaAccessSetForKafkaUser() is called with a list of two KafkaAccess objects and one " +
+    @DisplayName("When kafkaUserSecondaryToPrimaryMapper() is called with a list of two KafkaAccess objects and one " +
             "references the KafkaUser, then the correct KafkaAccess is returned")
     void testCorrectKafkaAccessReturnedForKafkaUser() {
         final KafkaReference kafkaReference1 = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_2);
@@ -102,14 +102,14 @@ public class KafkaAccessParserTest {
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference1, kafkaUserReference1);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_1, kafkaReference2, kafkaUserReference2);
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessSetForKafkaUser(
+        final Set<ResourceID> matches = KafkaAccessParser.kafkaUserSecondaryToPrimaryMapper(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getKafkaUser(KAFKA_USER_NAME_1, NAMESPACE_2));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
     }
 
     @Test
-    @DisplayName("When getKafkaAccessSetForKafkaUser() is called with a list of two KafkaAccess objects and both " +
+    @DisplayName("When kafkaUserSecondaryToPrimaryMapper() is called with a list of two KafkaAccess objects and both " +
             "reference the KafkaUser, then both KafkaAccess instances are returned")
     void testTwoCorrectKafkaAccessReturnedForKafkaUser() {
         final KafkaReference kafkaReference1 = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_2);
@@ -118,14 +118,14 @@ public class KafkaAccessParserTest {
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference1, kafkaUserReference);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_2, kafkaReference2, kafkaUserReference);
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessSetForKafkaUser(
+        final Set<ResourceID> matches = KafkaAccessParser.kafkaUserSecondaryToPrimaryMapper(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getKafkaUser(KAFKA_USER_NAME_1, NAMESPACE_2));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1), new ResourceID(ACCESS_NAME_2, NAMESPACE_2));
     }
 
     @Test
-    @DisplayName("When getKafkaAccessSetForKafkaUser() is called with a list of two KafkaAccess objects and the " +
+    @DisplayName("When kafkaUserSecondaryToPrimaryMapper() is called with a list of two KafkaAccess objects and the " +
             "KafkaAccess doesn't explicitly list the namespace, then the KafkaAccess in the same namespace as the KafkaUser is returned")
     void testKafkaAccessInMatchingNamespaceReturnedForKafkaUser() {
         final KafkaReference kafkaReference1 = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_2);
@@ -134,14 +134,14 @@ public class KafkaAccessParserTest {
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference1, kafkaUserReferenceNullNamespace);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_2, kafkaReference2, kafkaUserReferenceNullNamespace);
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessSetForKafkaUser(
+        final Set<ResourceID> matches = KafkaAccessParser.kafkaUserSecondaryToPrimaryMapper(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getKafkaUser(KAFKA_USER_NAME_1, NAMESPACE_1));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
     }
 
     @Test
-    @DisplayName("When getKafkaAccessSetForKafkaUser() is called with a list of KafkaAccess objects and none " +
+    @DisplayName("When kafkaUserSecondaryToPrimaryMapper() is called with a list of KafkaAccess objects and none " +
             "reference the KafkaUser, then an empty set is returned")
     void testKafkaAccessNoneMatchKafkaUser() {
         final KafkaReference kafkaReference1 = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_2);
@@ -150,37 +150,37 @@ public class KafkaAccessParserTest {
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference1, kafkaUserReference1);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_2, kafkaReference2);
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessSetForKafkaUser(
+        final Set<ResourceID> matches = KafkaAccessParser.kafkaUserSecondaryToPrimaryMapper(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getKafkaUser(KAFKA_USER_NAME_1, NAMESPACE_1));
         assertThat(matches).isEmpty();
     }
 
     @Test
-    @DisplayName("When getKafkaAccessResourceIDsForSecret() is called with a secret that is managed by a KafkaAccess, " +
+    @DisplayName("When secretSecondaryToPrimaryMapper() is called with a secret that is managed by a KafkaAccess, " +
             "then the correct KafkaAccess is returned")
     void testCorrectKafkaAccessReturnedForKafkaAccessSecret() {
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_1);
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessResourceIDsForSecret(
+        final Set<ResourceID> matches = KafkaAccessParser.secretSecondaryToPrimaryMapper(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getEmptyKafkaAccessSecret(SECRET_NAME, NAMESPACE_1, ACCESS_NAME_1));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
     }
 
     @Test
-    @DisplayName("When getKafkaAccessResourceIDsForSecret() is called with an empty cache and a secret that is managed " +
+    @DisplayName("When secretSecondaryToPrimaryMapper() is called with an empty cache and a secret that is managed " +
             "by a KafkaAccess, then the correct KafkaAccess is returned")
     void testCorrectKafkaAccessReturnedForKafkaAccessSecretEmptyCache() {
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessResourceIDsForSecret(
+        final Set<ResourceID> matches = KafkaAccessParser.secretSecondaryToPrimaryMapper(
                 Stream.of(),
                 ResourceProvider.getEmptyKafkaAccessSecret(SECRET_NAME, NAMESPACE_1, ACCESS_NAME_1));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
     }
 
     @Test
-    @DisplayName("When getKafkaAccessResourceIDsForSecret() is called with a secret that is managed by Strimzi, " +
+    @DisplayName("When secretSecondaryToPrimaryMapper() is called with a secret that is managed by Strimzi, " +
             "then the correct KafkaAccess is returned")
     void testCorrectKafkaAccessReturnedForStrimziSecret() {
         final KafkaReference kafkaReference1 = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_1);
@@ -188,14 +188,14 @@ public class KafkaAccessParserTest {
         final KafkaAccess kafkaAccess1 = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference1);
         final KafkaAccess kafkaAccess2 = ResourceProvider.getKafkaAccess(ACCESS_NAME_2, NAMESPACE_1, kafkaReference2);
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessResourceIDsForSecret(
+        final Set<ResourceID> matches = KafkaAccessParser.secretSecondaryToPrimaryMapper(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 ResourceProvider.getStrimziSecret(SECRET_NAME, NAMESPACE_1, KAFKA_NAME_1));
         assertThat(matches).containsExactly(new ResourceID(ACCESS_NAME_1, NAMESPACE_1));
     }
 
     @Test
-    @DisplayName("When getKafkaAccessResourceIDsForSecret() is called with a secret that is managed by an unknown operator, " +
+    @DisplayName("When secretSecondaryToPrimaryMapper() is called with a secret that is managed by an unknown operator, " +
             "then an empty set is returned")
     void testEmptySetForSecretManagedByUnknown() {
         final KafkaReference kafkaReference1 = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_1);
@@ -213,14 +213,14 @@ public class KafkaAccessParserTest {
                 .endMetadata()
                 .build();
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessResourceIDsForSecret(
+        final Set<ResourceID> matches = KafkaAccessParser.secretSecondaryToPrimaryMapper(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 secret);
         assertThat(matches).isEmpty();
     }
 
     @Test
-    @DisplayName("When getKafkaAccessResourceIDsForSecret() is called with a secret that is not managed by any resource, " +
+    @DisplayName("When secretSecondaryToPrimaryMapper() is called with a secret that is not managed by any resource, " +
             "then an empty set is returned")
     void testEmptySetForUnmanagedSecret() {
         final KafkaReference kafkaReference1 = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_1);
@@ -235,45 +235,45 @@ public class KafkaAccessParserTest {
                 .endMetadata()
                 .build();
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaAccessResourceIDsForSecret(
+        final Set<ResourceID> matches = KafkaAccessParser.secretSecondaryToPrimaryMapper(
                 Stream.of(kafkaAccess1, kafkaAccess2),
                 secret);
         assertThat(matches).isEmpty();
     }
 
     @Test
-    @DisplayName("When getKafkaUserForKafkaAccess() is called with a KafkaAccess that does not reference a KafkaUser, " +
+    @DisplayName("When kafkaUserPrimaryToSecondaryMapper() is called with a KafkaAccess that does not reference a KafkaUser, " +
             "then an empty set is returned")
     void testKafkaAccessWithMissingKafkaUser() {
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_1);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference);
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaUserForKafkaAccess(kafkaAccess);
+        final Set<ResourceID> matches = KafkaAccessParser.kafkaUserPrimaryToSecondaryMapper(kafkaAccess);
         assertThat(matches).isEmpty();
     }
 
     @Test
-    @DisplayName("When getKafkaUserForKafkaAccess() is called with a KafkaAccess that references a KafkaUser, " +
+    @DisplayName("When kafkaUserPrimaryToSecondaryMapper() is called with a KafkaAccess that references a KafkaUser, " +
             "then the returned set includes the KafkaUser")
     void testKafkaAccessWithKafkaUser() {
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_1);
         final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_USER_NAME_1, NAMESPACE_2);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference, kafkaUserReference);
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaUserForKafkaAccess(kafkaAccess);
+        final Set<ResourceID> matches = KafkaAccessParser.kafkaUserPrimaryToSecondaryMapper(kafkaAccess);
         assertThat(matches).hasSize(1);
         assertThat(matches).containsExactly(new ResourceID(KAFKA_USER_NAME_1, NAMESPACE_2));
     }
 
     @Test
-    @DisplayName("When getKafkaUserForKafkaAccess() is called with a KafkaAccess that references a KafkaUser but no namespace, " +
+    @DisplayName("When kafkaUserPrimaryToSecondaryMapper() is called with a KafkaAccess that references a KafkaUser but no namespace, " +
             "then the returned set includes the KafkaUser with the namespace of the KafkaAccess")
     void testKafkaAccessWithKafkaUserMissingNamespace() {
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME_1, NAMESPACE_1);
         final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_USER_NAME_1, null);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(ACCESS_NAME_1, NAMESPACE_1, kafkaReference, kafkaUserReference);
 
-        final Set<ResourceID> matches = KafkaAccessParser.getKafkaUserForKafkaAccess(kafkaAccess);
+        final Set<ResourceID> matches = KafkaAccessParser.kafkaUserPrimaryToSecondaryMapper(kafkaAccess);
         assertThat(matches).hasSize(1);
         assertThat(matches).containsExactly(new ResourceID(KAFKA_USER_NAME_1, NAMESPACE_1));
     }

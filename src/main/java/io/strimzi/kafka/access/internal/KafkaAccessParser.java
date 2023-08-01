@@ -63,7 +63,7 @@ public class KafkaAccessParser {
      *
      * @return                   Set of ResourceIDs for the KafkaAccess objects that reference the Kafka resource
      */
-    public static Set<ResourceID> getKafkaAccessSetForKafka(final Stream<KafkaAccess> kafkaAccessList, final Kafka kafka) {
+    public static Set<ResourceID> kafkaSecondaryToPrimaryMapper(final Stream<KafkaAccess> kafkaAccessList, final Kafka kafka) {
         final Optional<String> kafkaName = Optional.ofNullable(kafka.getMetadata()).map(ObjectMeta::getName);
         final Optional<String> kafkaNamespace = Optional.ofNullable(kafka.getMetadata()).map(ObjectMeta::getNamespace);
         if (kafkaName.isEmpty() || kafkaNamespace.isEmpty()) {
@@ -88,7 +88,7 @@ public class KafkaAccessParser {
      *
      * @return                   Set of ResourceIDs for the KafkaAccess objects that reference the KafkaUser resource
      */
-    public static Set<ResourceID> getKafkaAccessSetForKafkaUser(final Stream<KafkaAccess> kafkaAccessList, final KafkaUser kafkaUser) {
+    public static Set<ResourceID> kafkaUserSecondaryToPrimaryMapper(final Stream<KafkaAccess> kafkaAccessList, final KafkaUser kafkaUser) {
         final Optional<String> kafkaUserName = Optional.ofNullable(kafkaUser.getMetadata()).map(ObjectMeta::getName);
         final Optional<String> kafkaUserNamespace = Optional.ofNullable(kafkaUser.getMetadata()).map(ObjectMeta::getNamespace);
         if (kafkaUserName.isEmpty() || kafkaUserNamespace.isEmpty()) {
@@ -131,7 +131,7 @@ public class KafkaAccessParser {
      *
      * @return                   Set of ResourceIDs for the KafkaAccess objects that reference the Kafka resource
      */
-    public static Set<ResourceID> getKafkaAccessResourceIDsForSecret(final Stream<KafkaAccess> kafkaAccessList, final Secret secret) {
+    public static Set<ResourceID> secretSecondaryToPrimaryMapper(final Stream<KafkaAccess> kafkaAccessList, final Secret secret) {
         final Set<ResourceID> resourceIDS = new HashSet<>();
 
         final Optional<String> secretNamespace = Optional.ofNullable(secret.getMetadata())
@@ -166,7 +166,7 @@ public class KafkaAccessParser {
                             .withNamespace(secretNamespace.get())
                             .endMetadata()
                             .build();
-                    resourceIDS.addAll(KafkaAccessParser.getKafkaAccessSetForKafka(kafkaAccessList, kafka));
+                    resourceIDS.addAll(KafkaAccessParser.kafkaSecondaryToPrimaryMapper(kafkaAccessList, kafka));
                 });
         }
 
@@ -180,7 +180,7 @@ public class KafkaAccessParser {
      *
      * @return               Set of ResourceIDs containing the KafkaUser that is referenced by the KafkaAccess
      */
-    public static Set<ResourceID> getKafkaUserForKafkaAccess(final KafkaAccess kafkaAccess) {
+    public static Set<ResourceID> kafkaUserPrimaryToSecondaryMapper(final KafkaAccess kafkaAccess) {
         final Set<ResourceID> resourceIDS = new HashSet<>();
         Optional.ofNullable(kafkaAccess.getSpec())
                 .map(KafkaAccessSpec::getUser)

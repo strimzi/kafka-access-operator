@@ -199,25 +199,25 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         LOGGER.info("Preparing event sources");
         InformerEventSource<Kafka, KafkaAccess> kafkaEventSource = new InformerEventSource<>(
                 InformerConfiguration.from(Kafka.class, context)
-                        .withSecondaryToPrimaryMapper(kafka -> KafkaAccessParser.getKafkaAccessSetForKafka(context.getPrimaryCache().list(), kafka))
+                        .withSecondaryToPrimaryMapper(kafka -> KafkaAccessParser.kafkaSecondaryToPrimaryMapper(context.getPrimaryCache().list(), kafka))
                         .build(),
                 context);
         InformerEventSource<KafkaUser, KafkaAccess> kafkaUserEventSource = new InformerEventSource<>(
                 InformerConfiguration.from(KafkaUser.class, context)
-                        .withSecondaryToPrimaryMapper(kafkaUser -> KafkaAccessParser.getKafkaAccessSetForKafkaUser(context.getPrimaryCache().list(), kafkaUser))
-                        .withPrimaryToSecondaryMapper(kafkaAccess -> KafkaAccessParser.getKafkaUserForKafkaAccess((KafkaAccess) kafkaAccess))
+                        .withSecondaryToPrimaryMapper(kafkaUser -> KafkaAccessParser.kafkaUserSecondaryToPrimaryMapper(context.getPrimaryCache().list(), kafkaUser))
+                        .withPrimaryToSecondaryMapper(kafkaAccess -> KafkaAccessParser.kafkaUserPrimaryToSecondaryMapper((KafkaAccess) kafkaAccess))
                         .build(),
                 context);
         InformerEventSource<Secret, KafkaAccess> strimziSecretEventSource = new InformerEventSource<>(
                 InformerConfiguration.from(Secret.class)
                         .withLabelSelector(String.format("%s=%s", KafkaAccessParser.MANAGED_BY_LABEL_KEY, KafkaAccessParser.STRIMZI_CLUSTER_LABEL_VALUE))
-                        .withSecondaryToPrimaryMapper(secret -> KafkaAccessParser.getKafkaAccessResourceIDsForSecret(context.getPrimaryCache().list(), secret))
+                        .withSecondaryToPrimaryMapper(secret -> KafkaAccessParser.secretSecondaryToPrimaryMapper(context.getPrimaryCache().list(), secret))
                         .build(),
                 context);
         InformerEventSource<Secret, KafkaAccess> kafkaAccessSecretEventSource = new InformerEventSource<>(
                 InformerConfiguration.from(Secret.class)
                         .withLabelSelector(String.format("%s=%s", KafkaAccessParser.MANAGED_BY_LABEL_KEY, KafkaAccessParser.KAFKA_ACCESS_LABEL_VALUE))
-                        .withSecondaryToPrimaryMapper(secret -> KafkaAccessParser.getKafkaAccessResourceIDsForSecret(context.getPrimaryCache().list(), secret))
+                        .withSecondaryToPrimaryMapper(secret -> KafkaAccessParser.secretSecondaryToPrimaryMapper(context.getPrimaryCache().list(), secret))
                         .build(),
                 context);
         Map<String, EventSource> eventSources = EventSourceInitializer.nameEventSources(kafkaEventSource, kafkaUserEventSource, strimziSecretEventSource);
