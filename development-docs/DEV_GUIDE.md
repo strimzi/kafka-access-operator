@@ -5,6 +5,7 @@ This document gives a detailed breakdown of the various build processes and opti
 <!-- TOC depthFrom:2 -->
 
 - [Build Pre-Requisites](#build-pre-requisites)
+- [Run Pre-Requisites](#run-pre-requisites)
 - [Build and deploy from source](#build-and-deploy-from-source)
 - [Build details](#build-details)
    - [Make targets](#make-targets)
@@ -52,6 +53,12 @@ can) and create a new folder named `JavaVirtualMachines` followed by creating a 
 structure after everything is said and done should look like `/Library/Java/JavaVirtualMachines/openjdk-17.jdk`. After
 doing that run the command at the beginning again and this should link the file and allow you to use maven with OpenJDK
 version 17.
+
+## Run Pre-Requisites
+
+To start the operator you need the Strimzi Kafka and KafkaUser CRDs installed in your Kubernetes cluster.
+You can get these from the Strimzi [GitHub repository](https://github.com/strimzi/strimzi-kafka-operator/tree/main/packaging/install/cluster-operator), 
+or use the [Strimzi quickstart guide](https://strimzi.io/quickstarts/) to also deploy the Strimzi cluster operator and a Kafka instance at the same time.
 
 ## Build and deploy from source
 
