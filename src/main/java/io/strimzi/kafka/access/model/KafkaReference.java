@@ -4,14 +4,14 @@
  */
 package io.strimzi.kafka.access.model;
 
-import javax.validation.constraints.NotNull;
+import io.fabric8.generator.annotation.Required;
 
 /**
  * The Kafka reference. Keeps state for a Kafka resource of Strimzi Kafka Operator
  */
 public class KafkaReference {
 
-    @NotNull
+    @Required
     private String name;
     private String namespace;
     private String listener;

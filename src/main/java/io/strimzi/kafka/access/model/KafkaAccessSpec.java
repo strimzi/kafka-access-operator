@@ -4,14 +4,14 @@
  */
 package io.strimzi.kafka.access.model;
 
-import javax.validation.constraints.NotNull;
+import io.fabric8.generator.annotation.Required;
 
 /**
  * The spec model of the KafkaAccess resource
  */
 public class KafkaAccessSpec {
 
-    @NotNull
+    @Required
     private KafkaReference kafka;
     private KafkaUserReference user;
 

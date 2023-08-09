@@ -4,18 +4,18 @@
  */
 package io.strimzi.kafka.access.model;
 
-import javax.validation.constraints.NotNull;
+import io.fabric8.generator.annotation.Required;
 
 /**
  * The Kafka user reference, which keeps state for a KafkaUser resource of Strimzi Kafka Operator
  */
 public class KafkaUserReference {
 
-    @NotNull
+    @Required
     private String kind;
-    @NotNull
+    @Required
     private String apiGroup;
-    @NotNull
+    @Required
     private String name;
     private String namespace;
 

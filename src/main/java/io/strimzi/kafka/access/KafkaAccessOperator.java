@@ -4,8 +4,6 @@
  */
 package io.strimzi.kafka.access;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.javaoperatorsdk.operator.Operator;
 import io.strimzi.kafka.access.server.HealthServlet;
 import org.eclipse.jetty.server.Server;
@@ -28,9 +26,8 @@ public class KafkaAccessOperator {
      */
     public static void main(final String[] args) {
         LOGGER.info("Kafka Access operator starting");
-        final KubernetesClient client = new KubernetesClientBuilder().build();
-        final Operator operator = new Operator(client);
-        operator.register(new KafkaAccessReconciler(client));
+        final Operator operator = new Operator();
+        operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()));
         operator.installShutdownHook();
         operator.start();
         Server server = new Server(HEALTH_CHECK_PORT);
