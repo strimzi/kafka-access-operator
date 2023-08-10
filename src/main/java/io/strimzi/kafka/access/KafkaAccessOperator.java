@@ -28,7 +28,6 @@ public class KafkaAccessOperator {
         LOGGER.info("Kafka Access operator starting");
         final Operator operator = new Operator();
         operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()));
-        operator.installShutdownHook();
         operator.start();
         Server server = new Server(HEALTH_CHECK_PORT);
         ServletHandler handler = new ServletHandler();
