@@ -27,6 +27,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Class to represent the data in the Secret created by the operator
@@ -61,26 +62,23 @@ public class SecretDependentResource {
         final KafkaReference kafkaReference = spec.getKafka();
         final String kafkaClusterName = kafkaReference.getName();
         final String kafkaClusterNamespace = Optional.ofNullable(kafkaReference.getNamespace()).orElse(namespace);
-        final InformerEventSource<Kafka, KafkaAccess> kafkaEventSource = (InformerEventSource<Kafka, KafkaAccess>) context.eventSourceRetriever().getResourceEventSourceFor(Kafka.class);
-        final Kafka kafka = kafkaEventSource.get(new ResourceID(kafkaClusterName, kafkaClusterNamespace))
-                .orElseThrow(() -> new IllegalStateException(String.format("Kafka %s/%s missing", kafkaClusterNamespace, kafkaClusterName)));
-        final Optional<KafkaUserReference> kafkaUserReference = Optional.ofNullable(spec.getUser());
+        final Kafka kafka = context.getSecondaryResource(Kafka.class).orElseThrow(illegalStateException("Kafka", kafkaClusterNamespace, kafkaClusterName));
         final Map<String, String> data  = new HashMap<>(commonSecretData);
+        final Optional<KafkaUserReference> kafkaUserReference = Optional.ofNullable(spec.getUser());
         if (kafkaUserReference.isPresent()) {
             if (!KafkaUser.RESOURCE_KIND.equals(kafkaUserReference.get().getKind()) || !KafkaUser.RESOURCE_GROUP.equals(kafkaUserReference.get().getApiGroup())) {
                 throw new CustomResourceParseException(String.format("User kind must be %s and apiGroup must be %s", KafkaUser.RESOURCE_KIND, KafkaUser.RESOURCE_GROUP));
             }
             final String kafkaUserName = kafkaUserReference.get().getName();
             final String kafkaUserNamespace = Optional.ofNullable(kafkaUserReference.get().getNamespace()).orElse(namespace);
-            final KafkaUser kafkaUser = context.getSecondaryResource(KafkaUser.class)
-                    .orElseThrow(() -> new IllegalStateException(String.format("KafkaUser %s/%s missing", kafkaUserNamespace, kafkaUserName)));
+            final KafkaUser kafkaUser = context.getSecondaryResource(KafkaUser.class).orElseThrow(illegalStateException("KafkaUser", kafkaUserNamespace, kafkaUserName));
             final String userSecretName = Optional.ofNullable(kafkaUser.getStatus())
                     .map(KafkaUserStatus::getSecret)
-                    .orElseThrow(() -> new IllegalStateException(String.format("Secret for KafkaUser %s/%s missing", kafkaUserNamespace, kafkaUserName)));
+                    .orElseThrow(illegalStateException("Secret in KafkaUser status", kafkaUserNamespace, kafkaUserName));
             final InformerEventSource<Secret, KafkaAccess> kafkaUserSecretEventSource = (InformerEventSource<Secret, KafkaAccess>) context.eventSourceRetriever()
                     .getResourceEventSourceFor(Secret.class, KafkaAccessReconciler.KAFKA_USER_SECRET_EVENT_SOURCE);
             final Secret kafkaUserSecret = kafkaUserSecretEventSource.get(new ResourceID(userSecretName, kafkaUserNamespace))
-                    .orElseThrow(() -> new IllegalStateException(String.format("Secret for KafkaUser %s/%s missing", kafkaUserNamespace, kafkaUserName)));
+                    .orElseThrow(illegalStateException(String.format("Secret %s for KafkaUser", userSecretName), kafkaUserNamespace, kafkaUserName));
             data.putAll(secretDataWithUser(spec, kafka, kafkaUser, new KafkaUserData(kafkaUser).withSecret(kafkaUserSecret)));
         } else {
             data.putAll(secretData(spec, kafka));
@@ -115,5 +113,9 @@ public class SecretDependentResource {
         }
         data.putAll(listener.getConnectionSecretData());
         return data;
+    }
+
+    private static Supplier<IllegalStateException> illegalStateException(String type, String namespace, String name) {
+        return () -> new IllegalStateException(String.format("%s %s/%s missing", type, namespace, name));
     }
 }

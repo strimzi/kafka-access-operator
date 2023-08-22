@@ -27,7 +27,7 @@ import io.strimzi.api.kafka.model.status.ListenerAddress;
 import io.strimzi.api.kafka.model.status.ListenerAddressBuilder;
 import io.strimzi.api.kafka.model.status.ListenerStatus;
 import io.strimzi.api.kafka.model.status.ListenerStatusBuilder;
-import io.strimzi.kafka.access.internal.KafkaAccessParser;
+import io.strimzi.kafka.access.internal.KafkaAccessMapper;
 import io.strimzi.kafka.access.model.KafkaAccess;
 import io.strimzi.kafka.access.model.KafkaAccessSpec;
 import io.strimzi.kafka.access.model.KafkaReference;
@@ -69,7 +69,7 @@ public class ResourceProvider {
 
     public static Secret getEmptyKafkaAccessSecret(String secretName, String secretNamespace, String kafkaAccessName) {
         final Map<String, String> labels = new HashMap<>();
-        labels.put(KafkaAccessParser.MANAGED_BY_LABEL_KEY, KafkaAccessParser.KAFKA_ACCESS_LABEL_VALUE);
+        labels.put(KafkaAccessMapper.MANAGED_BY_LABEL_KEY, KafkaAccessMapper.KAFKA_ACCESS_LABEL_VALUE);
         final OwnerReference ownerReference = new OwnerReference();
         ownerReference.setName(kafkaAccessName);
         ownerReference.setKind(KafkaAccess.KIND);
@@ -85,15 +85,15 @@ public class ResourceProvider {
 
     public static Secret getStrimziSecret(final String secretName, final String secretNamespace, final String kafkaInstanceName) {
         final Map<String, String> labels = new HashMap<>();
-        labels.put(KafkaAccessParser.MANAGED_BY_LABEL_KEY, KafkaAccessParser.STRIMZI_CLUSTER_LABEL_VALUE);
-        labels.put(KafkaAccessParser.INSTANCE_LABEL_KEY, kafkaInstanceName);
+        labels.put(KafkaAccessMapper.MANAGED_BY_LABEL_KEY, KafkaAccessMapper.STRIMZI_CLUSTER_LABEL_VALUE);
+        labels.put(KafkaAccessMapper.INSTANCE_LABEL_KEY, kafkaInstanceName);
         return buildSecret(secretName, secretNamespace, labels);
     }
 
     public static Secret getStrimziUserSecret(final String secretName, final String secretNamespace, final String kafkaInstanceName) {
         final Map<String, String> labels = new HashMap<>();
-        labels.put(KafkaAccessParser.MANAGED_BY_LABEL_KEY, KafkaAccessParser.STRIMZI_USER_LABEL_VALUE);
-        labels.put(KafkaAccessParser.STRIMZI_CLUSTER_LABEL_KEY, kafkaInstanceName);
+        labels.put(KafkaAccessMapper.MANAGED_BY_LABEL_KEY, KafkaAccessMapper.STRIMZI_USER_LABEL_VALUE);
+        labels.put(KafkaAccessMapper.STRIMZI_CLUSTER_LABEL_KEY, kafkaInstanceName);
         return buildSecret(secretName, secretNamespace, labels);
     }
 
