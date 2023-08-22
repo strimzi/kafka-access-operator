@@ -9,7 +9,6 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 import io.javaoperatorsdk.operator.Operator;
@@ -59,7 +58,7 @@ public class KafkaAccessReconcilerTest {
     private static final String KAFKA_USER_NAME = "my-kafka-user";
     private static final int BOOTSTRAP_PORT_9092 = 9092;
     private static final int BOOTSTRAP_PORT_9093 = 9093;
-    private static final long TEST_TIMEOUT = 500;
+    private static final long TEST_TIMEOUT = 1000;
 
     KubernetesClient client;
     Operator operator;
@@ -148,11 +147,14 @@ public class KafkaAccessReconcilerTest {
         );
         Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
 
-        final KafkaUser kafkaUser = ResourceProvider.getKafkaUser(KAFKA_NAME, KAFKA_NAMESPACE, new KafkaUserTlsExternalClientAuthentication());
+        final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithStatus(KAFKA_USER_NAME, KAFKA_NAMESPACE, KAFKA_USER_NAME, "my-user", new KafkaUserTlsExternalClientAuthentication());
         Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafkaUser).create();
 
+        final Secret kafkaUserSecret = ResourceProvider.getStrimziUserSecret(KAFKA_USER_NAME, KAFKA_NAMESPACE, KAFKA_NAME);
+        client.secrets().inNamespace(KAFKA_NAMESPACE).resource(kafkaUserSecret).create();
+
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
-        final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_NAME, KAFKA_NAMESPACE);
+        final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_USER_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
 
         client.resources(KafkaAccess.class).resource(kafkaAccess).create();
@@ -205,10 +207,9 @@ public class KafkaAccessReconcilerTest {
         final Map<String, String> userSecretData = new HashMap<>();
         userSecretData.put("password", encodedPassword);
         userSecretData.put(SaslConfigs.SASL_JAAS_CONFIG, encodedSaslJaasConfig);
-        final Secret userSecret = new SecretBuilder().withNewMetadata().withName(KAFKA_USER_NAME).withNamespace(KAFKA_NAMESPACE).endMetadata()
-                .withData(userSecretData)
-                .build();
-        client.secrets().inNamespace(KAFKA_NAMESPACE).resource(userSecret).create();
+        final Secret kafkaUserSecret = ResourceProvider.getStrimziUserSecret(KAFKA_USER_NAME, KAFKA_NAMESPACE, KAFKA_NAME);
+        kafkaUserSecret.setData(userSecretData);
+        client.secrets().inNamespace(KAFKA_NAMESPACE).resource(kafkaUserSecret).create();
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_USER_NAME, KAFKA_NAMESPACE);

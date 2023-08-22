@@ -4,14 +4,17 @@
  */
 package io.strimzi.kafka.access;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
-import io.strimzi.api.kafka.Crds;
+import io.javaoperatorsdk.operator.api.reconciler.Context;
+import io.javaoperatorsdk.operator.processing.event.EventSourceRetriever;
+import io.javaoperatorsdk.operator.processing.event.ResourceID;
+import io.javaoperatorsdk.operator.processing.event.source.informer.InformerEventSource;
 import io.strimzi.api.kafka.model.Kafka;
 import io.strimzi.api.kafka.model.KafkaUser;
 import io.strimzi.api.kafka.model.KafkaUserScramSha512ClientAuthentication;
 import io.strimzi.api.kafka.model.listener.KafkaListenerAuthenticationScramSha512;
 import io.strimzi.api.kafka.model.listener.arraylistener.KafkaListenerType;
+import io.strimzi.kafka.access.internal.CustomResourceParseException;
+import io.strimzi.kafka.access.internal.KafkaUserData;
 import io.strimzi.kafka.access.model.KafkaAccess;
 import io.strimzi.kafka.access.model.KafkaReference;
 import io.strimzi.kafka.access.model.KafkaUserReference;
@@ -26,13 +29,16 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-@EnableKubernetesMockClient(crud = true)
-public class SecretDataTest {
+public class SecretDependentResourceTest {
 
     private static final String NAME = "kafka-access-name";
     private static final String NAMESPACE = "kafka-access-namespace";
@@ -44,7 +50,6 @@ public class SecretDataTest {
     private static final int BOOTSTRAP_PORT_9092 = 9092;
     private static final int BOOTSTRAP_PORT_9093 = 9093;
 
-    KubernetesClient client;
 
     @Test
     @DisplayName("When secretData is called with a KafkaAccess resource, then the data returned includes the " +
@@ -56,12 +61,11 @@ public class SecretDataTest {
                 List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false)),
                 List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
         );
-        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference);
 
-        Map<String, String> data = new KafkaAccessReconciler(client).secretData(kafkaAccess.getSpec(), NAMESPACE);
+        Map<String, String> data = new SecretDependentResource().secretData(kafkaAccess.getSpec(), kafka);
         final Base64.Encoder encoder = Base64.getEncoder();
         final Map<String, String> expectedDataEntries = new HashMap<>();
         expectedDataEntries.put("type", encoder.encodeToString("kafka".getBytes(StandardCharsets.UTF_8)));
@@ -81,16 +85,14 @@ public class SecretDataTest {
                 List.of(ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512())),
                 List.of(ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093))
         );
-        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
 
         final KafkaUser kafkaUser = ResourceProvider.getKafkaUser(KAFKA_NAME, KAFKA_NAMESPACE, new KafkaUserScramSha512ClientAuthentication());
-        Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafkaUser).create();
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReferenceWithListener(KAFKA_NAME, LISTENER_2, KAFKA_NAMESPACE);
         final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
 
-        Map<String, String> data = new KafkaAccessReconciler(client).secretData(kafkaAccess.getSpec(), NAMESPACE);
+        Map<String, String> data = new SecretDependentResource().secretDataWithUser(kafkaAccess.getSpec(), kafka, kafkaUser, new KafkaUserData(kafkaUser));
         final Base64.Encoder encoder = Base64.getEncoder();
         assertThat(data).containsEntry(
                 CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
@@ -105,7 +107,14 @@ public class SecretDataTest {
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference);
 
-        assertThrows(IllegalStateException.class, () -> new KafkaAccessReconciler(client).secretData(kafkaAccess.getSpec(), NAMESPACE));
+        final Context<KafkaAccess> mockContext = mock(Context.class);
+        final EventSourceRetriever<KafkaAccess> mockEventSourceRetriever = mock(EventSourceRetriever.class);
+        final InformerEventSource<Kafka, KafkaAccess> mockEventSource = mock(InformerEventSource.class);
+        when(mockContext.eventSourceRetriever()).thenReturn(mockEventSourceRetriever);
+        when(mockEventSourceRetriever.getResourceEventSourceFor(Kafka.class)).thenReturn(mockEventSource);
+        when(mockEventSource.get(any(ResourceID.class))).thenReturn(Optional.empty());
+
+        assertThrows(IllegalStateException.class, () -> new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext));
     }
 
     @Test
@@ -124,13 +133,22 @@ public class SecretDataTest {
                         ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
                 )
         );
-        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
+        final Context<KafkaAccess> mockContext = mock(Context.class);
+        final EventSourceRetriever<KafkaAccess> mockEventSourceRetriever = mock(EventSourceRetriever.class);
+        final InformerEventSource<Kafka, KafkaAccess> mockKafkaEventSource = mock(InformerEventSource.class);
+        when(mockContext.eventSourceRetriever()).thenReturn(mockEventSourceRetriever);
+        when(mockEventSourceRetriever.getResourceEventSourceFor(Kafka.class)).thenReturn(mockKafkaEventSource);
+        when(mockKafkaEventSource.get(any(ResourceID.class))).thenReturn(Optional.of(kafka));
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
 
-        assertThrows(IllegalStateException.class, () -> new KafkaAccessReconciler(client).secretData(kafkaAccess.getSpec(), NAMESPACE));
+        final InformerEventSource<KafkaUser, KafkaAccess> mockKafkaUserEventSource = mock(InformerEventSource.class);
+        when(mockEventSourceRetriever.getResourceEventSourceFor(KafkaUser.class)).thenReturn(mockKafkaUserEventSource);
+        when(mockKafkaUserEventSource.get(any(ResourceID.class))).thenReturn(Optional.empty());
+
+        assertThrows(IllegalStateException.class, () -> new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext));
     }
 
     private static Stream<KafkaUserReference> userReferences() {
@@ -157,14 +175,21 @@ public class SecretDataTest {
                         ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093)
                 )
         );
-        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
+        final Context<KafkaAccess> mockContext = mock(Context.class);
+        final EventSourceRetriever<KafkaAccess> mockEventSourceRetriever = mock(EventSourceRetriever.class);
+        final InformerEventSource<Kafka, KafkaAccess> mockKafkaEventSource = mock(InformerEventSource.class);
+        when(mockContext.eventSourceRetriever()).thenReturn(mockEventSourceRetriever);
+        when(mockEventSourceRetriever.getResourceEventSourceFor(Kafka.class)).thenReturn(mockKafkaEventSource);
+        when(mockKafkaEventSource.get(any(ResourceID.class))).thenReturn(Optional.of(kafka));
 
         final KafkaUser kafkaUser = ResourceProvider.getKafkaUser(KAFKA_NAME, KAFKA_NAMESPACE, new KafkaUserScramSha512ClientAuthentication());
-        Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafkaUser).create();
+        final InformerEventSource<KafkaUser, KafkaAccess> mockKafkaUserEventSource = mock(InformerEventSource.class);
+        when(mockEventSourceRetriever.getResourceEventSourceFor(KafkaUser.class)).thenReturn(mockKafkaUserEventSource);
+        when(mockKafkaUserEventSource.get(any(ResourceID.class))).thenReturn(Optional.of(kafkaUser));
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, userReference);
 
-        assertThrows(IllegalStateException.class, () -> new KafkaAccessReconciler(client).secretData(kafkaAccess.getSpec(), NAMESPACE));
+        assertThrows(CustomResourceParseException.class, () -> new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext));
     }
 }
