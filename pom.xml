@@ -88,8 +88,8 @@
         <maven.assembly.version>3.3.0</maven.assembly.version>
 
         <!-- Runtime dependencies -->
-        <javaoperatorsdk.version>3.2.0</javaoperatorsdk.version>
-        <fabric8.version>6.1.1</fabric8.version>
+        <javaoperatorsdk.version>4.4.1</javaoperatorsdk.version>
+        <fabric8.version>6.7.2</fabric8.version>
         <strimzi.version>0.31.0</strimzi.version>
         <kafka.clients.version>3.0.0</kafka.clients.version>
         <javax-validation.version>2.0.1.Final</javax-validation.version>
@@ -118,6 +118,17 @@
             <groupId>io.javaoperatorsdk</groupId>
             <artifactId>operator-framework-core</artifactId>
             <version>${javaoperatorsdk.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.fabric8</groupId>
+                    <artifactId>kubernetes-httpclient-okhttp</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-httpclient-jdk</artifactId>
+            <version>${fabric8.version}</version>
         </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>
@@ -156,11 +167,6 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
             <version>${kafka.clients.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
-            <version>${javax-validation.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -311,6 +317,8 @@
                             <ignoredDependencies>
                                 <!-- Required to generate CRD file -->
                                 <ignoredDependency>io.fabric8:crd-generator-apt:jar:${fabric8.version}</ignoredDependency>
+                                <ignoredDependency>io.fabric8:generator-annotations:jar:${fabric8.version}</ignoredDependency>
+                                <ignoredDependency>io.fabric8:kubernetes-httpclient-jdk:jar:${fabric8.version}</ignoredDependency>
                                 <ignoredDependency>org.apache.logging.log4j:log4j-slf4j-impl</ignoredDependency>
                             </ignoredDependencies>
                         </configuration>

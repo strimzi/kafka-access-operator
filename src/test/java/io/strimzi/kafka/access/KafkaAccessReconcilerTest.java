@@ -66,8 +66,8 @@ public class KafkaAccessReconcilerTest {
 
     @BeforeEach
     void beforeEach() {
-        operator = new Operator(client);
-        operator.register(new KafkaAccessReconciler(client));
+        operator = new Operator(overrider -> overrider.withKubernetesClient(client));
+        operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()));
         operator.start();
     }
 
