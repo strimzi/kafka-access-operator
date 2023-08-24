@@ -30,7 +30,7 @@ spec:
             - containerPort: 8080
               name: http
           args:
-            - /opt/strimzi/bin/run_java.sh
+            - /opt/strimzi/bin/access_operator_run.sh
           volumeMounts:
             - name: strimzi-tmp
               mountPath: /tmp
