@@ -29,9 +29,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Representation of a KafkaAccess parser that collects the resource IDs from different sources
+ * Maps Strimzi and Kuberentes resources to and from KafkaAccess resources
  */
-public class KafkaAccessParser {
+public class KafkaAccessMapper {
 
     /**
      *  The constant for managed-by label
@@ -63,7 +63,7 @@ public class KafkaAccessParser {
      */
     public static final String KAFKA_ACCESS_LABEL_VALUE = "kafka-access-operator";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessParser.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessMapper.class);
 
     /**
      * Filters the stream of KafkaAccess objects to find only the ones that reference the provided Kafka resource.
@@ -186,7 +186,7 @@ public class KafkaAccessParser {
                         .withNamespace(secretNamespace.get())
                         .endMetadata()
                         .build();
-                resourceIDS.addAll(KafkaAccessParser.kafkaSecondaryToPrimaryMapper(kafkaAccessList, kafka));
+                resourceIDS.addAll(KafkaAccessMapper.kafkaSecondaryToPrimaryMapper(kafkaAccessList, kafka));
             }
         }
 
@@ -210,6 +210,30 @@ public class KafkaAccessParser {
                             .orElseGet(() -> Optional.ofNullable(kafkaAccess.getMetadata()).map(ObjectMeta::getNamespace).orElse(null));
                     if (name == null || namespace == null) {
                         LOGGER.error("Found KafkaUser for KafkaAccess instance, but metadata is missing.");
+                    } else {
+                        resourceIDS.add(new ResourceID(name, namespace));
+                    }
+                });
+        return resourceIDS;
+    }
+
+    /**
+     * Finds the Kafka that is referenced by this KafkaAccess object.
+     *
+     * @param kafkaAccess    KafkaAccess object to parse
+     *
+     * @return               Set of ResourceIDs containing the Kafka that is referenced by the KafkaAccess
+     */
+    public static Set<ResourceID> kafkaPrimaryToSecondaryMapper(final KafkaAccess kafkaAccess) {
+        final Set<ResourceID> resourceIDS = new HashSet<>();
+        Optional.ofNullable(kafkaAccess.getSpec())
+                .map(KafkaAccessSpec::getKafka)
+                .ifPresent(kafkaReference -> {
+                    String name = kafkaReference.getName();
+                    String namespace = Optional.ofNullable(kafkaReference.getNamespace())
+                            .orElseGet(() -> Optional.ofNullable(kafkaAccess.getMetadata()).map(ObjectMeta::getNamespace).orElse(null));
+                    if (name == null || namespace == null) {
+                        LOGGER.error("Found Kafka for KafkaAccess instance, but metadata is missing.");
                     } else {
                         resourceIDS.add(new ResourceID(name, namespace));
                     }
