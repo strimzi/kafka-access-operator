@@ -8,7 +8,23 @@ RUN microdnf update \
     && microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install java-${JAVA_VERSION}-openjdk-headless openssl shadow-utils \
     && microdnf clean all
 
+# Set JAVA_HOME env var
 ENV JAVA_HOME /usr/lib/jvm/jre-17
+
+# Add strimzi user with UID 1001
+# The user is in the group 0 to have access to the mounted volumes and storage
+RUN useradd -r -m -u 1001 -g 0 strimzi
+
+ARG access_operator_version=1.0-SNAPSHOT
+ENV ACCESS_OPERATOR_VERSION ${access_operator_version}
+ENV STRIMZI_HOME=/opt/strimzi
+RUN mkdir -p ${STRIMZI_HOME}
+WORKDIR ${STRIMZI_HOME}
+
+#####
+# Add Kafka Access Operator
+#####
+COPY target/kafka-access-operator-${access_operator_version}/kafka-access-operator-${access_operator_version} ./
 
 #####
 # Add Tini
@@ -18,8 +34,6 @@ ENV TINI_SHA256_AMD64=93dcc18adc78c65a028a84799ecf8ad40c936fdfc5f2a57b1acda5a811
 ENV TINI_SHA256_ARM64=07952557df20bfd2a95f9bef198b445e006171969499a1d361bd9e6f8e5e0e81
 ENV TINI_SHA256_PPC64LE=3f658420974768e40810001a038c29d003728c5fe86da211cff5059e48cfdfde
 ENV TINI_SHA256_S390X=931b70a182af879ca249ae9de87ef68423121b38d235c78997fafc680ceab32d
-
-RUN echo $TARGETPLATFORM
 
 RUN set -ex; \
     if [[ ${TARGETPLATFORM} = "linux/ppc64le" ]]; then \
@@ -40,15 +54,6 @@ RUN set -ex; \
         chmod +x /usr/bin/tini; \
     fi
 
-# Add strimzi user with UID 1001
-# The user is in the group 0 to have access to the mounted volumes and storage
-RUN useradd -r -m -u 1001 -g 0 strimzi
-
-ARG access_operator_version=1.0-SNAPSHOT
-ENV ACCESS_OPERATOR_VERSION ${access_operator_version}
-ENV STRIMZI_HOME=/opt/strimzi
-WORKDIR ${STRIMZI_HOME}
-
-COPY target/kafka-access-operator-${access_operator_version}/kafka-access-operator-${access_operator_version} ./
-
 USER 1001
+
+CMD ["/opt/strimzi/bin/access_operator_run.sh"]
