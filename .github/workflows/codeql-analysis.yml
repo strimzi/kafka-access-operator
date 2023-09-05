@@ -35,11 +35,11 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     
     # Setup OpenJDK
     - name: Setup java
-      uses: joschi/setup-jdk@v2
+      uses: actions/setup-java@v3
       with:
         java-version: 17
 
