@@ -30,6 +30,7 @@ public class KafkaListener {
     private final boolean tls;
     private final String authenticationType;
     private String bootstrapServer;
+    private Map<String, String> caCertSecret;
 
     /**
      * Constructor
@@ -51,6 +52,17 @@ public class KafkaListener {
      */
     public KafkaListener withBootstrapServer(final String bootstrapServer) {
         this.bootstrapServer = bootstrapServer;
+        return this;
+    }
+
+    /**
+     * Decorates a KafkaListener instance with boostrap server information
+     *
+     * @param caCertSecret The CA certificate secret
+     * @return  A decorated KafkaListener instance
+     */
+    public KafkaListener withCaCertSecret(final Map<String, String> caCertSecret) {
+        this.caCertSecret = caCertSecret;
         return this;
     }
 
@@ -117,6 +129,9 @@ public class KafkaListener {
         data.put("securityProtocol", encodedSecurityProtocol);
         //Spring settings
         data.put("bootstrap-servers", bootstrapServers);
+        if (this.tls) {
+            Optional.ofNullable(this.caCertSecret).map(secretData -> secretData.get("ca.crt")).ifPresent(cert -> data.put("ssl.truststore.crt", cert));
+        }
         return data;
     }
 

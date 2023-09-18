@@ -9,6 +9,7 @@ import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.processing.event.ResourceID;
 import io.javaoperatorsdk.operator.processing.event.source.informer.InformerEventSource;
 import io.strimzi.api.kafka.model.Kafka;
+import io.strimzi.api.kafka.model.KafkaResources;
 import io.strimzi.api.kafka.model.KafkaUser;
 import io.strimzi.api.kafka.model.KafkaUserAuthentication;
 import io.strimzi.api.kafka.model.KafkaUserSpec;
@@ -64,6 +65,8 @@ public class SecretDependentResource {
         final String kafkaClusterNamespace = Optional.ofNullable(kafkaReference.getNamespace()).orElse(namespace);
         final Kafka kafka = context.getSecondaryResource(Kafka.class).orElseThrow(illegalStateException("Kafka", kafkaClusterNamespace, kafkaClusterName));
         final Map<String, String> data  = new HashMap<>(commonSecretData);
+        final KafkaListener listener;
+        String kafkaUserType = null;
         final Optional<KafkaUserReference> kafkaUserReference = Optional.ofNullable(spec.getUser());
         if (kafkaUserReference.isPresent()) {
             if (!KafkaUser.RESOURCE_KIND.equals(kafkaUserReference.get().getKind()) || !KafkaUser.RESOURCE_GROUP.equals(kafkaUserReference.get().getApiGroup())) {
@@ -72,47 +75,42 @@ public class SecretDependentResource {
             final String kafkaUserName = kafkaUserReference.get().getName();
             final String kafkaUserNamespace = Optional.ofNullable(kafkaUserReference.get().getNamespace()).orElse(namespace);
             final KafkaUser kafkaUser = context.getSecondaryResource(KafkaUser.class).orElseThrow(illegalStateException("KafkaUser", kafkaUserNamespace, kafkaUserName));
-            final String userSecretName = Optional.ofNullable(kafkaUser.getStatus())
-                    .map(KafkaUserStatus::getSecret)
-                    .orElseThrow(illegalStateException("Secret in KafkaUser status", kafkaUserNamespace, kafkaUserName));
-            final InformerEventSource<Secret, KafkaAccess> kafkaUserSecretEventSource = (InformerEventSource<Secret, KafkaAccess>) context.eventSourceRetriever()
-                    .getResourceEventSourceFor(Secret.class, KafkaAccessReconciler.KAFKA_USER_SECRET_EVENT_SOURCE);
-            final Secret kafkaUserSecret = kafkaUserSecretEventSource.get(new ResourceID(userSecretName, kafkaUserNamespace))
-                    .orElseThrow(illegalStateException(String.format("Secret %s for KafkaUser", userSecretName), kafkaUserNamespace, kafkaUserName));
-            data.putAll(secretDataWithUser(spec, kafka, kafkaUser, new KafkaUserData(kafkaUser).withSecret(kafkaUserSecret)));
-        } else {
-            data.putAll(secretData(spec, kafka));
-        }
-        return data;
-    }
-
-    protected Map<String, String> secretData(final KafkaAccessSpec spec, final Kafka kafka) {
-        final Map<String, String> data  = new HashMap<>(commonSecretData);
-        final KafkaListener listener;
-        try {
-            listener = KafkaParser.getKafkaListener(kafka, spec);
-        } catch (CustomResourceParseException e) {
-            throw new IllegalStateException("Reconcile failed due to ParserException " + e.getMessage());
-        }
-        data.putAll(listener.getConnectionSecretData());
-        return data;
-    }
-
-    protected Map<String, String> secretDataWithUser(final KafkaAccessSpec spec, final Kafka kafka, final KafkaUser kafkaUser, final KafkaUserData kafkaUserData) {
-        final Map<String, String> data  = new HashMap<>(commonSecretData);
-        final KafkaListener listener;
-        try {
-            final String kafkaUserType = Optional.ofNullable(kafkaUser.getSpec())
+            kafkaUserType = Optional.ofNullable(kafkaUser.getSpec())
                     .map(KafkaUserSpec::getAuthentication)
                     .map(KafkaUserAuthentication::getType)
                     .orElse(KafkaParser.USER_AUTH_UNDEFINED);
+            data.putAll(getKafkaUserSecretData(context, kafkaUser, kafkaUserName, kafkaUserNamespace));
+        }
+        try {
             listener = KafkaParser.getKafkaListener(kafka, spec, kafkaUserType);
-            data.putAll(kafkaUserData.getConnectionSecretData());
         } catch (CustomResourceParseException e) {
             throw new IllegalStateException("Reconcile failed due to ParserException " + e.getMessage());
         }
+        if (listener.isTls()) {
+            listener.withCaCertSecret(getKafkaCaCertData(context, kafkaClusterName, kafkaClusterNamespace));
+        }
         data.putAll(listener.getConnectionSecretData());
         return data;
+    }
+
+    private Map<String, String> getKafkaUserSecretData(final Context<KafkaAccess> context, final KafkaUser kafkaUser, final String kafkaUserName, final String kafkaUserNamespace) {
+        final String userSecretName = Optional.ofNullable(kafkaUser.getStatus())
+                .map(KafkaUserStatus::getSecret)
+                .orElseThrow(illegalStateException("Secret in KafkaUser status", kafkaUserNamespace, kafkaUserName));
+        final InformerEventSource<Secret, KafkaAccess> kafkaUserSecretEventSource = (InformerEventSource<Secret, KafkaAccess>) context.eventSourceRetriever()
+                .getResourceEventSourceFor(Secret.class, KafkaAccessReconciler.KAFKA_USER_SECRET_EVENT_SOURCE);
+        final Secret kafkaUserSecret = kafkaUserSecretEventSource.get(new ResourceID(userSecretName, kafkaUserNamespace))
+                .orElseThrow(illegalStateException(String.format("Secret %s for KafkaUser", userSecretName), kafkaUserNamespace, kafkaUserName));
+        return new KafkaUserData(kafkaUser).withSecret(kafkaUserSecret).getConnectionSecretData();
+    }
+
+    private Map<String, String> getKafkaCaCertData(final Context<KafkaAccess> context, String kafkaClusterName, String kafkaClusterNamespace) {
+        final String caCertSecretName = KafkaResources.clusterCaCertificateSecretName(kafkaClusterName);
+        final InformerEventSource<Secret, KafkaAccess> strimziSecretEventSource = (InformerEventSource<Secret, KafkaAccess>) context.eventSourceRetriever()
+                .getResourceEventSourceFor(Secret.class, KafkaAccessReconciler.STRIMZI_SECRET_EVENT_SOURCE);
+        return strimziSecretEventSource.get(new ResourceID(caCertSecretName, kafkaClusterNamespace))
+                .map(Secret::getData)
+                .orElse(new HashMap<>());
     }
 
     private static Supplier<IllegalStateException> illegalStateException(String type, String namespace, String name) {

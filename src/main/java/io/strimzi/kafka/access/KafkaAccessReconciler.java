@@ -46,6 +46,11 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessOperator.class);
 
     /**
+     * Name of the event source for Strimzi Secret resources
+     */
+    public static final String STRIMZI_SECRET_EVENT_SOURCE = "STRIMZI_SECRET_EVENT_SOURCE";
+
+    /**
      * Name of the event source for KafkaUser Secret resources
      */
     public static final String KAFKA_USER_SECRET_EVENT_SOURCE = "KAFKA_USER_SECRET_EVENT_SOURCE";
@@ -175,9 +180,9 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         Map<String, EventSource> eventSources = EventSourceInitializer.nameEventSources(
                 kafkaEventSource,
                 kafkaUserEventSource,
-                strimziSecretEventSource,
                 kafkaAccessSecretEventSource
         );
+        eventSources.put(STRIMZI_SECRET_EVENT_SOURCE, strimziSecretEventSource);
         eventSources.put(KAFKA_USER_SECRET_EVENT_SOURCE, strimziKafkaUserSecretEventSource);
         LOGGER.info("Finished preparing event sources");
         return eventSources;

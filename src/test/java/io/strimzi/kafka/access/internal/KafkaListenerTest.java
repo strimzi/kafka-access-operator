@@ -60,16 +60,21 @@ public class KafkaListenerTest {
 
 
     @Test
-    @DisplayName("When Kafka listener with TLS enables is created, then the connection data is correct and the security protocol is SSL")
+    @DisplayName("When Kafka listener with TLS enabled is created, then the connection data is correct and the security protocol is SSL")
     void testTLSKafkaListener() {
+        final String cert = encodeToString("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
+        final Map<String, String> certSecretData = new HashMap<>();
+        certSecretData.put("ca.crt", cert);
         final GenericKafkaListener genericKafkaListener = ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, true);
-        final KafkaListener listener = new KafkaListener(genericKafkaListener).withBootstrapServer(BOOTSTRAP_SERVER_9092);
+        final KafkaListener listener = new KafkaListener(genericKafkaListener).withBootstrapServer(BOOTSTRAP_SERVER_9092)
+                .withCaCertSecret(certSecretData);
 
         final Map<String, String> secretData = listener.getConnectionSecretData();
 
         final Map<String, String> expectedData = new HashMap<>();
         bootstrapServerKeys().forEach(key -> expectedData.put(key, encodeToString(BOOTSTRAP_SERVER_9092)));
         securityProtocolKeys().forEach(key -> expectedData.put(key, encodeToString(SecurityProtocol.SSL.name)));
+        expectedData.put("ssl.truststore.crt", cert);
         assertThat(secretData).containsAllEntriesOf(expectedData);
     }
 
@@ -90,14 +95,19 @@ public class KafkaListenerTest {
     @Test
     @DisplayName("When a Kafka listener with SASL auth and TLS enabled is created, then the connection data is correct and has security protocol SASL_SSL")
     void testKafkaListenerWithSaslAuthAndTls() {
+        final String cert = encodeToString("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
+        final Map<String, String> certSecretData = new HashMap<>();
+        certSecretData.put("ca.crt", cert);
         final GenericKafkaListener genericKafkaListener = ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, true, new KafkaListenerAuthenticationScramSha512());
-        final KafkaListener listener = new KafkaListener(genericKafkaListener).withBootstrapServer(BOOTSTRAP_SERVER_9092);
+        final KafkaListener listener = new KafkaListener(genericKafkaListener).withBootstrapServer(BOOTSTRAP_SERVER_9092)
+                .withCaCertSecret(certSecretData);
 
         final Map<String, String> secretData = listener.getConnectionSecretData();
 
         final Map<String, String> expectedData = new HashMap<>();
         bootstrapServerKeys().forEach(key -> expectedData.put(key, encodeToString(BOOTSTRAP_SERVER_9092)));
         securityProtocolKeys().forEach(key -> expectedData.put(key, encodeToString(SecurityProtocol.SASL_SSL.name)));
+        expectedData.put("ssl.truststore.crt", cert);
         assertThat(secretData).containsAllEntriesOf(expectedData);
     }
 

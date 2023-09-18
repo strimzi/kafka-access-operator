@@ -49,7 +49,7 @@ public class KafkaParserTest {
                 )
         );
 
-        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec);
+        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec, null);
         assertThat(listener.getName()).isEqualTo(LISTENER_1);
         assertThat(listener.getType()).isEqualTo(KafkaListenerType.INTERNAL);
         assertThat(listener.isTls()).isFalse();
@@ -75,7 +75,7 @@ public class KafkaParserTest {
                 )
         );
 
-        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec);
+        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec, null);
         assertThat(listener.getName()).isEqualTo(LISTENER_1);
         assertThat(listener.getType()).isEqualTo(KafkaListenerType.INTERNAL);
         assertThat(listener.isTls()).isTrue();
@@ -103,7 +103,7 @@ public class KafkaParserTest {
                 )
         );
 
-        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec);
+        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec, null);
         assertThat(listener.getName()).isEqualTo("b");
         assertThat(listener.getType()).isEqualTo(KafkaListenerType.INTERNAL);
         assertThat(listener.isTls()).isFalse();
@@ -129,7 +129,7 @@ public class KafkaParserTest {
                 )
         );
 
-        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec);
+        final KafkaListener listener = KafkaParser.getKafkaListener(kafka, spec, null);
         assertThat(listener.getName()).isEqualTo("a");
         assertThat(listener.getType()).isEqualTo(KafkaListenerType.ROUTE);
         assertThat(listener.isTls()).isTrue();
@@ -155,7 +155,7 @@ public class KafkaParserTest {
                 )
         );
 
-        final CustomResourceParseException exception = assertThrows(CustomResourceParseException.class, () -> KafkaParser.getKafkaListener(kafka, spec));
+        final CustomResourceParseException exception = assertThrows(CustomResourceParseException.class, () -> KafkaParser.getKafkaListener(kafka, spec, null));
         assertThat(exception.getMessage()).isEqualTo(String.format("The specified listener %s is missing from the Kafka resource.", LISTENER_1));
     }
 
@@ -177,7 +177,7 @@ public class KafkaParserTest {
                 )
         );
 
-        final CustomResourceParseException exception = assertThrows(CustomResourceParseException.class, () -> KafkaParser.getKafkaListener(kafka, spec));
+        final CustomResourceParseException exception = assertThrows(CustomResourceParseException.class, () -> KafkaParser.getKafkaListener(kafka, spec, null));
         assertThat(exception.getMessage()).isEqualTo(String.format("The bootstrap server address for the listener %s is missing from the Kafka resource status.", LISTENER_1));
     }
 
