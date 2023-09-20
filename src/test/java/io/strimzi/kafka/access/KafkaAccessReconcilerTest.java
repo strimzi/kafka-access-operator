@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static io.strimzi.kafka.access.Base64Encoder.encodeToString;
+import static io.strimzi.kafka.access.Base64Encoder.encodeUtf8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 
@@ -121,10 +121,10 @@ public class KafkaAccessReconcilerTest {
         assertThat(ownerReferences).containsExactly(ownerReference);
 
         final Map<String, String> expectedDataEntries = new HashMap<>();
-        expectedDataEntries.put("type", encodeToString("kafka"));
-        expectedDataEntries.put("provider", encodeToString("strimzi"));
+        expectedDataEntries.put("type", encodeUtf8("kafka"));
+        expectedDataEntries.put("provider", encodeUtf8("strimzi"));
         expectedDataEntries.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
-                encodeToString(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092)));
+                encodeUtf8(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092)));
         assertThat(secret.getData()).containsAllEntriesOf(expectedDataEntries);
     }
 
@@ -139,7 +139,7 @@ public class KafkaAccessReconcilerTest {
                 List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
         );
         final Secret certSecret = ResourceProvider.getStrimziSecret(KafkaResources.clusterCaCertificateSecretName(KAFKA_NAME), KAFKA_NAME, KAFKA_NAMESPACE);
-        final String cert = encodeToString("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
+        final String cert = encodeUtf8("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
         final Map<String, String> certSecretData = new HashMap<>();
         certSecretData.put("ca.crt", cert);
         certSecret.setData(certSecretData);
@@ -164,10 +164,10 @@ public class KafkaAccessReconcilerTest {
         assertThat(secret.getType()).isEqualTo("servicebinding.io/kafka");
 
         final Map<String, String> expectedDataEntries = new HashMap<>();
-        expectedDataEntries.put("type", encodeToString("kafka"));
-        expectedDataEntries.put("provider", encodeToString("strimzi"));
+        expectedDataEntries.put("type", encodeUtf8("kafka"));
+        expectedDataEntries.put("provider", encodeUtf8("strimzi"));
         expectedDataEntries.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
-                encodeToString(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092)));
+                encodeUtf8(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092)));
         expectedDataEntries.put("ssl.truststore.crt", cert);
 
         assertThat(secret.getData()).containsAllEntriesOf(expectedDataEntries);
@@ -177,8 +177,8 @@ public class KafkaAccessReconcilerTest {
     @DisplayName("When reconcile is called with a KafkaAccess resource that references a KafkaUser, then a secret is created with the " +
             "bootstrapServer for the correct listener and the KafkaAccess status is updated")
     void testReconcileWithKafkaUser() {
-        final String cert = encodeToString("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
-        final String key = encodeToString("-----BEGIN PRIVATE KEY-----\nMIIEvA\n-----END PRIVATE KEY-----\n");
+        final String cert = encodeUtf8("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
+        final String key = encodeUtf8("-----BEGIN PRIVATE KEY-----\nMIIEvA\n-----END PRIVATE KEY-----\n");
         final Kafka kafka = ResourceProvider.getKafka(
                 KAFKA_NAME,
                 KAFKA_NAMESPACE,
@@ -222,7 +222,7 @@ public class KafkaAccessReconcilerTest {
         assertThat(secret.getData())
                 .containsEntry(
                         CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
-                        encodeToString(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093))
+                        encodeUtf8(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093))
                 ).containsEntry("ssl.keystore.crt", cert)
                 .containsEntry("ssl.keystore.key", key);
     }
@@ -232,11 +232,11 @@ public class KafkaAccessReconcilerTest {
             "bootstrapServer for the correct listener, the SASL username, password and Jaas config, and the KafkaAccess status is updated")
     void testReconcileWithSASLKafkaUser() {
         final String username = "my-user";
-        final String encodedUsername = encodeToString(username);
+        final String encodedUsername = encodeUtf8(username);
         final String password = "password";
-        final String encodedPassword = encodeToString(password);
+        final String encodedPassword = encodeUtf8(password);
         final String saslJaasConfig = String.format("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"%s\" password=\"%s\";", username, password);
-        final String encodedSaslJaasConfig = encodeToString(saslJaasConfig);
+        final String encodedSaslJaasConfig = encodeUtf8(saslJaasConfig);
         final Kafka kafka = ResourceProvider.getKafka(
                 KAFKA_NAME,
                 KAFKA_NAMESPACE,
@@ -280,7 +280,7 @@ public class KafkaAccessReconcilerTest {
         assertThat(secret.getData())
                 .containsEntry(
                         CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
-                        encodeToString(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093))
+                        encodeUtf8(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093))
                 )
                 .containsEntry("username", encodedUsername)
                 .containsEntry("user", encodedUsername)
@@ -317,8 +317,8 @@ public class KafkaAccessReconcilerTest {
         }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
         final Secret updatedSecret = client.secrets().inNamespace(NAMESPACE).withName(NAME).get();
-        assertThat(updatedSecret.getData()).contains(entry("type", encodeToString("kafka")),
-                entry("provider", encodeToString("strimzi")));
+        assertThat(updatedSecret.getData()).contains(entry("type", encodeUtf8("kafka")),
+                entry("provider", encodeUtf8("strimzi")));
         assertThat(updatedSecret.getMetadata().getAnnotations()).containsAllEntriesOf(customAnnotation);
     }
 }

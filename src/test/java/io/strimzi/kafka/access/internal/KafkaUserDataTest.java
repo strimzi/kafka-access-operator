@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.strimzi.kafka.access.Base64Encoder.encodeToString;
+import static io.strimzi.kafka.access.Base64Encoder.encodeUtf8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class KafkaUserDataTest {
@@ -28,8 +28,8 @@ public class KafkaUserDataTest {
     @Test
     @DisplayName("When a ScramSha512 KafkaUserData is created with a secret, then the connection data contains the SASL properties")
     void testKafkaUserDataScramSha512Secret() {
-        final String password = encodeToString("password");
-        final String saslJaasConfig = encodeToString("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"my-user-scram\" password=\"password\";");
+        final String password = encodeUtf8("password");
+        final String saslJaasConfig = encodeUtf8("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"my-user-scram\" password=\"password\";");
         final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithStatus(SECRET_NAME, USERNAME, new KafkaUserScramSha512ClientAuthentication());
 
         final Map<String, String> kafkaUserSecretData = new HashMap<>();
@@ -38,19 +38,19 @@ public class KafkaUserDataTest {
         final Secret kafkaUserSecret = new SecretBuilder().withData(kafkaUserSecretData).build();
 
         final Map<String, String> secretData = new KafkaUserData(kafkaUser).withSecret(kafkaUserSecret).getConnectionSecretData();
-        assertThat(secretData.get("username")).isEqualTo(encodeToString(USERNAME));
-        assertThat(secretData.get("user")).isEqualTo(encodeToString(USERNAME));
+        assertThat(secretData.get("username")).isEqualTo(encodeUtf8(USERNAME));
+        assertThat(secretData.get("user")).isEqualTo(encodeUtf8(USERNAME));
         assertThat(secretData.get("password")).isEqualTo(password);
         assertThat(secretData.get(SaslConfigs.SASL_JAAS_CONFIG)).isEqualTo(saslJaasConfig);
-        assertThat(secretData.get(SaslConfigs.SASL_MECHANISM)).isEqualTo(encodeToString("SCRAM-SHA-512"));
-        assertThat(secretData.get("saslMechanism")).isEqualTo(encodeToString("SCRAM-SHA-512"));
+        assertThat(secretData.get(SaslConfigs.SASL_MECHANISM)).isEqualTo(encodeUtf8("SCRAM-SHA-512"));
+        assertThat(secretData.get("saslMechanism")).isEqualTo(encodeUtf8("SCRAM-SHA-512"));
     }
 
     @Test
     @DisplayName("When a ScramSha512 KafkaUserData is created with a secret and the status is missing, then the connection data contains the SASL properties without the username")
     void testKafkaUserDataScramSha512MissingStatus() {
-        final String password = encodeToString("password");
-        final String saslJaasConfig = encodeToString("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"my-user-scram\" password=\"password\";");
+        final String password = encodeUtf8("password");
+        final String saslJaasConfig = encodeUtf8("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"my-user-scram\" password=\"password\";");
         final KafkaUser kafkaUser = ResourceProvider.getKafkaUser("test", "test", new KafkaUserScramSha512ClientAuthentication());
 
         final Map<String, String> kafkaUserSecretData = new HashMap<>();
@@ -63,8 +63,8 @@ public class KafkaUserDataTest {
         assertThat(secretData.get("user")).isNull();
         assertThat(secretData.get("password")).isEqualTo(password);
         assertThat(secretData.get(SaslConfigs.SASL_JAAS_CONFIG)).isEqualTo(saslJaasConfig);
-        assertThat(secretData.get(SaslConfigs.SASL_MECHANISM)).isEqualTo(encodeToString("SCRAM-SHA-512"));
-        assertThat(secretData.get("saslMechanism")).isEqualTo(encodeToString("SCRAM-SHA-512"));
+        assertThat(secretData.get(SaslConfigs.SASL_MECHANISM)).isEqualTo(encodeUtf8("SCRAM-SHA-512"));
+        assertThat(secretData.get("saslMechanism")).isEqualTo(encodeUtf8("SCRAM-SHA-512"));
     }
 
     @Test
@@ -73,19 +73,19 @@ public class KafkaUserDataTest {
         final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithStatus(SECRET_NAME, USERNAME, new KafkaUserScramSha512ClientAuthentication());
 
         final Map<String, String> secretData = new KafkaUserData(kafkaUser).getConnectionSecretData();
-        assertThat(secretData.get("username")).isEqualTo(encodeToString(USERNAME));
-        assertThat(secretData.get("user")).isEqualTo(encodeToString(USERNAME));
+        assertThat(secretData.get("username")).isEqualTo(encodeUtf8(USERNAME));
+        assertThat(secretData.get("user")).isEqualTo(encodeUtf8(USERNAME));
         assertThat(secretData.get("password")).isNull();
         assertThat(secretData.get(SaslConfigs.SASL_JAAS_CONFIG)).isNull();
-        assertThat(secretData.get(SaslConfigs.SASL_MECHANISM)).isEqualTo(encodeToString("SCRAM-SHA-512"));
-        assertThat(secretData.get("saslMechanism")).isEqualTo(encodeToString("SCRAM-SHA-512"));
+        assertThat(secretData.get(SaslConfigs.SASL_MECHANISM)).isEqualTo(encodeUtf8("SCRAM-SHA-512"));
+        assertThat(secretData.get("saslMechanism")).isEqualTo(encodeUtf8("SCRAM-SHA-512"));
     }
 
     @Test
     @DisplayName("When a tls KafkaUserData is created with a secret, then the connection data contains the correct certificate properties")
     void testKafkaUserDataTlsSecret() {
-        final String cert = encodeToString("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
-        final String key = encodeToString("-----BEGIN PRIVATE KEY-----\nMIIEvA\n-----END PRIVATE KEY-----\n");
+        final String cert = encodeUtf8("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
+        final String key = encodeUtf8("-----BEGIN PRIVATE KEY-----\nMIIEvA\n-----END PRIVATE KEY-----\n");
         final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithStatus(SECRET_NAME, USERNAME, new KafkaUserTlsClientAuthentication());
 
         final Map<String, String> kafkaUserSecretData = new HashMap<>();
@@ -109,8 +109,8 @@ public class KafkaUserDataTest {
     @Test
     @DisplayName("When a tls external KafkaUserData is created with a secret, then the connection data contains the correct certificate properties")
     void testKafkaUserDataTlsExternalSecret() {
-        final String cert = encodeToString("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
-        final String key = encodeToString("-----BEGIN PRIVATE KEY-----\nMIIEvA\n-----END PRIVATE KEY-----\n");
+        final String cert = encodeUtf8("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
+        final String key = encodeUtf8("-----BEGIN PRIVATE KEY-----\nMIIEvA\n-----END PRIVATE KEY-----\n");
         final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithStatus(SECRET_NAME, USERNAME, new KafkaUserTlsExternalClientAuthentication());
 
         final Map<String, String> kafkaUserSecretData = new HashMap<>();

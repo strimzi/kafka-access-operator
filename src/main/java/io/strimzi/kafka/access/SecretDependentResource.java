@@ -110,7 +110,7 @@ public class SecretDependentResource {
                 .getResourceEventSourceFor(Secret.class, KafkaAccessReconciler.STRIMZI_SECRET_EVENT_SOURCE);
         return strimziSecretEventSource.get(new ResourceID(caCertSecretName, kafkaClusterNamespace))
                 .map(Secret::getData)
-                .orElse(new HashMap<>());
+                .orElse(Map.of());
     }
 
     private static Supplier<IllegalStateException> illegalStateException(String type, String namespace, String name) {

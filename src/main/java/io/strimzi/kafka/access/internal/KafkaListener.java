@@ -130,7 +130,9 @@ public class KafkaListener {
         //Spring settings
         data.put("bootstrap-servers", bootstrapServers);
         if (this.tls) {
-            Optional.ofNullable(this.caCertSecret).map(secretData -> secretData.get("ca.crt")).ifPresent(cert -> data.put("ssl.truststore.crt", cert));
+            Optional.ofNullable(this.caCertSecret)
+                    .map(secretData -> secretData.get("ca.crt"))
+                    .ifPresent(cert -> data.put("ssl.truststore.crt", cert));
         }
         return data;
     }

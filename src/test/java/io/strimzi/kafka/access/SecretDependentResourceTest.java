@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static io.strimzi.kafka.access.Base64Encoder.encodeToString;
+import static io.strimzi.kafka.access.Base64Encoder.encodeUtf8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -71,10 +71,10 @@ public class SecretDependentResourceTest {
 
         Map<String, String> data = new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext);
         final Map<String, String> expectedDataEntries = new HashMap<>();
-        expectedDataEntries.put("type", encodeToString("kafka"));
-        expectedDataEntries.put("provider", encodeToString("strimzi"));
+        expectedDataEntries.put("type", encodeUtf8("kafka"));
+        expectedDataEntries.put("provider", encodeUtf8("strimzi"));
         expectedDataEntries.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
-                encodeToString(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092)));
+                encodeUtf8(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092)));
         assertThat(data).containsAllEntriesOf(expectedDataEntries);
     }
 
@@ -82,7 +82,7 @@ public class SecretDependentResourceTest {
     @DisplayName("When secretData is called with a KafkaAccess resource that references a tls listener, then the data returned includes the " +
             "CA certificate")
     void testSecretDataWithTls() {
-        final String cert = encodeToString("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
+        final String cert = encodeUtf8("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
         final Map<String, String> certSecretData = new HashMap<>();
         certSecretData.put("ca.crt", cert);
         final Secret certSecret = ResourceProvider.getStrimziSecret(KafkaResources.clusterCaCertificateSecretName(KAFKA_NAME), KAFKA_NAMESPACE, KAFKA_NAME);
@@ -107,10 +107,10 @@ public class SecretDependentResourceTest {
 
         Map<String, String> data = new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext);
         final Map<String, String> expectedDataEntries = new HashMap<>();
-        expectedDataEntries.put("type", encodeToString("kafka"));
-        expectedDataEntries.put("provider", encodeToString("strimzi"));
+        expectedDataEntries.put("type", encodeUtf8("kafka"));
+        expectedDataEntries.put("provider", encodeUtf8("strimzi"));
         expectedDataEntries.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
-                encodeToString(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092)));
+                encodeUtf8(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092)));
         expectedDataEntries.put("ssl.truststore.crt", cert);
         assertThat(data).containsAllEntriesOf(expectedDataEntries);
     }
@@ -144,7 +144,7 @@ public class SecretDependentResourceTest {
         Map<String, String> data = new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext);
         assertThat(data).containsEntry(
                 CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
-                encodeToString(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093))
+                encodeUtf8(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093))
         );
     }
 
