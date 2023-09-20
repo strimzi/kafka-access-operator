@@ -9,6 +9,8 @@ import io.strimzi.api.kafka.model.KafkaUser;
 import io.strimzi.api.kafka.model.KafkaUserAuthentication;
 import io.strimzi.api.kafka.model.KafkaUserScramSha512ClientAuthentication;
 import io.strimzi.api.kafka.model.KafkaUserSpec;
+import io.strimzi.api.kafka.model.KafkaUserTlsClientAuthentication;
+import io.strimzi.api.kafka.model.KafkaUserTlsExternalClientAuthentication;
 import io.strimzi.api.kafka.model.status.KafkaUserStatus;
 import org.apache.kafka.common.config.SaslConfigs;
 
@@ -75,6 +77,12 @@ public class KafkaUserData {
                     .ifPresent(password -> secretData.put("password", password));
             Optional.ofNullable(rawUserData.get(SaslConfigs.SASL_JAAS_CONFIG))
                     .ifPresent(jaasConfig -> secretData.put(SaslConfigs.SASL_JAAS_CONFIG, jaasConfig));
+        }
+        if (KafkaUserTlsClientAuthentication.TYPE_TLS.equals(authType) || KafkaUserTlsExternalClientAuthentication.TYPE_TLS_EXTERNAL.equals(authType)) {
+            Optional.ofNullable(rawUserData.get("user.crt"))
+                    .ifPresent(cert -> secretData.put("ssl.keystore.crt", cert));
+            Optional.ofNullable(rawUserData.get("user.key"))
+                    .ifPresent(key -> secretData.put("ssl.keystore.key", key));
         }
         return secretData;
     }

@@ -47,23 +47,11 @@ public class KafkaParser {
     public static final String USER_AUTH_UNDEFINED = "user-auth-undefined";
 
     /**
-     * Selects a KafkaListener from the Kafka resource based on the KafkaAccessSpec
-     *
-     * @param kafka                The Kafka resource
-     * @param kafkaAccessSpec      The KafkaAccessSpec resource
-     *
-     * @return                     A new instance of KafkaListener for the chosen listener
-     */
-    public static KafkaListener getKafkaListener(final Kafka kafka, final KafkaAccessSpec kafkaAccessSpec) {
-        return getKafkaListener(kafka, kafkaAccessSpec, null);
-    }
-
-    /**
      * Selects a KafkaListener from the Kafka resource based on the KafkaAccessSpec and the request authentication type
      *
      * @param kafka                The Kafka resource
      * @param kafkaAccessSpec      The KafkaAccessSpec resource
-     * @param kafkaUserAuth        The KafkaUser authentication type
+     * @param kafkaUserAuth        The KafkaUser authentication type, can be null
      *
      * @return                     A new instance of KafkaListener for the chosen listener
      */

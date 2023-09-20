@@ -10,12 +10,12 @@ import io.javaoperatorsdk.operator.processing.event.EventSourceRetriever;
 import io.javaoperatorsdk.operator.processing.event.ResourceID;
 import io.javaoperatorsdk.operator.processing.event.source.informer.InformerEventSource;
 import io.strimzi.api.kafka.model.Kafka;
+import io.strimzi.api.kafka.model.KafkaResources;
 import io.strimzi.api.kafka.model.KafkaUser;
 import io.strimzi.api.kafka.model.KafkaUserScramSha512ClientAuthentication;
 import io.strimzi.api.kafka.model.listener.KafkaListenerAuthenticationScramSha512;
 import io.strimzi.api.kafka.model.listener.arraylistener.KafkaListenerType;
 import io.strimzi.kafka.access.internal.CustomResourceParseException;
-import io.strimzi.kafka.access.internal.KafkaUserData;
 import io.strimzi.kafka.access.model.KafkaAccess;
 import io.strimzi.kafka.access.model.KafkaReference;
 import io.strimzi.kafka.access.model.KafkaUserReference;
@@ -25,14 +25,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static io.strimzi.kafka.access.Base64Encoder.encodeUtf8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -64,17 +63,55 @@ public class SecretDependentResourceTest {
                 List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false)),
                 List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
         );
+        final Context<KafkaAccess> mockContext = mock(Context.class);
+        when(mockContext.getSecondaryResource(Kafka.class)).thenReturn(Optional.of(kafka));
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference);
 
-        Map<String, String> data = new SecretDependentResource().secretData(kafkaAccess.getSpec(), kafka);
-        final Base64.Encoder encoder = Base64.getEncoder();
+        Map<String, String> data = new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext);
         final Map<String, String> expectedDataEntries = new HashMap<>();
-        expectedDataEntries.put("type", encoder.encodeToString("kafka".getBytes(StandardCharsets.UTF_8)));
-        expectedDataEntries.put("provider", encoder.encodeToString("strimzi".getBytes(StandardCharsets.UTF_8)));
+        expectedDataEntries.put("type", encodeUtf8("kafka"));
+        expectedDataEntries.put("provider", encodeUtf8("strimzi"));
         expectedDataEntries.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
-                encoder.encodeToString(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092).getBytes(StandardCharsets.UTF_8)));
+                encodeUtf8(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092)));
+        assertThat(data).containsAllEntriesOf(expectedDataEntries);
+    }
+
+    @Test
+    @DisplayName("When secretData is called with a KafkaAccess resource that references a tls listener, then the data returned includes the " +
+            "CA certificate")
+    void testSecretDataWithTls() {
+        final String cert = encodeUtf8("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
+        final Map<String, String> certSecretData = new HashMap<>();
+        certSecretData.put("ca.crt", cert);
+        final Secret certSecret = ResourceProvider.getStrimziSecret(KafkaResources.clusterCaCertificateSecretName(KAFKA_NAME), KAFKA_NAMESPACE, KAFKA_NAME);
+        certSecret.setData(certSecretData);
+        final Kafka kafka = ResourceProvider.getKafka(
+                KAFKA_NAME,
+                KAFKA_NAMESPACE,
+                List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, true)),
+                List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
+        );
+        final Context<KafkaAccess> mockContext = mock(Context.class);
+        when(mockContext.getSecondaryResource(Kafka.class)).thenReturn(Optional.of(kafka));
+
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference);
+
+        final EventSourceRetriever<KafkaAccess> mockEventSourceRetriever = mock(EventSourceRetriever.class);
+        final InformerEventSource<Secret, KafkaAccess> mockInformerEventSource = mock(InformerEventSource.class);
+        when(mockContext.eventSourceRetriever()).thenReturn(mockEventSourceRetriever);
+        when(mockEventSourceRetriever.getResourceEventSourceFor(Secret.class, KafkaAccessReconciler.STRIMZI_SECRET_EVENT_SOURCE)).thenReturn(mockInformerEventSource);
+        when(mockInformerEventSource.get(any(ResourceID.class))).thenReturn(Optional.of(certSecret));
+
+        Map<String, String> data = new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext);
+        final Map<String, String> expectedDataEntries = new HashMap<>();
+        expectedDataEntries.put("type", encodeUtf8("kafka"));
+        expectedDataEntries.put("provider", encodeUtf8("strimzi"));
+        expectedDataEntries.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
+                encodeUtf8(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092)));
+        expectedDataEntries.put("ssl.truststore.crt", cert);
         assertThat(data).containsAllEntriesOf(expectedDataEntries);
     }
 
@@ -88,18 +125,26 @@ public class SecretDependentResourceTest {
                 List.of(ResourceProvider.getListener(LISTENER_2, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512())),
                 List.of(ResourceProvider.getListenerStatus(LISTENER_2, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093))
         );
+        final Context<KafkaAccess> mockContext = mock(Context.class);
+        when(mockContext.getSecondaryResource(Kafka.class)).thenReturn(Optional.of(kafka));
 
-        final KafkaUser kafkaUser = ResourceProvider.getKafkaUser(KAFKA_NAME, KAFKA_NAMESPACE, new KafkaUserScramSha512ClientAuthentication());
+        final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithStatus(KAFKA_NAME, KAFKA_NAMESPACE, KAFKA_USER_SECRET_NAME, "user", new KafkaUserScramSha512ClientAuthentication());
+        when(mockContext.getSecondaryResource(KafkaUser.class)).thenReturn(Optional.of(kafkaUser));
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReferenceWithListener(KAFKA_NAME, LISTENER_2, KAFKA_NAMESPACE);
         final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
 
-        Map<String, String> data = new SecretDependentResource().secretDataWithUser(kafkaAccess.getSpec(), kafka, kafkaUser, new KafkaUserData(kafkaUser));
-        final Base64.Encoder encoder = Base64.getEncoder();
+        final EventSourceRetriever<KafkaAccess> mockEventSourceRetriever = mock(EventSourceRetriever.class);
+        final InformerEventSource<Secret, KafkaAccess> mockInformerEventSource = mock(InformerEventSource.class);
+        when(mockContext.eventSourceRetriever()).thenReturn(mockEventSourceRetriever);
+        when(mockEventSourceRetriever.getResourceEventSourceFor(Secret.class, KafkaAccessReconciler.KAFKA_USER_SECRET_EVENT_SOURCE)).thenReturn(mockInformerEventSource);
+        when(mockInformerEventSource.get(any(ResourceID.class))).thenReturn(Optional.of(ResourceProvider.getStrimziUserSecret(KAFKA_USER_SECRET_NAME, KAFKA_NAMESPACE, KAFKA_NAME)));
+
+        Map<String, String> data = new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext);
         assertThat(data).containsEntry(
                 CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
-                encoder.encodeToString(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093).getBytes(StandardCharsets.UTF_8))
+                encodeUtf8(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093))
         );
     }
 
