@@ -18,10 +18,13 @@ import io.strimzi.kafka.access.internal.CustomResourceParseException;
 import io.strimzi.kafka.access.internal.KafkaListener;
 import io.strimzi.kafka.access.internal.KafkaParser;
 import io.strimzi.kafka.access.internal.KafkaUserData;
+import io.strimzi.kafka.access.internal.MissingKubernetesResourceException;
 import io.strimzi.kafka.access.model.KafkaAccess;
 import io.strimzi.kafka.access.model.KafkaAccessSpec;
 import io.strimzi.kafka.access.model.KafkaReference;
 import io.strimzi.kafka.access.model.KafkaUserReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -43,6 +46,8 @@ public class SecretDependentResource {
     private static final String PROVIDER_SECRET_VALUE = "strimzi";
     private final Map<String, String> commonSecretData = new HashMap<>();
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SecretDependentResource.class);
+
     /**
      * Default constructor that initialises the common secret data
      */
@@ -63,18 +68,18 @@ public class SecretDependentResource {
         final KafkaReference kafkaReference = spec.getKafka();
         final String kafkaClusterName = kafkaReference.getName();
         final String kafkaClusterNamespace = Optional.ofNullable(kafkaReference.getNamespace()).orElse(namespace);
-        final Kafka kafka = context.getSecondaryResource(Kafka.class).orElseThrow(illegalStateException("Kafka", kafkaClusterNamespace, kafkaClusterName));
+        final Kafka kafka = context.getSecondaryResource(Kafka.class).orElseThrow(missingKubernetesResourceException("Kafka", kafkaClusterNamespace, kafkaClusterName));
         final Map<String, String> data  = new HashMap<>(commonSecretData);
         final KafkaListener listener;
         String kafkaUserType = null;
         final Optional<KafkaUserReference> kafkaUserReference = Optional.ofNullable(spec.getUser());
         if (kafkaUserReference.isPresent()) {
             if (!KafkaUser.RESOURCE_KIND.equals(kafkaUserReference.get().getKind()) || !KafkaUser.RESOURCE_GROUP.equals(kafkaUserReference.get().getApiGroup())) {
-                throw new CustomResourceParseException(String.format("User kind must be %s and apiGroup must be %s", KafkaUser.RESOURCE_KIND, KafkaUser.RESOURCE_GROUP));
+                throw new IllegalStateException(String.format("User kind must be %s and apiGroup must be %s", KafkaUser.RESOURCE_KIND, KafkaUser.RESOURCE_GROUP));
             }
             final String kafkaUserName = kafkaUserReference.get().getName();
             final String kafkaUserNamespace = Optional.ofNullable(kafkaUserReference.get().getNamespace()).orElse(namespace);
-            final KafkaUser kafkaUser = context.getSecondaryResource(KafkaUser.class).orElseThrow(illegalStateException("KafkaUser", kafkaUserNamespace, kafkaUserName));
+            final KafkaUser kafkaUser = context.getSecondaryResource(KafkaUser.class).orElseThrow(missingKubernetesResourceException("KafkaUser", kafkaUserNamespace, kafkaUserName));
             kafkaUserType = Optional.ofNullable(kafkaUser.getSpec())
                     .map(KafkaUserSpec::getAuthentication)
                     .map(KafkaUserAuthentication::getType)
@@ -84,7 +89,8 @@ public class SecretDependentResource {
         try {
             listener = KafkaParser.getKafkaListener(kafka, spec, kafkaUserType);
         } catch (CustomResourceParseException e) {
-            throw new IllegalStateException("Reconcile failed due to ParserException " + e.getMessage());
+            LOGGER.error("Reconcile failed due to ParserException " + e.getMessage());
+            throw e;
         }
         if (listener.isTls()) {
             listener.withCaCertSecret(getKafkaCaCertData(context, kafkaClusterName, kafkaClusterNamespace));
@@ -96,11 +102,11 @@ public class SecretDependentResource {
     private Map<String, String> getKafkaUserSecretData(final Context<KafkaAccess> context, final KafkaUser kafkaUser, final String kafkaUserName, final String kafkaUserNamespace) {
         final String userSecretName = Optional.ofNullable(kafkaUser.getStatus())
                 .map(KafkaUserStatus::getSecret)
-                .orElseThrow(illegalStateException("Secret in KafkaUser status", kafkaUserNamespace, kafkaUserName));
+                .orElseThrow(missingKubernetesResourceException("Secret in KafkaUser status", kafkaUserNamespace, kafkaUserName));
         final InformerEventSource<Secret, KafkaAccess> kafkaUserSecretEventSource = (InformerEventSource<Secret, KafkaAccess>) context.eventSourceRetriever()
                 .getResourceEventSourceFor(Secret.class, KafkaAccessReconciler.KAFKA_USER_SECRET_EVENT_SOURCE);
         final Secret kafkaUserSecret = kafkaUserSecretEventSource.get(new ResourceID(userSecretName, kafkaUserNamespace))
-                .orElseThrow(illegalStateException(String.format("Secret %s for KafkaUser", userSecretName), kafkaUserNamespace, kafkaUserName));
+                .orElseThrow(missingKubernetesResourceException(String.format("Secret %s for KafkaUser", userSecretName), kafkaUserNamespace, kafkaUserName));
         return new KafkaUserData(kafkaUser).withSecret(kafkaUserSecret).getConnectionSecretData();
     }
 
@@ -113,7 +119,7 @@ public class SecretDependentResource {
                 .orElse(Map.of());
     }
 
-    private static Supplier<IllegalStateException> illegalStateException(String type, String namespace, String name) {
-        return () -> new IllegalStateException(String.format("%s %s/%s missing", type, namespace, name));
+    private static Supplier<MissingKubernetesResourceException> missingKubernetesResourceException(String type, String namespace, String name) {
+        return () -> new MissingKubernetesResourceException(String.format("%s %s/%s missing", type, namespace, name));
     }
 }

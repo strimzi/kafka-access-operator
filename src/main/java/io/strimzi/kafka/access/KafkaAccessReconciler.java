@@ -11,6 +11,8 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.config.informer.InformerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
+import io.javaoperatorsdk.operator.api.reconciler.ErrorStatusHandler;
+import io.javaoperatorsdk.operator.api.reconciler.ErrorStatusUpdateControl;
 import io.javaoperatorsdk.operator.api.reconciler.EventSourceContext;
 import io.javaoperatorsdk.operator.api.reconciler.EventSourceInitializer;
 import io.javaoperatorsdk.operator.api.reconciler.Reconciler;
@@ -21,6 +23,7 @@ import io.javaoperatorsdk.operator.processing.event.source.informer.InformerEven
 import io.strimzi.api.kafka.model.Kafka;
 import io.strimzi.api.kafka.model.KafkaUser;
 import io.strimzi.kafka.access.internal.KafkaAccessMapper;
+import io.strimzi.kafka.access.internal.MissingKubernetesResourceException;
 import io.strimzi.kafka.access.model.BindingStatus;
 import io.strimzi.kafka.access.model.KafkaAccess;
 import io.strimzi.kafka.access.model.KafkaAccessStatus;
@@ -36,7 +39,7 @@ import java.util.Optional;
  */
 @SuppressWarnings("ClassFanOutComplexity")
 @ControllerConfiguration
-public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSourceInitializer<KafkaAccess> {
+public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSourceInitializer<KafkaAccess>, ErrorStatusHandler<KafkaAccess> {
 
     private final KubernetesClient kubernetesClient;
     private InformerEventSource<Secret, KafkaAccess> kafkaAccessSecretEventSource;
@@ -80,19 +83,15 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
 
         createOrUpdateSecret(secretDependentResource.desired(kafkaAccess.getSpec(), kafkaAccessNamespace, context), kafkaAccess);
 
-        final boolean bindingStatusCorrect = Optional.ofNullable(kafkaAccess.getStatus())
-                .map(KafkaAccessStatus::getBinding)
-                .map(BindingStatus::getName)
-                .map(kafkaAccessName::equals)
-                .orElse(false);
-        if (!bindingStatusCorrect) {
-            final KafkaAccessStatus status = new KafkaAccessStatus();
-            status.setBinding(new BindingStatus(kafkaAccessName));
-            kafkaAccess.setStatus(status);
-            return UpdateControl.updateStatus(kafkaAccess);
-        } else {
-            return UpdateControl.noUpdate();
-        }
+        final KafkaAccessStatus kafkaAccessStatus = Optional.ofNullable(kafkaAccess.getStatus())
+                .orElseGet(() -> {
+                    final KafkaAccessStatus status = new KafkaAccessStatus();
+                    kafkaAccess.setStatus(status);
+                    return status;
+                });
+        kafkaAccessStatus.setBinding(new BindingStatus(kafkaAccessName));
+        kafkaAccessStatus.setReadyCondition(true);
+        return UpdateControl.patchStatus(kafkaAccess);
     }
 
     private void createOrUpdateSecret(final Map<String, String> data, final KafkaAccess kafkaAccess) {
@@ -186,5 +185,23 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         eventSources.put(KAFKA_USER_SECRET_EVENT_SOURCE, strimziKafkaUserSecretEventSource);
         LOGGER.info("Finished preparing event sources");
         return eventSources;
+    }
+
+    @Override
+    public ErrorStatusUpdateControl<KafkaAccess> updateErrorStatus(KafkaAccess kafkaAccess, Context<KafkaAccess> context, Exception e) {
+        final KafkaAccessStatus status = Optional.ofNullable(kafkaAccess.getStatus())
+                .orElseGet(() -> {
+                    final KafkaAccessStatus newStatus = new KafkaAccessStatus();
+                    kafkaAccess.setStatus(newStatus);
+                    return newStatus;
+                });
+        String reason = null;
+        if (e instanceof MissingKubernetesResourceException) {
+            reason = "MissingKubernetesResource";
+        } else if (e instanceof IllegalStateException) {
+            reason = "InvalidUserKind";
+        }
+        status.setReadyCondition(false, e.getMessage(), reason);
+        return ErrorStatusUpdateControl.patchStatus(kafkaAccess);
     }
 }

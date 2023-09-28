@@ -15,7 +15,7 @@ import io.strimzi.api.kafka.model.KafkaUser;
 import io.strimzi.api.kafka.model.KafkaUserScramSha512ClientAuthentication;
 import io.strimzi.api.kafka.model.listener.KafkaListenerAuthenticationScramSha512;
 import io.strimzi.api.kafka.model.listener.arraylistener.KafkaListenerType;
-import io.strimzi.kafka.access.internal.CustomResourceParseException;
+import io.strimzi.kafka.access.internal.MissingKubernetesResourceException;
 import io.strimzi.kafka.access.model.KafkaAccess;
 import io.strimzi.kafka.access.model.KafkaReference;
 import io.strimzi.kafka.access.model.KafkaUserReference;
@@ -158,7 +158,7 @@ public class SecretDependentResourceTest {
         final Context<KafkaAccess> mockContext = mock(Context.class);
         when(mockContext.getSecondaryResource(Kafka.class)).thenReturn(Optional.empty());
 
-        final IllegalStateException exception = assertThrows(IllegalStateException.class,
+        final MissingKubernetesResourceException exception = assertThrows(MissingKubernetesResourceException.class,
                 () -> new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext));
         assertThat(exception).hasMessage(String.format("Kafka %s/%s missing", KAFKA_NAMESPACE, KAFKA_NAME));
     }
@@ -187,7 +187,7 @@ public class SecretDependentResourceTest {
         final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_USER_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
 
-        final IllegalStateException exception = assertThrows(IllegalStateException.class,
+        final MissingKubernetesResourceException exception = assertThrows(MissingKubernetesResourceException.class,
                 () -> new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext));
         assertThat(exception).hasMessage(String.format("KafkaUser %s/%s missing", KAFKA_NAMESPACE, KAFKA_USER_NAME));
     }
@@ -218,13 +218,13 @@ public class SecretDependentResourceTest {
         final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_USER_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
 
-        final IllegalStateException exception = assertThrows(IllegalStateException.class,
+        final MissingKubernetesResourceException exception = assertThrows(MissingKubernetesResourceException.class,
                 () -> new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext));
         assertThat(exception).hasMessage(String.format("Secret in KafkaUser status %s/%s missing", KAFKA_NAMESPACE, KAFKA_USER_NAME));
     }
 
     @Test
-    @DisplayName("When desired is called with a KafkaAccess resource and the referenced KafkaUser resource's Secret, " +
+    @DisplayName("When desired is called with a KafkaAccess resource and the referenced KafkaUser resource's Secret is missing, " +
             "then it throws an exception")
     void testDesiredMissingKafkaUserSecret() {
         final Kafka kafka = ResourceProvider.getKafka(
@@ -254,7 +254,7 @@ public class SecretDependentResourceTest {
         final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_USER_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
 
-        final IllegalStateException exception = assertThrows(IllegalStateException.class,
+        final MissingKubernetesResourceException exception = assertThrows(MissingKubernetesResourceException.class,
                 () -> new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext));
         assertThat(exception).hasMessage(String.format("Secret %s for KafkaUser %s/%s missing", KAFKA_USER_SECRET_NAME, KAFKA_NAMESPACE, KAFKA_USER_NAME));
     }
@@ -288,7 +288,7 @@ public class SecretDependentResourceTest {
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
         final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, userReference);
-        final CustomResourceParseException exception = assertThrows(CustomResourceParseException.class,
+        final IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext));
         assertThat(exception).hasMessage("User kind must be KafkaUser and apiGroup must be kafka.strimzi.io");
     }
