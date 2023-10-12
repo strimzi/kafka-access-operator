@@ -85,6 +85,7 @@ If you encounter any issues while using the Access Operator, you can get help th
 
 - [Strimzi Users mailing list](https://lists.cncf.io/g/cncf-strimzi-users/topics)
 - [#strimzi channel on CNCF Slack](https://slack.cncf.io/)
+- [GitHub Discussions](https://github.com/orgs/strimzi/discussions)
 
 ## Contributing
 
