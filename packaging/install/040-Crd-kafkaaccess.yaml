@@ -57,6 +57,25 @@ spec:
                     name:
                       type: string
                   type: object
+                conditions:
+                  items:
+                    properties:
+                      status:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                      type:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                      additionalProperties:
+                        additionalProperties:
+                          type: object
+                        type: object
+                    type: object
+                  type: array
                 observedGeneration:
                   type: integer
               type: object

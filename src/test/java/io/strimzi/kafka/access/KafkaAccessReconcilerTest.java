@@ -21,6 +21,7 @@ import io.strimzi.api.kafka.model.KafkaUserTlsExternalClientAuthentication;
 import io.strimzi.api.kafka.model.listener.KafkaListenerAuthenticationScramSha512;
 import io.strimzi.api.kafka.model.listener.KafkaListenerAuthenticationTls;
 import io.strimzi.api.kafka.model.listener.arraylistener.KafkaListenerType;
+import io.strimzi.api.kafka.model.status.Condition;
 import io.strimzi.kafka.access.model.BindingStatus;
 import io.strimzi.kafka.access.model.KafkaAccess;
 import io.strimzi.kafka.access.model.KafkaAccessStatus;
@@ -32,6 +33,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static io.strimzi.kafka.access.Base64Encoder.encodeUtf8;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -99,7 +103,17 @@ public class KafkaAccessReconcilerTest {
             return bindingName.isPresent() && NAME.equals(bindingName.get());
         }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
-        String uid = Optional.ofNullable(client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get())
+        final KafkaAccess actualKafkaAccess = client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get();
+        List<Condition> conditions = Optional.ofNullable(actualKafkaAccess)
+                .map(KafkaAccess::getStatus)
+                .map(KafkaAccessStatus::getConditions)
+                .orElse(List.of());
+        assertThat(conditions).hasSize(1);
+        final Condition readyCondition = conditions.get(0);
+        assertThat(readyCondition.getType()).isEqualTo("Ready");
+        assertThat(readyCondition.getStatus()).isEqualTo("True");
+        assertThat(readyCondition.getLastTransitionTime()).isNotEmpty();
+        String uid = Optional.ofNullable(actualKafkaAccess)
                 .map(KafkaAccess::getMetadata)
                 .map(ObjectMeta::getUid)
                 .orElse("");
@@ -320,5 +334,193 @@ public class KafkaAccessReconcilerTest {
         assertThat(updatedSecret.getData()).contains(entry("type", encodeUtf8("kafka")),
                 entry("provider", encodeUtf8("strimzi")));
         assertThat(updatedSecret.getMetadata().getAnnotations()).containsAllEntriesOf(customAnnotation);
+    }
+
+    @Test
+    @DisplayName("When reconcile is called with a KafkaAccess resource and the Kafka resource is missing, then " +
+            "the KafkaAccess status is updated with a Ready condition of False")
+    void testReconcileMissingKafka() {
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference);
+
+        client.resources(KafkaAccess.class).resource(kafkaAccess).create();
+        client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
+            final Optional<KafkaAccessStatus> kafkaAccessStatus = Optional.ofNullable(updatedKafkaAccess)
+                    .map(KafkaAccess::getStatus);
+            return kafkaAccessStatus.isPresent() && !kafkaAccessStatus.get().getConditions().isEmpty();
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        final KafkaAccess actualKafkaAccess = client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get();
+        List<Condition> conditions = Optional.ofNullable(actualKafkaAccess)
+                .map(KafkaAccess::getStatus)
+                .map(KafkaAccessStatus::getConditions)
+                .orElse(List.of());
+        assertThat(conditions).hasSize(1);
+        final Condition readyCondition = conditions.get(0);
+        assertThat(readyCondition.getType()).isEqualTo("Ready");
+        assertThat(readyCondition.getStatus()).isEqualTo("False");
+        assertThat(readyCondition.getLastTransitionTime()).isNotEmpty();
+        assertThat(readyCondition.getMessage()).isEqualTo(String.format("Kafka %s/%s missing", KAFKA_NAMESPACE, KAFKA_NAME));
+        assertThat(readyCondition.getReason()).isEqualTo("MissingKubernetesResource");
+    }
+
+    @Test
+    @DisplayName("When reconcile is called with a KafkaAccess resource and the KafkaUser resource is missing, then " +
+            "the KafkaAccess status is updated with a Ready condition of False")
+    void testReconcileMissingKafkaUser() {
+        final Kafka kafka = ResourceProvider.getKafka(
+                KAFKA_NAME,
+                KAFKA_NAMESPACE,
+                List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false)),
+                List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
+        );
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
+        final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_USER_NAME, KAFKA_NAMESPACE);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
+
+        client.resources(KafkaAccess.class).resource(kafkaAccess).create();
+        client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
+            final Optional<KafkaAccessStatus> kafkaAccessStatus = Optional.ofNullable(updatedKafkaAccess)
+                    .map(KafkaAccess::getStatus);
+            return kafkaAccessStatus.isPresent() && !kafkaAccessStatus.get().getConditions().isEmpty();
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        final KafkaAccess actualKafkaAccess = client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get();
+        List<Condition> conditions = Optional.ofNullable(actualKafkaAccess)
+                .map(KafkaAccess::getStatus)
+                .map(KafkaAccessStatus::getConditions)
+                .orElse(List.of());
+        assertThat(conditions).hasSize(1);
+        final Condition readyCondition = conditions.get(0);
+        assertThat(readyCondition.getType()).isEqualTo("Ready");
+        assertThat(readyCondition.getStatus()).isEqualTo("False");
+        assertThat(readyCondition.getLastTransitionTime()).isNotEmpty();
+        assertThat(readyCondition.getMessage()).isEqualTo(String.format("KafkaUser %s/%s missing", KAFKA_NAMESPACE, KAFKA_USER_NAME));
+        assertThat(readyCondition.getReason()).isEqualTo("MissingKubernetesResource");
+    }
+
+    @Test
+    @DisplayName("When reconcile is called with a KafkaAccess resource and the KafkaUser's status is missing, then " +
+            "the KafkaAccess status is updated with a Ready condition of False")
+    void testReconcileMissingKafkaUserStatus() {
+        final Kafka kafka = ResourceProvider.getKafka(
+                KAFKA_NAME,
+                KAFKA_NAMESPACE,
+                List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationTls())),
+                List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
+        );
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
+
+        final KafkaUser kafkaUser = ResourceProvider.getKafkaUser(KAFKA_USER_NAME, KAFKA_NAMESPACE, new KafkaUserTlsExternalClientAuthentication());
+        Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafkaUser).create();
+
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
+        final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_USER_NAME, KAFKA_NAMESPACE);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
+
+        client.resources(KafkaAccess.class).resource(kafkaAccess).create();
+        client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
+            final Optional<KafkaAccessStatus> kafkaAccessStatus = Optional.ofNullable(updatedKafkaAccess)
+                    .map(KafkaAccess::getStatus);
+            return kafkaAccessStatus.isPresent() && !kafkaAccessStatus.get().getConditions().isEmpty();
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        final KafkaAccess actualKafkaAccess = client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get();
+        List<Condition> conditions = Optional.ofNullable(actualKafkaAccess)
+                .map(KafkaAccess::getStatus)
+                .map(KafkaAccessStatus::getConditions)
+                .orElse(List.of());
+        assertThat(conditions).hasSize(1);
+        final Condition readyCondition = conditions.get(0);
+        assertThat(readyCondition.getType()).isEqualTo("Ready");
+        assertThat(readyCondition.getStatus()).isEqualTo("False");
+        assertThat(readyCondition.getLastTransitionTime()).isNotEmpty();
+        assertThat(readyCondition.getMessage()).isEqualTo(String.format("Secret in KafkaUser status %s/%s missing", KAFKA_NAMESPACE, KAFKA_USER_NAME));
+        assertThat(readyCondition.getReason()).isEqualTo("MissingKubernetesResource");
+    }
+
+    @Test
+    @DisplayName("When reconcile is called with a KafkaAccess resource and the KafkaUser's Secret resource is missing, then " +
+            "the KafkaAccess status is updated with a Ready condition of False")
+    void testReconcileMissingKafkaUserSecret() {
+        final Kafka kafka = ResourceProvider.getKafka(
+                KAFKA_NAME,
+                KAFKA_NAMESPACE,
+                List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationTls())),
+                List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
+        );
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
+
+        final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithStatus(KAFKA_USER_NAME, KAFKA_NAMESPACE, KAFKA_USER_NAME, "my-user", new KafkaUserTlsExternalClientAuthentication());
+        Crds.kafkaUserOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafkaUser).create();
+
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
+        final KafkaUserReference kafkaUserReference = ResourceProvider.getKafkaUserReference(KAFKA_USER_NAME, KAFKA_NAMESPACE);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
+
+        client.resources(KafkaAccess.class).resource(kafkaAccess).create();
+        client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
+            final Optional<KafkaAccessStatus> kafkaAccessStatus = Optional.ofNullable(updatedKafkaAccess)
+                    .map(KafkaAccess::getStatus);
+            return kafkaAccessStatus.isPresent() && !kafkaAccessStatus.get().getConditions().isEmpty();
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        final KafkaAccess actualKafkaAccess = client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get();
+        List<Condition> conditions = Optional.ofNullable(actualKafkaAccess)
+                .map(KafkaAccess::getStatus)
+                .map(KafkaAccessStatus::getConditions)
+                .orElse(List.of());
+        assertThat(conditions).hasSize(1);
+        final Condition readyCondition = conditions.get(0);
+        assertThat(readyCondition.getType()).isEqualTo("Ready");
+        assertThat(readyCondition.getStatus()).isEqualTo("False");
+        assertThat(readyCondition.getLastTransitionTime()).isNotEmpty();
+        assertThat(readyCondition.getMessage()).isEqualTo(String.format("Secret %s for KafkaUser %s/%s missing", KAFKA_USER_NAME, KAFKA_NAMESPACE, KAFKA_USER_NAME));
+        assertThat(readyCondition.getReason()).isEqualTo("MissingKubernetesResource");
+    }
+
+    private static Stream<KafkaUserReference> userReferences() {
+        return Stream.of(
+                ResourceProvider.getUserReference("SpecialUser", KafkaUser.RESOURCE_GROUP, KAFKA_NAME, KAFKA_NAMESPACE),
+                ResourceProvider.getUserReference(KafkaUser.RESOURCE_KIND, "special.user.group", KAFKA_NAME, KAFKA_NAMESPACE),
+                ResourceProvider.getUserReference("SpecialUser", "special.user.group", KAFKA_NAME, KAFKA_NAMESPACE));
+    }
+
+    @ParameterizedTest
+    @MethodSource("userReferences")
+    @DisplayName("When reconcile is called with a KafkaAccess resource that references an invalid user Resource, then " +
+            "the KafkaAccess status is updated with a Ready condition of False")
+    void testReconcileInvalidUserReference(KafkaUserReference kafkaUserReference) {
+        final Kafka kafka = ResourceProvider.getKafka(
+                KAFKA_NAME,
+                KAFKA_NAMESPACE,
+                List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationTls())),
+                List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
+        );
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
+
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference, kafkaUserReference);
+
+        client.resources(KafkaAccess.class).resource(kafkaAccess).create();
+        client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
+            final Optional<KafkaAccessStatus> kafkaAccessStatus = Optional.ofNullable(updatedKafkaAccess)
+                    .map(KafkaAccess::getStatus);
+            return kafkaAccessStatus.isPresent() && !kafkaAccessStatus.get().getConditions().isEmpty();
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        final KafkaAccess actualKafkaAccess = client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get();
+        List<Condition> conditions = Optional.ofNullable(actualKafkaAccess)
+                .map(KafkaAccess::getStatus)
+                .map(KafkaAccessStatus::getConditions)
+                .orElse(List.of());
+        assertThat(conditions).hasSize(1);
+        final Condition readyCondition = conditions.get(0);
+        assertThat(readyCondition.getType()).isEqualTo("Ready");
+        assertThat(readyCondition.getStatus()).isEqualTo("False");
+        assertThat(readyCondition.getLastTransitionTime()).isNotEmpty();
+        assertThat(readyCondition.getMessage()).isEqualTo("User kind must be KafkaUser and apiGroup must be kafka.strimzi.io");
+        assertThat(readyCondition.getReason()).isEqualTo("InvalidUserKind");
     }
 }
