@@ -89,9 +89,11 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                     kafkaAccess.setStatus(status);
                     return status;
                 });
+
         kafkaAccessStatus.setBinding(new BindingStatus(kafkaAccessName));
-        kafkaAccessStatus.setReadyCondition(true);
-        return UpdateControl.patchStatus(kafkaAccess);
+        kafkaAccessStatus.setReadyCondition(true, "Ready", "Ready");
+
+        return UpdateControl.updateStatus(kafkaAccess);
     }
 
     private void createOrUpdateSecret(final Map<String, String> data, final KafkaAccess kafkaAccess) {
@@ -202,6 +204,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
             reason = "InvalidUserKind";
         }
         status.setReadyCondition(false, e.getMessage(), reason);
-        return ErrorStatusUpdateControl.patchStatus(kafkaAccess);
+
+        return ErrorStatusUpdateControl.updateStatus(kafkaAccess);
     }
 }
