@@ -6,6 +6,7 @@ package io.strimzi.kafka.access.model;
 
 import io.javaoperatorsdk.operator.api.ObservedGenerationAwareStatus;
 import io.strimzi.api.kafka.model.status.Condition;
+import io.strimzi.kafka.access.internal.StatusUtils;
 
 import java.util.ArrayList;
 import java.util.List;
