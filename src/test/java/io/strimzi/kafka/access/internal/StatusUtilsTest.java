@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class StatusUtilsTest {
     @Test
-    @DisplayName("When a condition is added, then the LastTransitionTime should be set if empty")
+    @DisplayName("When a condition is added, the LastTransitionTime should be set if empty")
     void testLastTransitionTimeSetIfEmpty() {
         final List<Condition> conditions = new ArrayList<>();
 
@@ -35,7 +35,7 @@ public class StatusUtilsTest {
     }
 
     @Test
-    @DisplayName("When a condition is amended, then the LastTransitionTime should be set if empty")
+    @DisplayName("When a condition is amended, the LastTransitionTime should be set if empty")
     void testLastTransitionTimeSetIfEmptyWhenAmend() {
         final List<Condition> conditions = new ArrayList<>();
 
@@ -63,7 +63,7 @@ public class StatusUtilsTest {
     }
 
     @Test
-    @DisplayName("When a condition is amended and it status changes, then the LastTransitionTime should be updated according")
+    @DisplayName("When a condition is amended and its status changes, the LastTransitionTime should be updated accordingly")
     void testLastTransitionTimeUpdatedOnStatusChange() {
         final List<Condition> conditions = new ArrayList<>();
 
@@ -100,7 +100,7 @@ public class StatusUtilsTest {
     }
 
     @Test
-    @DisplayName("When a condition is amended and it status does not change, then the LastTransitionTime should not be ièdated")
+    @DisplayName("When a condition is amended and its status does not change, the LastTransitionTime should not be updated")
     void testLastTransitionTimeNotUpdated() {
         final List<Condition> conditions = new ArrayList<>();
 
@@ -126,7 +126,7 @@ public class StatusUtilsTest {
 
         var ltt1 = conditions.get(0).getLastTransitionTime();
 
-        // amend the condition but not ots status, LastTransitionTime should not be updated
+        // amend the condition but not its status, LastTransitionTime should not be updated
         StatusUtils.setCondition(conditions, c2);
 
         assertThat(conditions).first().satisfies(c -> {
