@@ -114,7 +114,7 @@ Strimzi Access Operator is licensed under the [Apache License](./LICENSE), Versi
 
 Strimzi Access Operator containers are signed using the [`cosign` tool](https://github.com/sigstore/cosign).
 Strimzi currently does not use the keyless signing and the transparency log.
-To verify the container, you can copy the following public key into a file:
+To verify the authenticity of the container, you can copy the following Strimzi public key into a file:
 
 ```
 -----BEGIN PUBLIC KEY-----
@@ -123,7 +123,7 @@ TRnbE23Wb5AzJPnpevvQ1QUEQQ5h/I4GobB7/jkGfqYkt6Ct5WOU2cc6HQ==
 -----END PUBLIC KEY-----
 ```
 
-And use it to verify the signature:
+Use the following `cosign` command to verify the signature:
 
 ```
 cosign verify --key strimzi.pub quay.io/strimzi/kafka-access-operator:latest --insecure-ignore-tlog=true
@@ -132,9 +132,9 @@ cosign verify --key strimzi.pub quay.io/strimzi/kafka-access-operator:latest --i
 ## Software Bill of Materials (SBOM)
 
 Strimzi Access Operator publishes the software bill of materials (SBOM) of our containers.
-The SBOMs are published as an archive with `SPDX-JSON` and `Syft-Table` formats signed using cosign.
+The SBOMs are published as archives with `SPDX-JSON` and `Syft-Table` formats, and they are signed using cosign.
 For releases, they are also pushed into the container registry.
-To verify the SBOM signatures, please use the Strimzi public key:
+To verify the authenticity of the SBOM signatures, use the Strimzi public key:
 
 ```
 -----BEGIN PUBLIC KEY-----
@@ -143,7 +143,7 @@ TRnbE23Wb5AzJPnpevvQ1QUEQQ5h/I4GobB7/jkGfqYkt6Ct5WOU2cc6HQ==
 -----END PUBLIC KEY-----
 ```
 
-You can use it to verify the signature of the SBOM files with the following command:
+Use the following `cosign` command to verify the signatures:
 
 ```
 cosign verify-blob --key cosign.pub --bundle <SBOM-file>.bundle --insecure-ignore-tlog=true <SBOM-file>
