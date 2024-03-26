@@ -1,0 +1,18 @@
+image:
+  # TODO until first release is there
+  tag: latest
+  pullPolicy: Always
+
+resources:
+  limits:
+    memory: 256Mi
+    cpu: 500m
+  requests:
+    memory: 256Mi
+    cpu: 100m
+livenessProbe:
+  initialDelaySeconds: 10
+  periodSeconds: 30
+readinessProbe:
+  initialDelaySeconds: 10
+  periodSeconds: 30
