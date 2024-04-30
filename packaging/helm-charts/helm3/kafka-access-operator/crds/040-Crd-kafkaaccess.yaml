@@ -1,0 +1,86 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: kafkaaccesses.access.strimzi.io
+  labels:
+    servicebinding.io/provisioned-service: "true"
+spec:
+  group: access.strimzi.io
+  names:
+    kind: KafkaAccess
+    plural: kafkaaccesses
+    shortNames:
+      - ka
+    singular: kafkaaccess
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                kafka:
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    listener:
+                      type: string
+                  required:
+                    - name
+                  type: object
+                user:
+                  properties:
+                    kind:
+                      type: string
+                    apiGroup:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                    - kind
+                    - apiGroup
+                    - name
+                  type: object
+              required:
+                - kafka
+              type: object
+            status:
+              properties:
+                binding:
+                  properties:
+                    name:
+                      type: string
+                  type: object
+                conditions:
+                  items:
+                    properties:
+                      status:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                      type:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                      additionalProperties:
+                        additionalProperties:
+                          type: object
+                        type: object
+                    type: object
+                  type: array
+                observedGeneration:
+                  type: integer
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
