@@ -2,65 +2,27 @@ name: CI
 
 "on":
   merge_group: {}
-  pull_request:
-    branches:
-      - "tickets/*"
+  pull_request: {}
   push:
-    branches-ignore:
-      # These should always correspond to pull requests, so ignore them for
-      # the push trigger and let them be triggered by the pull_request
-      # trigger, avoiding running the workflow twice.  This is a minor
-      # optimization so there's no need to ensure this is comprehensive.
-      - "dependabot/**"
-      - "gh-readonly-queue/**"
-      - "renovate/**"
     tags:
       - "*"
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
-    # Only do Docker builds of tagged releases and pull requests from ticket
-    # branches.  This will still trigger on pull requests from untrusted
-    # repositories whose branch names match our tickets/* branch convention,
-    # but in this case the build will fail with an error since the secret
-    # won't be set.
+    # (optional) only build on tags or ticket branches
     if: >
       startsWith(github.ref, 'refs/tags/')
       || startsWith(github.head_ref, 'tickets/')
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - uses: lsst-sqre/build-and-push-to-ghcr@v1
+        id: build
         with:
-          fetch-depth: 0
+          image: ${{ github.repository }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Define the Docker tag
-        id: vars
-        run: echo ::set-output name=tag::$(scripts/docker-tag.sh)
-
-      - name: Print the tag
-        id: print
-        run: echo ${{ steps.vars.outputs.tag }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/lsst-sqre/strimzi-access-operator:${{ steps.vars.outputs.tag }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - run: echo Pushed ghcr.io/${{ github.repository }}:${{ steps.build.outputs.tag }}
