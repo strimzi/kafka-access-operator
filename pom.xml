@@ -19,6 +19,7 @@
     <modules>
         <module>api</module>
         <module>operator</module>
+        <module>systemtest</module>
     </modules>
 
     <name>Strimzi Kafka Access Operator</name>
@@ -108,6 +109,8 @@
         <junit-jupiter.version>5.8.2</junit-jupiter.version>
         <assertj.version>3.21.0</assertj.version>
         <mockito.version>4.11.0</mockito.version>
+        <test-frame.version>0.1.1</test-frame.version>
+        <helm-client.version>0.0.8</helm-client.version>
 
         <javadoc.fail.on.warnings>true</javadoc.fail.on.warnings>
     </properties>
@@ -248,6 +251,36 @@
                 <groupId>io.strimzi.kafka.access</groupId>
                 <artifactId>api</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.skodjob</groupId>
+                <artifactId>test-frame-common</artifactId>
+                <version>${test-frame.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.skodjob</groupId>
+                <artifactId>test-frame-kubernetes</artifactId>
+                <version>${test-frame.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-model-apiextensions</artifactId>
+                <version>${fabric8.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-model-rbac</artifactId>
+                <version>${fabric8.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-model-apps</artifactId>
+                <version>${fabric8.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.marcnuri.helm-java</groupId>
+                <artifactId>helm-java</artifactId>
+                <version>${helm-client.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
