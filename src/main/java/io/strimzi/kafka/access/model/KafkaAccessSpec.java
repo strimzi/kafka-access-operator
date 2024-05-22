@@ -5,10 +5,16 @@
 package io.strimzi.kafka.access.model;
 
 import io.fabric8.generator.annotation.Required;
+import io.strimzi.api.kafka.model.Constants;
+import io.sundr.builder.annotations.Buildable;
 
 /**
  * The spec model of the KafkaAccess resource
  */
+@Buildable(
+    editableEnabled = false,
+    builderPackage = Constants.FABRIC8_KUBERNETES_API
+)
 public class KafkaAccessSpec {
 
     @Required

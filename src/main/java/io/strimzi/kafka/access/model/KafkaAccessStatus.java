@@ -5,8 +5,10 @@
 package io.strimzi.kafka.access.model;
 
 import io.javaoperatorsdk.operator.api.ObservedGenerationAwareStatus;
+import io.strimzi.api.kafka.model.Constants;
 import io.strimzi.api.kafka.model.status.Condition;
 import io.strimzi.kafka.access.internal.StatusUtils;
+import io.sundr.builder.annotations.Buildable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +16,10 @@ import java.util.List;
 /**
  * The status model of the KafkaAccess resource
  */
+@Buildable(
+    editableEnabled = false,
+    builderPackage = Constants.FABRIC8_KUBERNETES_API
+)
 public class KafkaAccessStatus extends ObservedGenerationAwareStatus {
 
     private BindingStatus binding;

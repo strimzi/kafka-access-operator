@@ -4,9 +4,16 @@
  */
 package io.strimzi.kafka.access.model;
 
+import io.strimzi.api.kafka.model.Constants;
+import io.sundr.builder.annotations.Buildable;
+
 /**
  * The status class for keeping the state of service binding status
  */
+@Buildable(
+    editableEnabled = false,
+    builderPackage = Constants.FABRIC8_KUBERNETES_API
+)
 public class BindingStatus {
 
     private String name;
@@ -20,10 +27,10 @@ public class BindingStatus {
     /**
      * Constructor
      *
-     * @param secretName    The Kubernetes secret name
+     * @param name    The Kubernetes secret name
      */
-    public BindingStatus(final String secretName) {
-        this.setName(secretName);
+    public BindingStatus(final String name) {
+        this.setName(name);
     }
 
     /**
