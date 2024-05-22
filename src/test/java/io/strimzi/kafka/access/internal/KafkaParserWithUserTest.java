@@ -16,7 +16,9 @@ import io.strimzi.api.kafka.model.listener.arraylistener.KafkaListenerType;
 import io.strimzi.api.kafka.model.status.ListenerStatus;
 import io.strimzi.kafka.access.ResourceProvider;
 import io.strimzi.kafka.access.model.KafkaAccessSpec;
+import io.strimzi.kafka.access.model.KafkaAccessSpecBuilder;
 import io.strimzi.kafka.access.model.KafkaReference;
+import io.strimzi.kafka.access.model.KafkaReferenceBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -68,10 +70,13 @@ public class KafkaParserWithUserTest {
     @MethodSource("listenerSpecifiedWithMatchingAuthProvider")
     @DisplayName("When listener is specified in CR and it has a specific auth and KafkaUser is specified with the same auth, then the listener is selected")
     void testListenerSpecifiedWithMatchingAuth(final GenericKafkaListener selectedListener, final String kafkaUserAuthType) {
-        final KafkaReference kafkaReference = new KafkaReference();
-        kafkaReference.setListener(selectedListener.getName());
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(kafkaReference);
+        final KafkaReference kafkaReference = new KafkaReferenceBuilder()
+            .withListener(selectedListener.getName())
+            .build();
+
+        final KafkaAccessSpec spec = new KafkaAccessSpecBuilder()
+            .withKafka(kafkaReference)
+            .build();
 
         final List<GenericKafkaListener> listeners = List.of(PLAIN_LISTENER, PLAIN_LISTENER_WITH_TLS,
                 SCRAM_LISTENER, SCRAM_LISTENER_WITH_TLS,
@@ -129,9 +134,9 @@ public class KafkaParserWithUserTest {
     @MethodSource("listenerWithMatchingAuthProvider")
     @DisplayName("When a Kafka User with a specific auth is specified in CR, then the listener with matching auth is selected")
     void testListenerWithMatchingAuth(final String kafkaUserAuthType, final GenericKafkaListener expectedListener, final List<GenericKafkaListener> otherListeners) {
-        final KafkaReference kafkaReference = new KafkaReference();
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(kafkaReference);
+        final KafkaAccessSpec spec = new KafkaAccessSpecBuilder()
+            .withKafka(new KafkaReference())
+            .build();
 
         final List<GenericKafkaListener> listeners = new ArrayList<>(otherListeners);
         listeners.add(expectedListener);
@@ -173,9 +178,9 @@ public class KafkaParserWithUserTest {
     @MethodSource("noListenersMatchingAuthProvider")
     @DisplayName("When there is no listener that satisfies the auth type for the chosen Kafka User, then the parsing fails")
     void testNoListenersMatchingAuth(final String kafkaUserAuthType, final List<GenericKafkaListener> listeners) {
-        final KafkaReference kafkaReference = new KafkaReference();
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(kafkaReference);
+        final KafkaAccessSpec spec = new KafkaAccessSpecBuilder()
+            .withKafka(new KafkaReference())
+            .build();
 
         final Kafka kafka = ResourceProvider.getKafka(
                 CLUSTER_NAME,
@@ -218,10 +223,13 @@ public class KafkaParserWithUserTest {
     @MethodSource("listenerAndUserIncompatibleProvider")
     @DisplayName("When the selected listener and the selected KafkaUser have different auth types, then the parsing fails")
     void testListenerAndUserIncompatible(final String selectedListener, final String kafkaUserAuthType) {
-        final KafkaReference kafkaReference = new KafkaReference();
-        kafkaReference.setListener(selectedListener);
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(kafkaReference);
+        final KafkaReference kafkaReference = new KafkaReferenceBuilder()
+            .withListener(selectedListener)
+            .build();
+
+        final KafkaAccessSpec spec = new KafkaAccessSpecBuilder()
+            .withKafka(kafkaReference)
+            .build();
 
         final Kafka kafka = ResourceProvider.getKafka(
                 CLUSTER_NAME,
@@ -240,8 +248,9 @@ public class KafkaParserWithUserTest {
     @Test
     @DisplayName("When a Kafka User with no auth is specified in CR and a listener isn't specified, then the parsing fails")
     void testUndefinedUserAuthAndNoListener() {
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(new KafkaReference());
+        final KafkaAccessSpec spec = new KafkaAccessSpecBuilder()
+            .withKafka(new KafkaReference())
+            .build();
 
         final Kafka kafka = ResourceProvider.getKafka(
                 CLUSTER_NAME,

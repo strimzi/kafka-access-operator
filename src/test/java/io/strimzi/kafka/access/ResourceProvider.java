@@ -6,7 +6,6 @@ package io.strimzi.kafka.access;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.strimzi.api.kafka.model.Kafka;
@@ -14,73 +13,69 @@ import io.strimzi.api.kafka.model.KafkaBuilder;
 import io.strimzi.api.kafka.model.KafkaUser;
 import io.strimzi.api.kafka.model.KafkaUserAuthentication;
 import io.strimzi.api.kafka.model.KafkaUserBuilder;
-import io.strimzi.api.kafka.model.KafkaUserSpec;
-import io.strimzi.api.kafka.model.KafkaUserSpecBuilder;
 import io.strimzi.api.kafka.model.listener.KafkaListenerAuthentication;
 import io.strimzi.api.kafka.model.listener.arraylistener.GenericKafkaListener;
 import io.strimzi.api.kafka.model.listener.arraylistener.GenericKafkaListenerBuilder;
 import io.strimzi.api.kafka.model.listener.arraylistener.KafkaListenerType;
 import io.strimzi.api.kafka.model.status.KafkaStatus;
 import io.strimzi.api.kafka.model.status.KafkaStatusBuilder;
-import io.strimzi.api.kafka.model.status.KafkaUserStatus;
 import io.strimzi.api.kafka.model.status.ListenerAddress;
 import io.strimzi.api.kafka.model.status.ListenerAddressBuilder;
 import io.strimzi.api.kafka.model.status.ListenerStatus;
 import io.strimzi.api.kafka.model.status.ListenerStatusBuilder;
 import io.strimzi.kafka.access.internal.KafkaAccessMapper;
 import io.strimzi.kafka.access.model.KafkaAccess;
-import io.strimzi.kafka.access.model.KafkaAccessSpec;
+import io.strimzi.kafka.access.model.KafkaAccessBuilder;
 import io.strimzi.kafka.access.model.KafkaReference;
+import io.strimzi.kafka.access.model.KafkaReferenceBuilder;
 import io.strimzi.kafka.access.model.KafkaUserReference;
+import io.strimzi.kafka.access.model.KafkaUserReferenceBuilder;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @SuppressWarnings({"ClassDataAbstractionCoupling", "ClassFanOutComplexity"})
 public class ResourceProvider {
 
     public static KafkaAccess getKafkaAccess(final String kafkaAccessName, final String kafkaAccessNamespace) {
-        final ObjectMeta metadata = new ObjectMeta();
-        metadata.setName(kafkaAccessName);
-        metadata.setNamespace(kafkaAccessNamespace);
-        final KafkaAccess kafkaAccess = new KafkaAccess();
-        kafkaAccess.setMetadata(metadata);
-        return kafkaAccess;
+        return new KafkaAccessBuilder()
+            .withNewMetadata()
+                .withNamespace(kafkaAccessNamespace)
+                .withName(kafkaAccessName)
+            .endMetadata()
+            .build();
     }
 
     public static KafkaAccess getKafkaAccess(final String kafkaAccessName, final String kafkaAccessNamespace, final KafkaReference kafkaReference) {
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(kafkaReference);
-        final KafkaAccess kafkaAccess = getKafkaAccess(kafkaAccessName, kafkaAccessNamespace);
-        kafkaAccess.setSpec(spec);
-        return kafkaAccess;
+        return new KafkaAccessBuilder(getKafkaAccess(kafkaAccessName, kafkaAccessNamespace))
+            .withNewSpec()
+                .withKafka(kafkaReference)
+            .endSpec()
+            .build();
     }
 
     public static KafkaAccess getKafkaAccess(final String kafkaAccessName, final String kafkaAccessNamespace, final KafkaReference kafkaReference, final KafkaUserReference kafkaUserReference) {
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(kafkaReference);
-        spec.setUser(kafkaUserReference);
-        final KafkaAccess kafkaAccess = getKafkaAccess(kafkaAccessName, kafkaAccessNamespace);
-        kafkaAccess.setSpec(spec);
-        return kafkaAccess;
+        return new KafkaAccessBuilder(getKafkaAccess(kafkaAccessName, kafkaAccessNamespace))
+            .withNewSpec()
+                .withKafka(kafkaReference)
+                .withUser(kafkaUserReference)
+            .endSpec()
+            .build();
     }
 
     public static Secret getEmptyKafkaAccessSecret(String secretName, String secretNamespace, String kafkaAccessName) {
-        final Map<String, String> labels = new HashMap<>();
-        labels.put(KafkaAccessMapper.MANAGED_BY_LABEL_KEY, KafkaAccessMapper.KAFKA_ACCESS_LABEL_VALUE);
-        final OwnerReference ownerReference = new OwnerReference();
-        ownerReference.setName(kafkaAccessName);
-        ownerReference.setKind(KafkaAccess.KIND);
         return new SecretBuilder()
-                .withNewMetadata()
-                    .withName(secretName)
-                    .withNamespace(secretNamespace)
-                    .withLabels(labels)
-                    .withOwnerReferences(ownerReference)
-                .endMetadata()
-                .build();
+            .withNewMetadata()
+                .withName(secretName)
+                .withNamespace(secretNamespace)
+                .addToLabels(KafkaAccessMapper.MANAGED_BY_LABEL_KEY, KafkaAccessMapper.KAFKA_ACCESS_LABEL_VALUE)
+                .addNewOwnerReference()
+                    .withName(kafkaAccessName)
+                    .withKind(KafkaAccess.KIND)
+                .endOwnerReference()
+            .endMetadata()
+            .build();
     }
 
     public static Secret getStrimziSecret(final String secretName, final String secretNamespace, final String kafkaInstanceName) {
@@ -99,45 +94,38 @@ public class ResourceProvider {
 
     private static Secret buildSecret(final String name, final String namespace, final Map<String, String> labels) {
         return new SecretBuilder()
-                .withNewMetadata()
-                    .withName(name)
-                    .withNamespace(namespace)
-                    .withLabels(labels)
-                .endMetadata()
-                .build();
+            .withNewMetadata()
+                .withName(name)
+                .withNamespace(namespace)
+                .withLabels(labels)
+            .endMetadata()
+            .build();
     }
 
     public static KafkaReference getKafkaReference(final String kafkaName, final String kafkaNamespace) {
-        final KafkaReference kafkaReference = new KafkaReference();
-        kafkaReference.setName(kafkaName);
-        Optional.ofNullable(kafkaNamespace).ifPresent(kafkaReference::setNamespace);
-        return kafkaReference;
+        return new KafkaReferenceBuilder()
+            .withName(kafkaName)
+            .withNamespace(kafkaNamespace)
+            .build();
     }
 
     public static KafkaReference getKafkaReferenceWithListener(final String kafkaName, final String listenerName, final String kafkaNamespace) {
-        final KafkaReference kafkaReference = new KafkaReference();
-        kafkaReference.setName(kafkaName);
-        kafkaReference.setListener(listenerName);
-        Optional.ofNullable(kafkaNamespace).ifPresent(kafkaReference::setNamespace);
-        return kafkaReference;
+        return new KafkaReferenceBuilder(getKafkaReference(kafkaName, kafkaNamespace))
+            .withListener(listenerName)
+            .build();
     }
 
     public static KafkaUserReference getKafkaUserReference(final String kafkaUserName, final String kafkaUserNamespace) {
-        final KafkaUserReference kafkaUserReference = new KafkaUserReference();
-        kafkaUserReference.setKind(KafkaUser.RESOURCE_KIND);
-        kafkaUserReference.setApiGroup(KafkaUser.RESOURCE_GROUP);
-        kafkaUserReference.setName(kafkaUserName);
-        Optional.ofNullable(kafkaUserNamespace).ifPresent(kafkaUserReference::setNamespace);
-        return kafkaUserReference;
+        return getUserReference(KafkaUser.RESOURCE_KIND, KafkaUser.RESOURCE_GROUP, kafkaUserName, kafkaUserNamespace);
     }
 
     public static KafkaUserReference getUserReference(final String kind, final String apiGroup, final String kafkaUserName, final String kafkaUserNamespace) {
-        final KafkaUserReference userReference = new KafkaUserReference();
-        userReference.setKind(kind);
-        userReference.setApiGroup(apiGroup);
-        userReference.setName(kafkaUserName);
-        Optional.ofNullable(kafkaUserNamespace).ifPresent(userReference::setNamespace);
-        return userReference;
+        return new KafkaUserReferenceBuilder()
+            .withName(kafkaUserName)
+            .withNamespace(kafkaUserNamespace)
+            .withKind(kind)
+            .withApiGroup(apiGroup)
+            .build();
     }
 
     public static Kafka getKafka(final String name, final String namespace) {
@@ -171,9 +159,9 @@ public class ResourceProvider {
         return new KafkaBuilder()
                 .withMetadata(metadata)
                 .withNewSpec()
-                .withNewKafka()
-                .withListeners(listeners)
-                .endKafka()
+                    .withNewKafka()
+                        .withListeners(listeners)
+                    .endKafka()
                 .endSpec()
                 .withStatus(kafkaStatus)
                 .build();
@@ -210,52 +198,42 @@ public class ResourceProvider {
     public static KafkaUser getKafkaUser(final String name, final String namespace) {
         return new KafkaUserBuilder()
                 .withNewMetadata()
-                .withName(name)
-                .withNamespace(namespace)
+                    .withName(name)
+                    .withNamespace(namespace)
                 .endMetadata()
                 .build();
     }
 
     public static KafkaUser getKafkaUser(final String name, final String namespace, final KafkaUserAuthentication authentication) {
-        final KafkaUserSpec spec = Optional.ofNullable(authentication)
-                .map(auth -> new KafkaUserSpecBuilder().withAuthentication(authentication).build())
-                .orElse(new KafkaUserSpecBuilder().build());
         return new KafkaUserBuilder()
                 .withNewMetadata()
-                .withName(name)
-                .withNamespace(namespace)
+                    .withName(name)
+                    .withNamespace(namespace)
                 .endMetadata()
-                .withSpec(spec)
+                .withNewSpec()
+                    .withAuthentication(authentication)
+                .endSpec()
                 .build();
     }
 
     public static KafkaUser getKafkaUserWithStatus(final String secretName, final String username, final KafkaUserAuthentication authentication) {
-        final KafkaUserSpec spec = Optional.ofNullable(authentication)
-                .map(auth -> new KafkaUserSpecBuilder().withAuthentication(authentication).build())
-                .orElse(new KafkaUserSpecBuilder().build());
-        final KafkaUserStatus status = new KafkaUserStatus();
-        Optional.ofNullable(secretName).ifPresent(status::setSecret);
-        Optional.ofNullable(username).ifPresent(status::setUsername);
         return new KafkaUserBuilder()
-                .withSpec(spec)
-                .withStatus(status)
+                .withNewSpec()
+                    .withAuthentication(authentication)
+                .endSpec()
+                .withNewStatus()
+                    .withSecret(secretName)
+                    .withUsername(username)
+                .endStatus()
                 .build();
     }
 
     public static KafkaUser getKafkaUserWithStatus(final String name, final String namespace, final String secretName, final String username, final KafkaUserAuthentication authentication) {
-        final KafkaUserSpec spec = Optional.ofNullable(authentication)
-                .map(auth -> new KafkaUserSpecBuilder().withAuthentication(authentication).build())
-                .orElse(new KafkaUserSpecBuilder().build());
-        final KafkaUserStatus status = new KafkaUserStatus();
-        Optional.ofNullable(secretName).ifPresent(status::setSecret);
-        Optional.ofNullable(username).ifPresent(status::setUsername);
-        return new KafkaUserBuilder()
+        return new KafkaUserBuilder(getKafkaUserWithStatus(secretName, username, authentication))
                 .withNewMetadata()
-                .withName(name)
-                .withNamespace(namespace)
+                    .withName(name)
+                    .withNamespace(namespace)
                 .endMetadata()
-                .withSpec(spec)
-                .withStatus(status)
                 .build();
     }
 }

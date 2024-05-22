@@ -10,7 +10,9 @@ import io.strimzi.api.kafka.model.listener.KafkaListenerAuthenticationTls;
 import io.strimzi.api.kafka.model.listener.arraylistener.KafkaListenerType;
 import io.strimzi.kafka.access.ResourceProvider;
 import io.strimzi.kafka.access.model.KafkaAccessSpec;
+import io.strimzi.kafka.access.model.KafkaAccessSpecBuilder;
 import io.strimzi.kafka.access.model.KafkaReference;
+import io.strimzi.kafka.access.model.KafkaReferenceBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -32,10 +34,13 @@ public class KafkaParserTest {
     @Test
     @DisplayName("When listener is specified in CR, then that listener is chosen")
     void testSpecifiedPlainListener() {
-        final KafkaReference kafkaReference = new KafkaReference();
-        kafkaReference.setListener(LISTENER_1);
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(kafkaReference);
+        final KafkaReference kafkaReference = new KafkaReferenceBuilder()
+            .withListener(LISTENER_1)
+            .build();
+
+        final KafkaAccessSpec spec = new KafkaAccessSpecBuilder()
+            .withKafka(kafkaReference)
+            .build();
 
         final Kafka kafka = ResourceProvider.getKafka(
                 CLUSTER_NAME,
@@ -60,8 +65,9 @@ public class KafkaParserTest {
     @Test
     @DisplayName("When listener is not specified in CR and there are internal and external listeners, then the internal listener is chosen")
     void testInternalListener() {
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(new KafkaReference());
+        final KafkaAccessSpec spec = new KafkaAccessSpecBuilder()
+            .withKafka(new KafkaReference())
+            .build();
 
         final Kafka kafka = ResourceProvider.getKafka(
                 CLUSTER_NAME,
@@ -86,8 +92,9 @@ public class KafkaParserTest {
     @Test
     @DisplayName("When listener is not specified in CR and there are two internal listeners, then the internal listener with the first name alphabetically is chosen")
     void testMultipleInternalListeners() {
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(new KafkaReference());
+        final KafkaAccessSpec spec = new KafkaAccessSpecBuilder()
+            .withKafka(new KafkaReference())
+            .build();
 
         final Kafka kafka = ResourceProvider.getKafka(
                 CLUSTER_NAME,
@@ -114,8 +121,9 @@ public class KafkaParserTest {
     @Test
     @DisplayName("When listener is not specified in CR and there are two external listeners, then the external listener with the first name alphabetically is chosen")
     void testMultipleExternalListeners() {
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(new KafkaReference());
+        final KafkaAccessSpec spec = new KafkaAccessSpecBuilder()
+            .withKafka(new KafkaReference())
+            .build();
 
         final Kafka kafka = ResourceProvider.getKafka(
                 CLUSTER_NAME,
@@ -140,10 +148,13 @@ public class KafkaParserTest {
     @Test
     @DisplayName("When listener is specified in CR and it is not present in Kafka, then the parsing fails")
     void testSpecifiedListenerMissing() {
-        final KafkaReference kafkaReference = new KafkaReference();
-        kafkaReference.setListener(LISTENER_1);
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(kafkaReference);
+        final KafkaReference kafkaReference = new KafkaReferenceBuilder()
+            .withListener(LISTENER_1)
+            .build();
+
+        final KafkaAccessSpec spec = new KafkaAccessSpecBuilder()
+            .withKafka(kafkaReference)
+            .build();
 
         final Kafka kafka = ResourceProvider.getKafka(
                 CLUSTER_NAME,
@@ -162,10 +173,13 @@ public class KafkaParserTest {
     @Test
     @DisplayName("When listener is specified in CR and the matching Kafka status field is missing, then the parsing fails")
     void testSpecifiedListenerMissingFromStatus() {
-        final KafkaReference kafkaReference = new KafkaReference();
-        kafkaReference.setListener(LISTENER_1);
-        final KafkaAccessSpec spec = new KafkaAccessSpec();
-        spec.setKafka(kafkaReference);
+        final KafkaReference kafkaReference = new KafkaReferenceBuilder()
+            .withListener(LISTENER_1)
+            .build();
+
+        final KafkaAccessSpec spec = new KafkaAccessSpecBuilder()
+            .withKafka(kafkaReference)
+            .build();
 
         final Kafka kafka = ResourceProvider.getKafka(
                 CLUSTER_NAME,
