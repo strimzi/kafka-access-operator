@@ -2,13 +2,14 @@
  * Copyright Strimzi authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.strimzi.kafka.access.internal;
+package internal;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import io.strimzi.api.kafka.model.status.Condition;
 import io.strimzi.api.kafka.model.status.ConditionBuilder;
+import io.strimzi.kafka.access.internal.StatusUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

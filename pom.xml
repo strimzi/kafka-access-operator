@@ -4,9 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.strimzi</groupId>
+    <groupId>io.strimzi.kafka.access</groupId>
     <artifactId>kafka-access-operator</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <licenses>
         <license>
@@ -14,6 +15,11 @@
             <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
+
+    <modules>
+        <module>api</module>
+        <module>operator</module>
+    </modules>
 
     <name>Strimzi Kafka Access Operator</name>
     <description>Kubernetes operator that creates secrets containing access credentials for a Apache Kafka clusters
@@ -97,10 +103,13 @@
         <log4j.version>2.17.2</log4j.version>
         <jetty.version>11.0.14</jetty.version>
         <jetty.jakarta-servlet-api.version>5.0.2</jetty.jakarta-servlet-api.version>
+
         <!-- Test dependencies -->
         <junit-jupiter.version>5.8.2</junit-jupiter.version>
         <assertj.version>3.21.0</assertj.version>
         <mockito.version>4.11.0</mockito.version>
+
+        <javadoc.fail.on.warnings>true</javadoc.fail.on.warnings>
     </properties>
 
     <distributionManagement>
@@ -114,118 +123,125 @@
         </repository>
     </distributionManagement>
 
-    <dependencies>
-        <dependency>
-            <groupId>io.javaoperatorsdk</groupId>
-            <artifactId>operator-framework-core</artifactId>
-            <version>${javaoperatorsdk.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.fabric8</groupId>
-                    <artifactId>kubernetes-httpclient-okhttp</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-httpclient-jdk</artifactId>
-            <version>${fabric8.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-client-api</artifactId>
-            <version>${fabric8.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-model-core</artifactId>
-            <version>${fabric8.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-model-common</artifactId>
-            <version>${fabric8.version}</version>
-        </dependency>
-        <!-- Required to generate CRD file -->
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>crd-generator-apt</artifactId>
-            <version>${fabric8.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.strimzi</groupId>
-            <artifactId>api</artifactId>
-            <version>${strimzi.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.fabric8</groupId>
-                    <artifactId>kubernetes-client</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-            <version>${kafka.clients.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
-            <version>${log4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty.toolchain</groupId>
-            <artifactId>jetty-jakarta-servlet-api</artifactId>
-            <version>${jetty.jakarta-servlet-api.version}</version>
-        </dependency>
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>${junit-jupiter.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
-            <version>${junit-jupiter.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>${assertj.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-server-mock</artifactId>
-            <version>${fabric8.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.javaoperatorsdk</groupId>
+                <artifactId>operator-framework-core</artifactId>
+                <version>${javaoperatorsdk.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>kubernetes-httpclient-okhttp</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-httpclient-jdk</artifactId>
+                <version>${fabric8.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-client-api</artifactId>
+                <version>${fabric8.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-model-core</artifactId>
+                <version>${fabric8.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-model-common</artifactId>
+                <version>${fabric8.version}</version>
+            </dependency>
+            <!-- Required to generate CRD file -->
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>crd-generator-apt</artifactId>
+                <version>${fabric8.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.strimzi</groupId>
+                <artifactId>api</artifactId>
+                <version>${strimzi.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>kubernetes-client</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>${kafka.clients.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j-impl</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.toolchain</groupId>
+                <artifactId>jetty-jakarta-servlet-api</artifactId>
+                <version>${jetty.jakarta-servlet-api.version}</version>
+            </dependency>
+            <!-- Test dependencies -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>${junit-jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-params</artifactId>
+                <version>${junit-jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-server-mock</artifactId>
+                <version>${fabric8.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.strimzi.kafka.access</groupId>
+                <artifactId>api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>
@@ -304,7 +320,7 @@
                             <sourcepath>${project.build.sourceDirectory}:${project.build.directory}/generated-sources/annotations</sourcepath>
                             <show>public</show>
                             <failOnError>true</failOnError>
-                            <failOnWarnings>false</failOnWarnings>
+                            <failOnWarnings>${javadoc.fail.on.warnings}</failOnWarnings>
                         </configuration>
                     </execution>
                 </executions>
@@ -328,25 +344,6 @@
                                 <ignoredDependency>io.fabric8:kubernetes-httpclient-jdk:jar:${fabric8.version}</ignoredDependency>
                                 <ignoredDependency>org.apache.logging.log4j:log4j-slf4j-impl</ignoredDependency>
                             </ignoredDependencies>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>${maven.assembly.version}</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <descriptors>
-                                <descriptor>src/main/assembly/zip.xml</descriptor>
-                            </descriptors>
                         </configuration>
                     </execution>
                 </executions>

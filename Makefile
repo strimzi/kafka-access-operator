@@ -51,7 +51,7 @@ clean: java_clean
 
 .PHONY: crd_install
 crd_install:
-	$(CP) ./target/classes/META-INF/fabric8/kafkaaccesses.access.strimzi.io-v1.yml ./packaging/install/040-Crd-kafkaaccess.yaml
+	$(CP) ./api/target/classes/META-INF/fabric8/kafkaaccesses.access.strimzi.io-v1.yml ./packaging/install/040-Crd-kafkaaccess.yaml
 	yq eval -i '.metadata.labels."servicebinding.io/provisioned-service"="true"' ./packaging/install/040-Crd-kafkaaccess.yaml
 
 .PHONY: next_version
