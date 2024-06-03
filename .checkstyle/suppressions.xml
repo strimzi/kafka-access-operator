@@ -12,4 +12,6 @@
                * To suppress warning we do not want for the whole project
                * To suppress file-level warnings
          In all other cases, you should use the annotations on the methods or classes affected by it. -->
+    <suppress checks=".*"
+              files="io[/\\]strimzi[/\\]kafka[/\\]access[/\\]model[/\\].*(Builder|Fluent|FluentImpl)\.java"/>
 </suppressions>

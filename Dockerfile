@@ -24,7 +24,7 @@ WORKDIR ${STRIMZI_HOME}
 #####
 # Add Kafka Access Operator
 #####
-COPY target/kafka-access-operator-${access_operator_version}/kafka-access-operator-${access_operator_version} ./
+COPY operator/target/operator-${access_operator_version} ./
 
 #####
 # Add Tini

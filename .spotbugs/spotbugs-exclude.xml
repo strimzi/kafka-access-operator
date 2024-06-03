@@ -7,4 +7,7 @@
     <Match>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
+    <Match>
+        <Class name="~io\.strimzi\.kafka\.access\.model\..+(Builder|Fluent|FluentImpl)(\$.*)?" />
+    </Match>
 </FindBugsFilter>
