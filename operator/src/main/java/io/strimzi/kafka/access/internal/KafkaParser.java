@@ -84,7 +84,7 @@ public class KafkaParser {
                 .map(KafkaStatus::getListeners)
                 .orElse(Collections.emptyList());
         final Optional<String> bootstrapServer = listenersInStatus.stream()
-                .filter(listener -> kafkaListener.getName().equals(listener.getType()))
+                .filter(listener -> kafkaListener.getName().equals(listener.getName()))
                 .findFirst()
                 .map(ListenerStatus::getBootstrapServers);
         if (bootstrapServer.isEmpty()) {
