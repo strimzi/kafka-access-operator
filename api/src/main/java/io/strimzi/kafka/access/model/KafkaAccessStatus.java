@@ -5,8 +5,8 @@
 package io.strimzi.kafka.access.model;
 
 import io.javaoperatorsdk.operator.api.ObservedGenerationAwareStatus;
-import io.strimzi.api.kafka.model.Constants;
-import io.strimzi.api.kafka.model.status.Condition;
+import io.strimzi.api.kafka.model.common.Constants;
+import io.strimzi.api.kafka.model.common.Condition;
 import io.strimzi.kafka.access.internal.StatusUtils;
 import io.sundr.builder.annotations.Buildable;
 

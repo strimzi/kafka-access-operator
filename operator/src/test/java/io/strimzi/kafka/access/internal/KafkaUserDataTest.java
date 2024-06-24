@@ -6,10 +6,10 @@ package io.strimzi.kafka.access.internal;
 
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
-import io.strimzi.api.kafka.model.KafkaUser;
-import io.strimzi.api.kafka.model.KafkaUserScramSha512ClientAuthentication;
-import io.strimzi.api.kafka.model.KafkaUserTlsClientAuthentication;
-import io.strimzi.api.kafka.model.KafkaUserTlsExternalClientAuthentication;
+import io.strimzi.api.kafka.model.user.KafkaUser;
+import io.strimzi.api.kafka.model.user.KafkaUserScramSha512ClientAuthentication;
+import io.strimzi.api.kafka.model.user.KafkaUserTlsClientAuthentication;
+import io.strimzi.api.kafka.model.user.KafkaUserTlsExternalClientAuthentication;
 import io.strimzi.kafka.access.ResourceProvider;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.junit.jupiter.api.DisplayName;

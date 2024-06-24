@@ -11,8 +11,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
-import io.strimzi.api.kafka.model.status.Condition;
-import io.strimzi.api.kafka.model.status.ConditionBuilder;
+import io.strimzi.api.kafka.model.common.Condition;
+import io.strimzi.api.kafka.model.common.ConditionBuilder;
 
 /**
  * Utility methods for working with status sections of custom resources

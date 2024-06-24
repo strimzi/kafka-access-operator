@@ -95,8 +95,8 @@
 
         <!-- Runtime dependencies -->
         <javaoperatorsdk.version>4.4.2</javaoperatorsdk.version>
-        <fabric8.version>6.7.2</fabric8.version>
-        <strimzi.version>0.31.0</strimzi.version>
+        <fabric8.version>6.13.0</fabric8.version>
+        <strimzi.version>0.41.0</strimzi.version>
         <kafka.clients.version>3.0.0</kafka.clients.version>
         <javax-validation.version>2.0.1.Final</javax-validation.version>
         <slf4j.version>1.7.36</slf4j.version>
