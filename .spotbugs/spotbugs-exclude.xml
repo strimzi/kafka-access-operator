@@ -10,4 +10,8 @@
     <Match>
         <Class name="~io\.strimzi\.kafka\.access\.model\..+(Builder|Fluent|FluentImpl)(\$.*)?" />
     </Match>
+    <Match>
+        <!-- Throws false positives in Fabric8 Kubernetes client (related to https://github.com/spotbugs/spotbugs/issues/1219) -->
+        <Bug pattern="BC_UNCONFIRMED_CAST_OF_RETURN_VALUE"/>
+    </Match>
 </FindBugsFilter>
