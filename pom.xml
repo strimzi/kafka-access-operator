@@ -141,6 +141,10 @@
                 <artifactId>kubernetes-httpclient-jdk</artifactId>
                 <version>${fabric8.version}</version>
             </dependency>
+            <!--
+            Needed because of java.lang.NoClassDefFoundError: io/fabric8/kubernetes/client/V1Alpha1DynamicResourceAllocationAPIGroupDSL
+            Once we update Java Operator SDK, we can remove it again
+            -->
             <dependency>
                 <groupId>io.fabric8</groupId>
                 <artifactId>kubernetes-client</artifactId>
