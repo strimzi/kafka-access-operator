@@ -7,8 +7,8 @@ package internal;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.strimzi.api.kafka.model.status.Condition;
-import io.strimzi.api.kafka.model.status.ConditionBuilder;
+import io.strimzi.api.kafka.model.common.Condition;
+import io.strimzi.api.kafka.model.common.ConditionBuilder;
 import io.strimzi.kafka.access.internal.StatusUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -5,7 +5,7 @@
 package io.strimzi.kafka.access.model;
 
 import io.fabric8.generator.annotation.Required;
-import io.strimzi.api.kafka.model.Constants;
+import io.strimzi.api.kafka.model.common.Constants;
 import io.sundr.builder.annotations.Buildable;
 
 /**

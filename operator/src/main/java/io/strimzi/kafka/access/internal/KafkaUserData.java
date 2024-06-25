@@ -5,13 +5,13 @@
 package io.strimzi.kafka.access.internal;
 
 import io.fabric8.kubernetes.api.model.Secret;
-import io.strimzi.api.kafka.model.KafkaUser;
-import io.strimzi.api.kafka.model.KafkaUserAuthentication;
-import io.strimzi.api.kafka.model.KafkaUserScramSha512ClientAuthentication;
-import io.strimzi.api.kafka.model.KafkaUserSpec;
-import io.strimzi.api.kafka.model.KafkaUserTlsClientAuthentication;
-import io.strimzi.api.kafka.model.KafkaUserTlsExternalClientAuthentication;
-import io.strimzi.api.kafka.model.status.KafkaUserStatus;
+import io.strimzi.api.kafka.model.user.KafkaUser;
+import io.strimzi.api.kafka.model.user.KafkaUserAuthentication;
+import io.strimzi.api.kafka.model.user.KafkaUserScramSha512ClientAuthentication;
+import io.strimzi.api.kafka.model.user.KafkaUserSpec;
+import io.strimzi.api.kafka.model.user.KafkaUserTlsClientAuthentication;
+import io.strimzi.api.kafka.model.user.KafkaUserTlsExternalClientAuthentication;
+import io.strimzi.api.kafka.model.user.KafkaUserStatus;
 import org.apache.kafka.common.config.SaslConfigs;
 
 import java.nio.charset.StandardCharsets;
