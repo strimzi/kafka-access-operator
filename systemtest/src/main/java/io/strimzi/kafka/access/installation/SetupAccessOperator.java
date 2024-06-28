@@ -6,7 +6,7 @@ package io.strimzi.kafka.access.installation;
 
 import io.skodjob.testframe.enums.InstallType;
 import io.skodjob.testframe.installation.InstallationMethod;
-import io.strimzi.kafka.access.systemtest.utils.Environment;
+import io.strimzi.kafka.access.Environment;
 
 public class SetupAccessOperator {
     private final InstallationMethod installationMethod;

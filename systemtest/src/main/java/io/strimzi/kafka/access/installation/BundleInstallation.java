@@ -17,8 +17,8 @@ import io.skodjob.testframe.installation.InstallationMethod;
 import io.skodjob.testframe.resources.KubeResourceManager;
 import io.skodjob.testframe.utils.ImageUtils;
 import io.skodjob.testframe.utils.TestFrameUtils;
-import io.strimzi.kafka.access.systemtest.utils.Environment;
-import io.strimzi.kafka.access.systemtest.utils.TestConstants;
+import io.strimzi.kafka.access.Environment;
+import io.strimzi.kafka.access.TestConstants;
 
 import java.io.File;
 import java.util.Arrays;
