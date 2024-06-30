@@ -118,6 +118,8 @@
 
         <!-- failsafe fork-count configuration -->
         <failsafe.forkCount>1</failsafe.forkCount>
+
+        <skipTests>false</skipTests>
     </properties>
 
     <distributionManagement>
@@ -397,55 +399,6 @@
                                 <ignoredDependency>io.fabric8:kubernetes-httpclient-jdk:jar:${fabric8.version}</ignoredDependency>
                                 <ignoredDependency>org.apache.logging.log4j:log4j-slf4j-impl</ignoredDependency>
                             </ignoredDependencies>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>${maven.failsafe.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                        <configuration>
-                            <includes>
-                                <include>**/IT*.java</include>
-                                <include>**/*IT.java</include>
-                                <include>**/ST*.java</include>
-                                <include>**/*ST.java</include>
-                            </includes>
-                            <trimStackTrace>false</trimStackTrace>
-                            <!--
-                              Fork count is configured through a system property:
-                                * ITs run with forked VM because of class path for Apache Kafka
-                                * STs run without forking the VM for better log output in CI pipelines
-                                -->
-                            <forkCount>${failsafe.forkCount}</forkCount>
-                            <!-- This is workaround for https://issues.apache.org/jira/browse/SUREFIRE-1809 -->
-                            <useModulePath>false</useModulePath>
-                            <statelessTestsetReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5Xml30StatelessReporter">
-                                <disable>false</disable>
-                                <version>3.0</version>
-                                <usePhrasedFileName>false</usePhrasedFileName>
-                                <usePhrasedTestSuiteClassName>true</usePhrasedTestSuiteClassName>
-                                <usePhrasedTestCaseClassName>true</usePhrasedTestCaseClassName>
-                                <usePhrasedTestCaseMethodName>true</usePhrasedTestCaseMethodName>
-                            </statelessTestsetReporter>
-                            <consoleOutputReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5ConsoleOutputReporter">
-                                <disable>false</disable>
-                                <encoding>UTF-8</encoding>
-                                <usePhrasedFileName>true</usePhrasedFileName>
-                            </consoleOutputReporter>
-                            <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoReporter">
-                                <disable>false</disable>
-                                <usePhrasedFileName>false</usePhrasedFileName>
-                                <usePhrasedClassNameInRunning>false</usePhrasedClassNameInRunning>
-                                <usePhrasedClassNameInTestCaseSummary>true</usePhrasedClassNameInTestCaseSummary>
-                            </statelessTestsetInfoReporter>
                         </configuration>
                     </execution>
                 </executions>
