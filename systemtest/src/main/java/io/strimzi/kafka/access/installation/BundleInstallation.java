@@ -23,7 +23,6 @@ import io.strimzi.kafka.access.TestConstants;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class BundleInstallation implements InstallationMethod {
     private final String installationNamespace;
@@ -34,7 +33,7 @@ public class BundleInstallation implements InstallationMethod {
 
     @Override
     public void install() {
-        List<File> accessOperatorFiles = Arrays.stream(Objects.requireNonNull(new File(TestConstants.INSTALL_PATH).listFiles()))
+        List<File> accessOperatorFiles = Arrays.stream(new File(TestConstants.INSTALL_PATH).listFiles())
             .sorted()
             .filter(File::isFile)
             .toList();
