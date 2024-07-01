@@ -92,6 +92,8 @@ public class BundleInstallation implements InstallationMethod {
 
     @Override
     public void delete() {
+        // nothing to do here, as we are deleting everything using KubeResourceManager, which deletes everything at the
+        // end of the tests
     }
 
     private void deployKafkaAccessOperator(File deploymentFile) {

@@ -52,10 +52,6 @@ public abstract class AbstractST {
 
     @AfterAll
     void deleteResources() {
-        cleanUp();
-    }
-
-    private void cleanUp() {
         // delete KafkaAccessOperator
         setupAccessOperator.delete();
 

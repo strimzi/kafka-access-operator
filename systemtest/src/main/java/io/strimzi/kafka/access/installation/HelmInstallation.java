@@ -7,7 +7,6 @@ package io.strimzi.kafka.access.installation;
 import com.marcnuri.helm.Helm;
 import com.marcnuri.helm.InstallCommand;
 import com.marcnuri.helm.UninstallCommand;
-import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.skodjob.testframe.installation.InstallationMethod;
 import io.skodjob.testframe.resources.KubeResourceManager;
 import io.strimzi.kafka.access.Environment;
@@ -27,18 +26,11 @@ public class HelmInstallation implements InstallationMethod {
 
     @Override
     public void install() {
-        // create Namespace where the KAO will be installed into
-        KubeResourceManager.getInstance().createResourceWithWait(new NamespaceBuilder()
-            .withNewMetadata()
-                .withName(installationNamespace)
-            .endMetadata()
-            .build()
-        );
-
         InstallCommand installCommand = new Helm(Paths.get(TestConstants.HELM_CHARTS_PATH))
             .install()
             .withName(HELM_RELEASE_NAME)
             .withNamespace(installationNamespace)
+            .createNamespace()
             .waitReady();
 
         if (Environment.OPERATOR_REGISTRY != null) {
@@ -63,6 +55,9 @@ public class HelmInstallation implements InstallationMethod {
     public void delete() {
         Helm.uninstall(HELM_RELEASE_NAME)
             .withCascade(UninstallCommand.Cascade.ORPHAN)
+            .withNamespace(installationNamespace)
             .call();
+
+        KubeResourceManager.getKubeClient().getClient().namespaces().withName(installationNamespace).delete();
     }
 }
