@@ -8,7 +8,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: strimzi-access-operator
-    namespace: strimzi-access-operator
+    namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
   name: strimzi-access-operator

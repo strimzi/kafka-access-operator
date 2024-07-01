@@ -5,6 +5,7 @@ metadata:
   name: strimzi-access-operator
   labels:
     app: strimzi-access-operator
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
