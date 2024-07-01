@@ -38,8 +38,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class KafkaAccessOperatorST extends AbstractST {
 
     private final String defaultHost = "my-host.svc";
-    private final String defaultAccessName = "my-access";
-    private final String defaultClusterName = "my-cluster";
 
     private final String nodePortListenerName = "nodeport";
     private final int nodePortListenerPort = 9098;
@@ -55,6 +53,8 @@ public class KafkaAccessOperatorST extends AbstractST {
 
     @Test
     void testAccessToSpecifiedListener() {
+        TestStorage testStorage = new TestStorage();
+
         String userKey = SecretUtils.createUserKey("my-super-secret-key");
         String userCrt = SecretUtils.createUserCrt("my-super-secret-crt");
 
@@ -64,9 +64,9 @@ public class KafkaAccessOperatorST extends AbstractST {
             ListenerTemplates.listener(loadBalanceListenerName, KafkaListenerType.LOADBALANCER, new KafkaListenerAuthenticationScramSha512(), loadBalanceListenerPort)
         );
 
-        Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, defaultClusterName, defaultHost, listeners).build();
+        Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, testStorage.getKafkaClusterName(), defaultHost, listeners).build();
         KafkaUser tlsUser = KafkaUserTemplates.kafkaUser(namespace, tlsUserName, new KafkaUserTlsClientAuthentication());
-        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, defaultClusterName, userKey, userCrt);
+        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, testStorage.getKafkaClusterName(), userKey, userCrt);
 
         resourceManager.createResourceWithWait(
             kafka,
@@ -77,10 +77,10 @@ public class KafkaAccessOperatorST extends AbstractST {
         KubeResourceManager.getKubeClient().getClient().resource(kafka).updateStatus();
         KubeResourceManager.getKubeClient().getClient().resource(tlsUser).updateStatus();
 
-        resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, defaultAccessName)
+        resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, testStorage.getKafkaAccessName())
             .withNewSpec()
                 .withNewKafka()
-                    .withName(defaultClusterName)
+                    .withName(testStorage.getKafkaClusterName())
                     .withNamespace(namespace)
                     .withListener(nodePortListenerName)
                 .endKafka()
@@ -94,11 +94,13 @@ public class KafkaAccessOperatorST extends AbstractST {
             .build()
         );
 
-        assertListenerAndUserValuesInAccessSecret(defaultAccessName, ListenerUtils.bootstrapServer(defaultHost, nodePortListenerPort), SecurityProtocol.SSL, tlsUserSecret.getData());
+        assertListenerAndUserValuesInAccessSecret(testStorage.getKafkaAccessName(), ListenerUtils.bootstrapServer(defaultHost, nodePortListenerPort), SecurityProtocol.SSL, tlsUserSecret.getData());
     }
 
     @Test
     void testAccessToSpecifiedListenerAndWrongUser() {
+        TestStorage testStorage = new TestStorage();
+
         String password = Base64Utils.encodeToBase64("my-secret-password");
         String saslJaasConfig = Base64Utils.encodeToBase64("my-config\nsomething;");
 
@@ -108,9 +110,9 @@ public class KafkaAccessOperatorST extends AbstractST {
             ListenerTemplates.listener(loadBalanceListenerName, KafkaListenerType.LOADBALANCER, new KafkaListenerAuthenticationScramSha512(), loadBalanceListenerPort)
         );
 
-        Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, defaultClusterName, defaultHost, listeners).build();
+        Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, testStorage.getKafkaClusterName(), defaultHost, listeners).build();
         KafkaUser scramUser = KafkaUserTemplates.kafkaUser(namespace, scramShaUserName, new KafkaUserScramSha512ClientAuthentication());
-        Secret scramSecret = SecretTemplates.scramShaSecretForUser(namespace, scramShaUserName, defaultClusterName, password, saslJaasConfig);
+        Secret scramSecret = SecretTemplates.scramShaSecretForUser(namespace, scramShaUserName, testStorage.getKafkaClusterName(), password, saslJaasConfig);
 
         resourceManager.createResourceWithWait(
             kafka,
@@ -120,10 +122,10 @@ public class KafkaAccessOperatorST extends AbstractST {
         KubeResourceManager.getKubeClient().getClient().resource(kafka).updateStatus();
         KubeResourceManager.getKubeClient().getClient().resource(scramUser).updateStatus();
 
-        resourceManager.createResourceWithoutWait(KafkaAccessTemplates.kafkaAccess(namespace, defaultAccessName)
+        resourceManager.createResourceWithoutWait(KafkaAccessTemplates.kafkaAccess(namespace, testStorage.getKafkaAccessName())
             .withNewSpec()
                 .withNewKafka()
-                    .withName(defaultClusterName)
+                    .withName(testStorage.getKafkaClusterName())
                     .withNamespace(namespace)
                     .withListener(nodePortListenerName)
                 .endKafka()
@@ -137,9 +139,9 @@ public class KafkaAccessOperatorST extends AbstractST {
             .build()
         );
 
-        KafkaAccessUtils.waitForKafkaAccessNotReady(namespace, defaultAccessName);
+        KafkaAccessUtils.waitForKafkaAccessNotReady(namespace, testStorage.getKafkaAccessName());
 
-        KafkaAccess currentAccess = KafkaAccessType.kafkaAccessClient().inNamespace(namespace).withName(defaultAccessName).get();
+        KafkaAccess currentAccess = KafkaAccessType.kafkaAccessClient().inNamespace(namespace).withName(testStorage.getKafkaAccessName()).get();
         Condition currentAccessStatus = currentAccess.getStatus().getConditions().stream().filter(condition -> condition.getType().equals(KafkaAccessUtils.READY_TYPE)).findFirst().get();
 
         assertThat(currentAccessStatus.getMessage().contains("do not have compatible authentication configuration"), is(true));
@@ -147,29 +149,33 @@ public class KafkaAccessOperatorST extends AbstractST {
 
     @Test
     void testAccessToUnspecifiedSingleListener() {
+        TestStorage testStorage = new TestStorage();
+        
         List<GenericKafkaListener> listeners = List.of(
             ListenerTemplates.listener(internalListenerName, KafkaListenerType.INTERNAL, new KafkaListenerAuthenticationScramSha512(), internalListenerPort)
         );
 
-        Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, defaultClusterName, defaultHost, listeners).build();
+        Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, testStorage.getKafkaClusterName(), defaultHost, listeners).build();
 
         resourceManager.createResourceWithWait(kafka);
         KubeResourceManager.getKubeClient().getClient().resource(kafka).updateStatus();
 
-        resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, defaultAccessName)
+        resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, testStorage.getKafkaAccessName())
             .withNewSpec()
                 .withNewKafka()
-                    .withName(defaultClusterName)
+                    .withName(testStorage.getKafkaClusterName())
                     .withNamespace(namespace)
                 .endKafka()
             .endSpec()
             .build());
 
-        assertListenerValuesInAccessSecret(defaultAccessName, ListenerUtils.bootstrapServer(defaultHost, internalListenerPort), SecurityProtocol.SASL_PLAINTEXT);
+        assertListenerValuesInAccessSecret(testStorage.getKafkaAccessName(), ListenerUtils.bootstrapServer(defaultHost, internalListenerPort), SecurityProtocol.SASL_PLAINTEXT);
     }
 
     @Test
     void testAccessToUnspecifiedMultipleListeners() {
+        TestStorage testStorage = new TestStorage();
+        
         String userKey = SecretUtils.createUserKey("my-super-secret-key");
         String userCrt = SecretUtils.createUserCrt("my-super-secret-crt");
 
@@ -178,9 +184,9 @@ public class KafkaAccessOperatorST extends AbstractST {
             ListenerTemplates.listener(loadBalanceListenerName, KafkaListenerType.LOADBALANCER, new KafkaListenerAuthenticationScramSha512(), loadBalanceListenerPort)
         );
 
-        Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, defaultClusterName, defaultHost, listeners).build();
+        Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, testStorage.getKafkaClusterName(), defaultHost, listeners).build();
         KafkaUser tlsUser = KafkaUserTemplates.kafkaUser(namespace, tlsUserName, new KafkaUserTlsClientAuthentication());
-        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, defaultClusterName, userKey, userCrt);
+        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, testStorage.getKafkaClusterName(), userKey, userCrt);
 
         resourceManager.createResourceWithWait(
             kafka,
@@ -190,10 +196,10 @@ public class KafkaAccessOperatorST extends AbstractST {
         KubeResourceManager.getKubeClient().getClient().resource(kafka).updateStatus();
         KubeResourceManager.getKubeClient().getClient().resource(tlsUser).updateStatus();
 
-        resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, defaultAccessName)
+        resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, testStorage.getKafkaAccessName())
             .withNewSpec()
             .withNewKafka()
-                .withName(defaultClusterName)
+                .withName(testStorage.getKafkaClusterName())
                 .withNamespace(namespace)
             .endKafka()
             .withNewUser()
@@ -206,11 +212,13 @@ public class KafkaAccessOperatorST extends AbstractST {
             .build()
         );
 
-        assertListenerAndUserValuesInAccessSecret(defaultAccessName, ListenerUtils.bootstrapServer(defaultHost, nodePortListenerPort), SecurityProtocol.SSL, tlsUserSecret.getData());
+        assertListenerAndUserValuesInAccessSecret(testStorage.getKafkaAccessName(), ListenerUtils.bootstrapServer(defaultHost, nodePortListenerPort), SecurityProtocol.SSL, tlsUserSecret.getData());
     }
 
     @Test
     void testAccessToUnspecifiedMultipleListenersWithSingleInternal() {
+        TestStorage testStorage = new TestStorage();
+        
         String userKey = SecretUtils.createUserKey("my-super-secret-key");
         String userCrt = SecretUtils.createUserCrt("my-super-secret-crt");
 
@@ -220,9 +228,9 @@ public class KafkaAccessOperatorST extends AbstractST {
             ListenerTemplates.tlsListener(loadBalanceListenerName, KafkaListenerType.LOADBALANCER, new KafkaListenerAuthenticationTls(), loadBalanceListenerPort)
         );
 
-        Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, defaultClusterName, defaultHost, listeners).build();
+        Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, testStorage.getKafkaClusterName(), defaultHost, listeners).build();
         KafkaUser tlsUser = KafkaUserTemplates.kafkaUser(namespace, tlsUserName, new KafkaUserTlsClientAuthentication());
-        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, defaultClusterName, userKey, userCrt);
+        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, testStorage.getKafkaClusterName(), userKey, userCrt);
 
         resourceManager.createResourceWithWait(
             kafka,
@@ -232,10 +240,10 @@ public class KafkaAccessOperatorST extends AbstractST {
         KubeResourceManager.getKubeClient().getClient().resource(kafka).updateStatus();
         KubeResourceManager.getKubeClient().getClient().resource(tlsUser).updateStatus();
 
-        resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, defaultAccessName)
+        resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, testStorage.getKafkaAccessName())
             .withNewSpec()
                 .withNewKafka()
-                    .withName(defaultClusterName)
+                    .withName(testStorage.getKafkaClusterName())
                     .withNamespace(namespace)
                 .endKafka()
                 .withNewUser()
@@ -248,11 +256,13 @@ public class KafkaAccessOperatorST extends AbstractST {
             .build()
         );
 
-        assertListenerAndUserValuesInAccessSecret(defaultAccessName, ListenerUtils.bootstrapServer(defaultHost, internalListenerPort), SecurityProtocol.SSL, tlsUserSecret.getData());
+        assertListenerAndUserValuesInAccessSecret(testStorage.getKafkaAccessName(), ListenerUtils.bootstrapServer(defaultHost, internalListenerPort), SecurityProtocol.SSL, tlsUserSecret.getData());
     }
 
     @Test
     void testAccessToUnspecifiedMultipleListenersWithMultipleInternal() {
+        TestStorage testStorage = new TestStorage();
+        
         String listenerA = "ales";
         String listenerK = "karel";
         String listenerT = "tonda";
@@ -270,9 +280,9 @@ public class KafkaAccessOperatorST extends AbstractST {
             ListenerTemplates.tlsListener(listenerT, KafkaListenerType.LOADBALANCER, new KafkaListenerAuthenticationTls(), listenerTPort)
         );
 
-        Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, defaultClusterName, defaultHost, listeners).build();
+        Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, testStorage.getKafkaClusterName(), defaultHost, listeners).build();
         KafkaUser tlsUser = KafkaUserTemplates.kafkaUser(namespace, tlsUserName, new KafkaUserTlsClientAuthentication());
-        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, defaultClusterName, userKey, userCrt);
+        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, testStorage.getKafkaClusterName(), userKey, userCrt);
 
         resourceManager.createResourceWithWait(
             kafka,
@@ -282,10 +292,10 @@ public class KafkaAccessOperatorST extends AbstractST {
         KubeResourceManager.getKubeClient().getClient().resource(kafka).updateStatus();
         KubeResourceManager.getKubeClient().getClient().resource(tlsUser).updateStatus();
 
-        resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, defaultAccessName)
+        resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, testStorage.getKafkaAccessName())
             .withNewSpec()
                 .withNewKafka()
-                    .withName(defaultClusterName)
+                    .withName(testStorage.getKafkaClusterName())
                     .withNamespace(namespace)
                 .endKafka()
                 .withNewUser()
@@ -298,7 +308,7 @@ public class KafkaAccessOperatorST extends AbstractST {
             .build()
         );
 
-        assertListenerAndUserValuesInAccessSecret(defaultAccessName, ListenerUtils.bootstrapServer(defaultHost, listenerAPort), SecurityProtocol.SSL, tlsUserSecret.getData());
+        assertListenerAndUserValuesInAccessSecret(testStorage.getKafkaAccessName(), ListenerUtils.bootstrapServer(defaultHost, listenerAPort), SecurityProtocol.SSL, tlsUserSecret.getData());
     }
 
     private void assertListenerValuesInAccessSecret(

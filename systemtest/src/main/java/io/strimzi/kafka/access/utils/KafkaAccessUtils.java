@@ -17,15 +17,15 @@ public class KafkaAccessUtils {
 
     public static final String READY_TYPE = "Ready";
 
-    public static void waitForKafkaAccessReady(String namespaceName, String accessName) {
-        waitForKafkaAccessStatus(namespaceName, accessName, READY_TYPE, "True");
+    public static boolean waitForKafkaAccessReady(String namespaceName, String accessName) {
+        return waitForKafkaAccessStatus(namespaceName, accessName, READY_TYPE, "True");
     }
 
-    public static void waitForKafkaAccessNotReady(String namespaceName, String accessName) {
-        waitForKafkaAccessStatus(namespaceName, accessName, READY_TYPE, "False");
+    public static boolean waitForKafkaAccessNotReady(String namespaceName, String accessName) {
+        return waitForKafkaAccessStatus(namespaceName, accessName, READY_TYPE, "False");
     }
 
-    public static void waitForKafkaAccessStatus(String namespaceName, String accessName, String conditionType, String conditionStatus) {
+    public static boolean waitForKafkaAccessStatus(String namespaceName, String accessName, String conditionType, String conditionStatus) {
         Wait.until(
             "KafkaAccess %s/%s to contain condition %s with status %s".formatted(namespaceName, accessName, conditionType, conditionStatus),
             TestConstants.GLOBAL_POLL_INTERVAL_SMALL_MS,
@@ -37,5 +37,7 @@ public class KafkaAccessUtils {
                 return desiredStatus.map(condition -> condition.getStatus().equals(conditionStatus)).orElse(false);
             }
         );
+
+        return true;
     }
 }

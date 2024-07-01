@@ -10,6 +10,7 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.skodjob.testframe.interfaces.NamespacedResourceType;
 import io.skodjob.testframe.resources.KubeResourceManager;
 import io.strimzi.kafka.access.model.KafkaAccess;
+import io.strimzi.kafka.access.utils.KafkaAccessUtils;
 
 import java.util.function.Consumer;
 
@@ -59,7 +60,7 @@ public class KafkaAccessType implements NamespacedResourceType<KafkaAccess> {
 
     @Override
     public boolean waitForReadiness(KafkaAccess kafkaAccess) {
-        return kafkaAccess != null;
+        return KafkaAccessUtils.waitForKafkaAccessReady(kafkaAccess.getMetadata().getNamespace(), kafkaAccess.getMetadata().getName());
     }
 
     @Override
