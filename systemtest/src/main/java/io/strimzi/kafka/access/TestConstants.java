@@ -16,6 +16,12 @@ public interface TestConstants {
     String HELM_CHARTS_PATH = USER_PATH + "/../packaging/helm-charts/helm3/kafka-access-operator";
 
     //--------------------------
+    // Strimzi related constants
+    //--------------------------
+    // in case of change in the pom.xml, update this one as well please
+    String STRIMZI_API_VERSION = "0.41.0";
+
+    //--------------------------
     // Resource types
     //--------------------------
     String NAMESPACE = "Namespace";

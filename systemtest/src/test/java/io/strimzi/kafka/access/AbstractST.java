@@ -25,8 +25,8 @@ import org.junit.jupiter.api.TestInstance;
 public abstract class AbstractST {
     protected final KubeResourceManager resourceManager = KubeResourceManager.getInstance();
     public final String namespace = "main-namespace";
-    private final String kafkaCrdUrl = "https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/main/packaging/install/cluster-operator/040-Crd-kafka.yaml";
-    private final String kafkaUserCrdUrl = "https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/main/packaging/install/cluster-operator/044-Crd-kafkauser.yaml";
+    private final String kafkaCrdUrl = "https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/%s/packaging/install/cluster-operator/040-Crd-kafka.yaml".formatted(TestConstants.STRIMZI_API_VERSION);
+    private final String kafkaUserCrdUrl = "https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/%s/packaging/install/cluster-operator/044-Crd-kafkauser.yaml".formatted(TestConstants.STRIMZI_API_VERSION);
     private final SetupAccessOperator setupAccessOperator = new SetupAccessOperator(namespace);
 
     static {
