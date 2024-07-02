@@ -237,6 +237,10 @@ changing the image target. However, this will only work if all instances of the 
 to `IfNotPresent` or `Never`. If not, then the cluster nodes will go to the upstream registry (Quay by default)
 and pull the official images instead of using your freshly built image.
 
+## Running system tests
+
+System tests has its own guide with more information. See [Testing Guide](TESTING.md) document for more information.
+
 ## DCO Signoff
 
 The project requires that all commits are signed-off, indicating that _you_ certify the changes with the developer
