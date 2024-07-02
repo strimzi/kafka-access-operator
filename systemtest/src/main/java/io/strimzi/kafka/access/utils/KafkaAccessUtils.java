@@ -28,8 +28,8 @@ public class KafkaAccessUtils {
     public static boolean waitForKafkaAccessStatus(String namespaceName, String accessName, String conditionType, String conditionStatus) {
         Wait.until(
             "KafkaAccess %s/%s to contain condition %s with status %s".formatted(namespaceName, accessName, conditionType, conditionStatus),
-            TestConstants.GLOBAL_POLL_INTERVAL_SMALL_MS,
-            TestConstants.GLOBAL_TIMEOUT_SMALL_MS,
+            TestConstants.GLOBAL_POLL_INTERVAL_SHORT_MS,
+            TestConstants.GLOBAL_TIMEOUT_SHORT_MS,
             () -> {
                 Optional<Condition> desiredStatus = KafkaAccessType.kafkaAccessClient().inNamespace(namespaceName).withName(accessName).get()
                     .getStatus().getConditions().stream().filter(condition -> condition.getType().equals(conditionType)).findFirst();

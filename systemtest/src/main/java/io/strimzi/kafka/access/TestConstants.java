@@ -54,6 +54,6 @@ public interface TestConstants {
     //--------------------------
     // Duration constants
     //--------------------------
-    long GLOBAL_POLL_INTERVAL_SMALL_MS = Duration.ofSeconds(1).toMillis();
-    long GLOBAL_TIMEOUT_SMALL_MS = Duration.ofMinutes(2).toMillis();
+    long GLOBAL_POLL_INTERVAL_SHORT_MS = Duration.ofSeconds(1).toMillis();
+    long GLOBAL_TIMEOUT_SHORT_MS = Duration.ofMinutes(2).toMillis();
 }
