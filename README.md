@@ -24,7 +24,7 @@ or use the [Strimzi quickstart guide](https://strimzi.io/quickstarts/) to also d
 ## Using the Access Operator
 
 To make use of the Access Operator, create a `KafkaAccess` custom resource (CR).
-You must specify the name of the name of the `Kafka` CR you want to connect to.
+You must specify the name of the `Kafka` CR you want to connect to.
 You can optionally also specify the name of the listener in the `Kafka` CR and a `KafkaUser`.
 See the [examples folder](https://github.com/strimzi/kafka-access-operator/tree/main/packaging/examples) for some valid `KafkaAccess` specifications.
 
