@@ -75,6 +75,24 @@
             <organization>CN Group</organization>
             <organizationUrl>https://www.cngroup.dk</organizationUrl>
         </developer>
+        <developer>
+            <name>Paul Mellor</name>
+            <email>pmellor@redhat.com</email>
+            <organization>Red Hat</organization>
+            <organizationUrl>https://www.redhat.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Lukáš Král</name>
+            <email>l.kral@outlook.com</email>
+            <organization>Red Hat</organization>
+            <organizationUrl>https://www.redhat.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Maroš Orsák</name>
+            <email>maros.orsak159@gmail.com</email>
+            <organization>Red Hat</organization>
+            <organizationUrl>https://www.redhat.com</organizationUrl>
+        </developer>
     </developers>
 
     <properties>
@@ -97,13 +115,13 @@
 
         <!-- Runtime dependencies -->
         <javaoperatorsdk.version>4.4.2</javaoperatorsdk.version>
-        <fabric8.version>6.13.0</fabric8.version>
-        <strimzi.version>0.41.0</strimzi.version>
-        <kafka.clients.version>3.0.0</kafka.clients.version>
+        <fabric8.version>6.13.4</fabric8.version>
+        <strimzi.version>0.43.0</strimzi.version>
+        <kafka.clients.version>3.8.0</kafka.clients.version>
         <javax-validation.version>2.0.1.Final</javax-validation.version>
         <slf4j.version>1.7.36</slf4j.version>
         <log4j.version>2.17.2</log4j.version>
-        <jetty.version>11.0.14</jetty.version>
+        <jetty.version>11.0.24</jetty.version>
         <jetty.jakarta-servlet-api.version>5.0.2</jetty.jakarta-servlet-api.version>
 
         <!-- Test dependencies -->
