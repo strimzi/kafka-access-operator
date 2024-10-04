@@ -5,9 +5,10 @@ echo "Build reason: ${BUILD_REASON}"
 echo "Source branch: ${BRANCH}"
 
 make crd_install
+make helm_install
 
-CHANGED_DERIVED=$(git diff --name-status -- packaging/install/)
-GENERATED_FILES=$(git ls-files --other --exclude-standard -- packaging/install/)
+CHANGED_DERIVED=$(git diff --name-status -- packaging/install/ packaging/helm-charts/)
+GENERATED_FILES=$(git ls-files --other --exclude-standard -- packaging/install/ packaging/helm-charts/)
 if [ -n "$CHANGED_DERIVED" ] || [ -n "$GENERATED_FILES" ] ; then
     if [ -n "$CHANGED_DERIVED" ] ; then
         echo "ERROR: Uncommitted changes in derived resources:"
@@ -21,6 +22,7 @@ if [ -n "$CHANGED_DERIVED" ] || [ -n "$GENERATED_FILES" ] ; then
   
     echo "Run the following to add up-to-date resources:"
     echo "  make crd_install \\"
+    echo "    && make helm_install \\"
     echo "    && git add packaging/ \\"
     echo "    && git commit -s -m 'Update derived resources'"
     exit 1

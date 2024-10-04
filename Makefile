@@ -41,7 +41,7 @@ release_pkg:
 	$(FIND) ./packaging/install/ -mindepth 1 -maxdepth 1 ! -name Makefile -type f,d -exec $(CP) -rv {} ./install/ \;
 
 .PHONY: all
-all: java_package docker_build docker_push crd_install
+all: java_package docker_build docker_push crd_install helm_install
 
 .PHONY: build
 build: java_verify crd_install docker_build
@@ -53,6 +53,18 @@ clean: java_clean
 crd_install:
 	$(CP) ./api/target/classes/META-INF/fabric8/kafkaaccesses.access.strimzi.io-v1.yml ./packaging/install/040-Crd-kafkaaccess.yaml
 	yq eval -i '.metadata.labels."servicebinding.io/provisioned-service"="true"' ./packaging/install/040-Crd-kafkaaccess.yaml
+	$(CP) ./api/target/classes/META-INF/fabric8/kafkaaccesses.access.strimzi.io-v1.yml ./packaging/helm-charts/helm3/strimzi-access-operator/crds/040-Crd-kafkaaccess.yaml
+	yq eval -i '.metadata.labels."servicebinding.io/provisioned-service"="true"' ./packaging/helm-charts/helm3/strimzi-access-operator/crds/040-Crd-kafkaaccess.yaml
+
+.PHONY: helm_install
+helm_install:
+	#helm template --output-dir ./packaging/install/ ./packaging/helm-charts/helm3/kafka-access-operator/
+	mkdir -p ./target/helm
+	helm template --namespace strimzi-access-operator --output-dir ./target/helm ./packaging/helm-charts/helm3/strimzi-access-operator/
+	$(FIND) ./target/helm/strimzi-access-operator/templates/ -type f -name '*.yaml' -exec $(SED) -i '/^---/d' {} \;
+	$(FIND) ./target/helm/strimzi-access-operator/templates/ -type f -name '*.yaml' -exec $(SED) -i '/^# Source: /d' {} \;
+	$(CP) -v ./target/helm/strimzi-access-operator/templates/*.yaml ./packaging/install/
+	rm -rf ./target/helm
 
 .PHONY: next_version
 next_version:
