@@ -58,7 +58,6 @@ crd_install:
 
 .PHONY: helm_install
 helm_install:
-	#helm template --output-dir ./packaging/install/ ./packaging/helm-charts/helm3/kafka-access-operator/
 	mkdir -p ./target/helm
 	helm template --namespace strimzi-access-operator --output-dir ./target/helm ./packaging/helm-charts/helm3/strimzi-access-operator/
 	$(FIND) ./target/helm/strimzi-access-operator/templates/ -type f -name '*.yaml' -exec $(SED) -i '/^---/d' {} \;
