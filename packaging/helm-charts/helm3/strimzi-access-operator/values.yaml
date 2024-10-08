@@ -1,7 +1,5 @@
 image:
-  # TODO until first release is there
   tag: latest
-  pullPolicy: Always
 
 resources:
   limits:
