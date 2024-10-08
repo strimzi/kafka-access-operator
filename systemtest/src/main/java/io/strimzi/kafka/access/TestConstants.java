@@ -13,7 +13,7 @@ public interface TestConstants {
     String USER_PATH = System.getProperty("user.dir");
 
     String INSTALL_PATH = USER_PATH + "/../packaging/install/";
-    String HELM_CHARTS_PATH = USER_PATH + "/../packaging/helm-charts/helm3/kafka-access-operator";
+    String HELM_CHARTS_PATH = USER_PATH + "/../packaging/helm-charts/helm3/strimzi-access-operator";
 
     //--------------------------
     // Strimzi related constants
