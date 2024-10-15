@@ -21,7 +21,7 @@ public class KafkaReference {
     @io.fabric8.crd.generator.annotation.PrinterColumn(name = "Cluster")
     private String name;
     private String namespace;
-    @io.fabric8.crd.generator.annotation.PrinterColumn()
+    @io.fabric8.crd.generator.annotation.PrinterColumn(name = "Listener")
     private String listener;
 
     /**

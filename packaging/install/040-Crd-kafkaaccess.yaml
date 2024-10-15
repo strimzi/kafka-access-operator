@@ -17,7 +17,7 @@ spec:
   versions:
     - additionalPrinterColumns:
         - jsonPath: .spec.kafka.listener
-          name: LISTENER
+          name: Listener
           priority: 0
           type: string
         - jsonPath: .spec.kafka.name
