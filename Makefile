@@ -69,7 +69,7 @@ crd_install:
 
 .PHONY: helm_install
 helm_install: packaging/helm-charts/helm3
-	$(MAKE) -C packaging/helm-charts/helm3 $(MAKECMDGOALS)
+	$(MAKE) -C packaging/helm-charts/helm3 helm_install
 
 .PHONY: next_version
 next_version:
