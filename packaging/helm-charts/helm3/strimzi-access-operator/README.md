@@ -16,7 +16,7 @@ or use the [Strimzi quickstart guide](https://strimzi.io/quickstarts/) to also d
 
 ### Installing the Chart
 
-To install the chart with the release name `my-strimzi-drain-cleaner`:
+To install the chart with the release name `my-strimzi-access-operator`:
 
 ```bash
 $ helm install my-strimzi-access-operator oci://quay.io/strimzi-helm/strimzi-access-operator
