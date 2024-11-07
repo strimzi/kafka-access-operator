@@ -21,7 +21,7 @@ For the operator to start successfully you need the Strimzi `Kafka` and `KafkaUs
 You can get these from the Strimzi [GitHub repository](https://github.com/strimzi/strimzi-kafka-operator/tree/main/install/cluster-operator),
 or use the [Strimzi quickstart guide](https://strimzi.io/quickstarts/) to also deploy the Strimzi cluster operator and a Kafka instance at the same time.
 
-### Starting the Access Operator
+### Deploying the Access Operator
 
 To deploy the Access Operator in the `strimzi-access-operator` namespace:
 
