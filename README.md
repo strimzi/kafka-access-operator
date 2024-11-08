@@ -14,19 +14,39 @@ The operator is built using the [Java Operator SDK](https://github.com/java-oper
 
 ## Running the Access Operator
 
-The Access Operator is still in early stages of development so to run it you need to build it from source.
-The [dev guide](https://github.com/strimzi/kafka-access-operator/blob/main/development-docs/DEV_GUIDE.md) describes how to build and run the Access Operator.
+The latest release of the Access Operator can be started using the manifests in the `install` directory.
+The [dev guide](https://github.com/strimzi/kafka-access-operator/blob/main/development-docs/DEV_GUIDE.md) describes how to build and run the Access Operator from source.
 
-To start the operator you need the Strimzi `Kafka` and `KafkaUser` custom resource definitions installed in your Kubernetes cluster.
-You can get these from the Strimzi [GitHub repository](https://github.com/strimzi/strimzi-kafka-operator/tree/main/packaging/install/cluster-operator),
+For the operator to start successfully you need the Strimzi `Kafka` and `KafkaUser` custom resource definitions installed in your Kubernetes cluster.
+You can get these from the Strimzi [GitHub repository](https://github.com/strimzi/strimzi-kafka-operator/tree/main/install/cluster-operator),
 or use the [Strimzi quickstart guide](https://strimzi.io/quickstarts/) to also deploy the Strimzi cluster operator and a Kafka instance at the same time.
+
+### Deploying the Access Operator
+
+To deploy the Access Operator in the `strimzi-access-operator` namespace:
+
+```bash
+kubectl apply -f install
+```
+
+The command deploys the Strimzi Access Operator on the Kubernetes cluster.
+
+### Removing the Access Operator
+
+To delete the `strimzi-access-operator` deployment:
+
+```bash
+kubectl delete -f install
+```
+
+The command removes all the Kubernetes components associated with the Strimzi Access Operator utility and deletes the deployment.
 
 ## Using the Access Operator
 
 To make use of the Access Operator, create a `KafkaAccess` custom resource (CR).
 You must specify the name of the `Kafka` CR you want to connect to.
 You can optionally also specify the name of the listener in the `Kafka` CR and a `KafkaUser`.
-See the [examples folder](https://github.com/strimzi/kafka-access-operator/tree/main/packaging/examples) for some valid `KafkaAccess` specifications.
+See the [examples folder](https://github.com/strimzi/kafka-access-operator/tree/main/examples) for some valid `KafkaAccess` specifications.
 
 If you do not specify which listener you want to connect to, the operator uses the following rules to choose a listener:
 1. If there is only one listener configured in the `Kafka` CR, that listener is chosen.
