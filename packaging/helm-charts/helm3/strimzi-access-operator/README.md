@@ -10,19 +10,60 @@ The operator is built using the [Java Operator SDK](https://github.com/java-oper
 
 ## Running the Access Operator
 
-The Access Operator is still in early stages of development so to run it you need to build it from source.
-The [dev guide](https://github.com/strimzi/kafka-access-operator/blob/main/development-docs/DEV_GUIDE.md) describes how to build and run the Access Operator.
-
-To start the operator you need the Strimzi `Kafka` and `KafkaUser` custom resource definitions installed in your Kubernetes cluster.
-You can get these from the Strimzi [GitHub repository](https://github.com/strimzi/strimzi-kafka-operator/tree/main/packaging/install/cluster-operator),
+For the operator to start successfully you need the Strimzi `Kafka` and `KafkaUser` custom resource definitions installed in your Kubernetes cluster.
+You can get these from the Strimzi [GitHub repository](https://github.com/strimzi/strimzi-kafka-operator/tree/main/install/cluster-operator),
 or use the [Strimzi quickstart guide](https://strimzi.io/quickstarts/) to also deploy the Strimzi cluster operator and a Kafka instance at the same time.
+
+### Installing the Chart
+
+To install the chart with the release name `my-strimzi-access-operator`:
+
+```bash
+$ helm install my-strimzi-access-operator oci://quay.io/strimzi-helm/strimzi-access-operator
+```
+
+The command deploys the Strimzi Access Operator on the Kubernetes cluster with the default configuration.
+
+### Uninstalling the Chart
+
+To uninstall/delete the `my-strimzi-access-operator` deployment:
+
+```bash
+$ helm delete my-strimzi-access-operator
+```
+
+The command removes all the Kubernetes components associated with the Strimzi Access Operator utility and deletes the release.
+
+### Configuration
+
+The following table lists some available configurable parameters of the Strimzi chart and their default values.
+For a full list of supported options, check the [`values.yaml` file](./values.yaml).
+
+| Parameter                            | Description                                               | Default  |
+|--------------------------------------|-----------------------------------------------------------|----------|
+| `image.tag`                          | Override default Drain Cleaner image tag                  | `latest` |
+| `image.imagePullPolicy`              | Image pull policy for all pods deployed by Drain Cleaner  | `nil`    |
+| `resources.limits.cpu`               | Configures the CPU limit for the Access Operator Pod      | `256Mi`  |
+| `resources.limits.memory`            | Configures the memory limit for the Access Operator Pod   | `500m`   |
+| `resources.requests.cpu`             | Configures the CPU request for the Access Operator Pod    | `256Mi`  |
+| `resources.requests.memory`          | Configures the memory request for the Access Operator Pod | `100m`   |
+| `livenessProbe.initialDelaySeconds`  | Liveness probe initial delay (in seconds)                 | `10`     |
+| `livenessProbe.periodSeconds`        | Liveness probe period (in seconds)                        | `30`     |
+| `readinessProbe.initialDelaySeconds` | Readiness probe initial delay (in seconds)                | `10`     |
+| `readinessProbe.periodSeconds`       | Readiness probe period (in seconds)                       | `30`     |
+
+Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
+
+```bash
+$ helm install my-strimzi-access-operator --set replicaCount=2 oci://quay.io/strimzi-helm/strimzi-access-operator
+```
 
 ## Using the Access Operator
 
 To make use of the Access Operator, create a `KafkaAccess` custom resource (CR).
 You must specify the name of the `Kafka` CR you want to connect to.
 You can optionally also specify the name of the listener in the `Kafka` CR and a `KafkaUser`.
-See the [examples folder](https://github.com/strimzi/kafka-access-operator/tree/main/packaging/examples) for some valid `KafkaAccess` specifications.
+See the [examples folder](https://github.com/strimzi/kafka-access-operator/tree/main/examples) for some valid `KafkaAccess` specifications.
 
 If you do not specify which listener you want to connect to, the operator uses the following rules to choose a listener:
 1. If there is only one listener configured in the `Kafka` CR, that listener is chosen.
@@ -105,47 +146,3 @@ Learn more on how you can contribute on our [Join Us](https://strimzi.io/join-us
 ## License
 
 Strimzi Access Operator is licensed under the [Apache License](./LICENSE), Version 2.0
-
-## Installing the Chart
-
-To install the chart with the release name `my-strimzi-drain-cleaner`:
-
-```bash
-$ helm install my-strimzi-access-operator oci://quay.io/strimzi-helm/strimzi-access-operator
-```
-
-The command deploys the Strimzi Access Operator on the Kubernetes cluster with the default configuration.
-
-## Uninstalling the Chart
-
-To uninstall/delete the `my-strimzi-access-operator` deployment:
-
-```bash
-$ helm delete my-strimzi-access-operator
-```
-
-The command removes all the Kubernetes components associated with the Strimzi Access Operator utility and deletes the release.
-
-## Configuration
-
-The following table lists some available configurable parameters of the Strimzi chart and their default values.
-For a full list of supported options, check the [`values.yaml` file](./values.yaml).
-
-| Parameter                            | Description                                               | Default  |
-|--------------------------------------|-----------------------------------------------------------|----------|
-| `image.tag`                          | Override default Drain Cleaner image tag                  | `latest` |
-| `image.imagePullPolicy`              | Image pull policy for all pods deployed by Drain Cleaner  | `nil`    |
-| `resources.limits.cpu`               | Configures the CPU limit for the Access Operator Pod      | `256Mi`  |
-| `resources.limits.memory`            | Configures the memory limit for the Access Operator Pod   | `500m`   |
-| `resources.requests.cpu`             | Configures the CPU request for the Access Operator Pod    | `256Mi`  |
-| `resources.requests.memory`          | Configures the memory request for the Access Operator Pod | `100m`   |
-| `livenessProbe.initialDelaySeconds`  | Liveness probe initial delay (in seconds)                 | `10`     |
-| `livenessProbe.periodSeconds`        | Liveness probe period (in seconds)                        | `30`     |
-| `readinessProbe.initialDelaySeconds` | Readiness probe initial delay (in seconds)                | `10`     |
-| `readinessProbe.periodSeconds`       | Readiness probe period (in seconds)                       | `30`     |
-
-Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
-
-```bash
-$ helm install my-strimzi-access-operator --set replicaCount=2 oci://quay.io/strimzi-helm/strimzi-access-operator
-```
