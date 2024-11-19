@@ -77,6 +77,9 @@ next_version:
 	mvn versions:set -DnewVersion=$(shell echo $(NEXT_VERSION) | tr a-z A-Z)
 	mvn versions:commit
 
+release_files_check:
+	./.azure/scripts/release_files_check.sh
+
 checksum_examples:
 	@$(FIND) ./examples/ -type f -print0 | LC_ALL=C $(SORT) -z | $(XARGS) -0 $(SHA1SUM) | $(SHA1SUM)
 
