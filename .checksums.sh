@@ -14,7 +14,7 @@
 # if this checksum has changed as part of any non-release specific changes, please apply your changes to the
 #   development version of the helm charts in ./packaging/install
 ### IMPORTANT ###
-INSTALL_CHECKSUM="4e3bc4774c0d1803e895d42e22d792364b2f14c5  -"
+INSTALL_CHECKSUM="14107f5b805ba8ccceb44f0845d535b8732c2e6e  -"
 
 ### IMPORTANT ###
 # if the below line has changed, this means the ./examples directory has changed
@@ -22,4 +22,4 @@ INSTALL_CHECKSUM="4e3bc4774c0d1803e895d42e22d792364b2f14c5  -"
 # if this checksum has changed as part of any non-release specific changes, please apply your changes to the
 #   development version of the helm charts in ./packaging/examples
 ### IMPORTANT ###
-EXAMPLES_CHECKSUM="2bbd52b17af9b7ef63731b4a0a81165b182d77e6  -"
+EXAMPLES_CHECKSUM="5329eddeedb33d52e207946b684862db93ebcd84  -"
