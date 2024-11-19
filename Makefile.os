@@ -12,7 +12,7 @@ ifeq ($(UNAME_S),Darwin)
 	SED = gsed
 	GREP = ggrep
 	CP = gcp
-    SORT = gsort
-    SHA1SUM = gsha1sum
-    XARGS = gxargs
+	SORT = gsort
+	SHA1SUM = gsha1sum
+	XARGS = gxargs
 endif
