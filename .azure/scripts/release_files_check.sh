@@ -32,7 +32,7 @@ for i in "${!ITEMS[@]}"; do
     echo "If your changes to $DIRECTORY are related to a new release, please update the checksums. Otherwise, please change only the files in the $PACKAGING_DIR directory. "
     RETURN_CODE=$((RETURN_CODE+1))
   else
-    echo "checksum of $DIRECTORY matches expected checksum => OK"
+    echo "Checksums of $DIRECTORY match => OK"
   fi
 done
 
