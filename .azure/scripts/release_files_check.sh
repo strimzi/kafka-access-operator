@@ -32,11 +32,6 @@ for i in "${!ITEMS[@]}"; do
     echo "if your changes are not related to a release please check your changes into"
     echo "$PACKAGING_DIR"
     echo "instead of $DIRECTORY"
-    echo ""
-    echo "if this is part of a release instead update the checksum i.e."
-    echo "$CHECKSUM_VAR=\"${EXPECTED_CHECKSUM}\""
-    echo "->"
-    echo "$CHECKSUM_VAR=\"${CHECKSUM}\""
     RETURN_CODE=$((RETURN_CODE+1))
   else
     echo "checksum of $DIRECTORY matches expected checksum => OK"
