@@ -7,6 +7,6 @@ metadata:
   name: my-kafka-access
 spec:
   kafka:
-    name: my-cluster22
+    name: my-cluster
     namespace: kafka
     listener: plain
