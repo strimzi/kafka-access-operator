@@ -3,7 +3,7 @@ kind: ClusterRole
 metadata:
   name: strimzi-access-operator
   labels:
-    app: strimzi-access-operator
+    app: this-is-funnny
 rules:
   - apiGroups:
       - "access.strimzi.io"
