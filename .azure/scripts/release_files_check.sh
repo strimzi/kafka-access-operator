@@ -26,12 +26,10 @@ for i in "${!ITEMS[@]}"; do
   EXPECTED_CHECKSUM="${!CHECKSUM_VAR}"
 
   if [ "$CHECKSUM" != "$EXPECTED_CHECKSUM" ]; then
-    echo "ERROR checksum of $DIRECTORY does not match expected"
-    echo "expected ${EXPECTED_CHECKSUM}"
-    echo "found ${CHECKSUM}"
-    echo "if your changes are not related to a release please check your changes into"
-    echo "$PACKAGING_DIR"
-    echo "instead of $DIRECTORY"
+    echo "ERROR: Checksums of $DIRECTORY do not match."
+    echo "    Expected: ${EXPECTED_CHECKSUM}"
+    echo "    Actual: ${CHECKSUM}"
+    echo "If your changes to $DIRECTORY are related to a new release, please update the checksums. Otherwise, please change only the files in the $PACKAGING_DIR directory. "
     RETURN_CODE=$((RETURN_CODE+1))
   else
     echo "checksum of $DIRECTORY matches expected checksum => OK"
