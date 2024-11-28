@@ -7,14 +7,16 @@ package io.strimzi.kafka.access.resources;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.skodjob.testframe.interfaces.NamespacedResourceType;
+import io.skodjob.testframe.interfaces.ResourceType;
 import io.skodjob.testframe.resources.KubeResourceManager;
+import io.strimzi.api.kafka.model.common.Condition;
 import io.strimzi.kafka.access.model.KafkaAccess;
-import io.strimzi.kafka.access.utils.KafkaAccessUtils;
+import io.strimzi.kafka.access.model.KafkaAccessStatus;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
-public class KafkaAccessType implements NamespacedResourceType<KafkaAccess> {
+public class KafkaAccessType implements ResourceType<KafkaAccess> {
 
     private final MixedOperation<KafkaAccess, KubernetesResourceList<KafkaAccess>, Resource<KafkaAccess>> client;
 
@@ -47,47 +49,28 @@ public class KafkaAccessType implements NamespacedResourceType<KafkaAccess> {
     }
 
     @Override
-    public void delete(String resourceName) {
-        client.withName(resourceName).delete();
+    public void delete(KafkaAccess kafkaAccess) {
+        client.resource(kafkaAccess).delete();
     }
 
     @Override
-    public void replace(String resourceName, Consumer<KafkaAccess> editor) {
-        KafkaAccess toBeReplaced = client.withName(resourceName).get();
+    public void replace(KafkaAccess kafkaAccess, Consumer<KafkaAccess> editor) {
+        KafkaAccess toBeReplaced = client.inNamespace(kafkaAccess.getMetadata().getNamespace()).withName(kafkaAccess.getMetadata().getName()).get();
         editor.accept(toBeReplaced);
         update(toBeReplaced);
     }
 
     @Override
-    public boolean waitForReadiness(KafkaAccess kafkaAccess) {
-        return KafkaAccessUtils.waitForKafkaAccessReady(kafkaAccess.getMetadata().getNamespace(), kafkaAccess.getMetadata().getName());
+    public boolean isReady(KafkaAccess kafkaAccess) {
+        KafkaAccessStatus kafkaAccessStatus = client.resource(kafkaAccess).get().getStatus();
+        Optional<Condition> readyCondition = kafkaAccessStatus.getConditions().stream().filter(condition -> condition.getType().equals("Ready")).findFirst();
+
+        return readyCondition.map(condition -> condition.getStatus().equals("True")).orElse(false);
     }
 
     @Override
-    public boolean waitForDeletion(KafkaAccess kafkaAccess) {
+    public boolean isDeleted(KafkaAccess kafkaAccess) {
         return kafkaAccess == null;
-    }
-
-    @Override
-    public void createInNamespace(String namespaceName, KafkaAccess kafkaAccess) {
-        client.inNamespace(namespaceName).resource(kafkaAccess).create();
-    }
-
-    @Override
-    public void updateInNamespace(String namespaceName, KafkaAccess kafkaAccess) {
-        client.inNamespace(namespaceName).resource(kafkaAccess).update();
-    }
-
-    @Override
-    public void deleteFromNamespace(String namespaceName, String resourceName) {
-        client.inNamespace(namespaceName).withName(resourceName).delete();
-    }
-
-    @Override
-    public void replaceInNamespace(String namespaceName, String resourceName, Consumer<KafkaAccess> editor) {
-        KafkaAccess toBeReplaced = client.inNamespace(namespaceName).withName(resourceName).get();
-        editor.accept(toBeReplaced);
-        updateInNamespace(namespaceName, toBeReplaced);
     }
 
     public static MixedOperation<KafkaAccess, KubernetesResourceList<KafkaAccess>, Resource<KafkaAccess>> kafkaAccessClient() {
