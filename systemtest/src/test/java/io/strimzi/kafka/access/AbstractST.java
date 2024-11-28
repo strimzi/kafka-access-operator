@@ -43,8 +43,8 @@ public abstract class AbstractST {
     @BeforeAll
     void createResources() {
         // apply Kafka and KafkaUser CRDs for the tests
-        KubeResourceManager.getKubeCmdClient().inNamespace(namespace).execInCurrentNamespace("apply", "-f", kafkaCrdUrl);
-        KubeResourceManager.getKubeCmdClient().inNamespace(namespace).execInCurrentNamespace("apply", "-f", kafkaUserCrdUrl);
+        KubeResourceManager.getKubeCmdClient().inNamespace(namespace).exec("apply", "-f", kafkaCrdUrl);
+        KubeResourceManager.getKubeCmdClient().inNamespace(namespace).exec("apply", "-f", kafkaUserCrdUrl);
 
         // install KafkaAccessOperator
         setupAccessOperator.install();
@@ -56,7 +56,7 @@ public abstract class AbstractST {
         setupAccessOperator.delete();
 
         // delete CRDs
-        KubeResourceManager.getKubeCmdClient().inNamespace(namespace).execInCurrentNamespace("delete", "-f", kafkaCrdUrl);
-        KubeResourceManager.getKubeCmdClient().inNamespace(namespace).execInCurrentNamespace("delete", "-f", kafkaUserCrdUrl);
+        KubeResourceManager.getKubeCmdClient().inNamespace(namespace).exec("delete", "-f", kafkaCrdUrl);
+        KubeResourceManager.getKubeCmdClient().inNamespace(namespace).exec("delete", "-f", kafkaUserCrdUrl);
     }
 }
