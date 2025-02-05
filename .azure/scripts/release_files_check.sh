@@ -8,12 +8,11 @@ SHA1SUM=sha1sum
 RETURN_CODE=0
 
 # Arrays holding the relevant information for each directory
-# TODO: after release add here "Helm Charts" HELM_CHART_CHECKSUM checksum_helm "./helm-charts" and "./packaging/helm-charts" in each line
-ITEMS=("install" "examples")
-CHECKSUM_VARS=("INSTALL_CHECKSUM" "EXAMPLES_CHECKSUM")
-MAKE_TARGETS=("checksum_install" "checksum_examples")
-DIRECTORIES=("./install" "./examples")
-PACKAGING_DIRS=("./packaging/install" "./packaging/examples")
+ITEMS=("install" "examples" "helm-charts")
+CHECKSUM_VARS=("INSTALL_CHECKSUM" "EXAMPLES_CHECKSUM" "HELM_CHART_CHECKSUM")
+MAKE_TARGETS=("checksum_install" "checksum_examples" "checksum_helm")
+DIRECTORIES=("./install" "./examples" "./helm-charts")
+PACKAGING_DIRS=("./packaging/install" "./packaging/examples" "./packaging/helm-charts")
 
 for i in "${!ITEMS[@]}"; do
   NAME="${ITEMS[$i]}"

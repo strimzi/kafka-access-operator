@@ -1,10 +1,11 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: strimzi-access-operator
   labels:
     app: strimzi-access-operator
-  namespace: strimzi-access-operator
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
@@ -27,7 +28,10 @@ spec:
             sizeLimit: 1Mi
       containers:
         - name: access-operator
-          image: quay.io/strimzi/access-operator:0.1.1
+          image: quay.io/strimzi/access-operator:{{ .Values.image.tag }}
+          {{- if .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          {{- end }}
           ports:
             - containerPort: 8080
               name: http
@@ -37,21 +41,16 @@ spec:
             - name: strimzi-tmp
               mountPath: /tmp
           resources:
-            limits:
-              cpu: 500m
-              memory: 256Mi
-            requests:
-              cpu: 100m
-              memory: 256Mi
+{{ toYaml .Values.resources | indent 12 }}
           livenessProbe:
             httpGet:
               path: /healthy
               port: http
-            initialDelaySeconds: 10
-            periodSeconds: 30
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
           readinessProbe:
             httpGet:
               path: /ready
               port: http
-            initialDelaySeconds: 10
-            periodSeconds: 30
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}

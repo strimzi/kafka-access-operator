@@ -1,0 +1,18 @@
+apiVersion: v2
+# TODO
+appVersion: "0.1.0"
+description: "Strimzi Kafka Access Operator"
+name: strimzi-access-operator
+version: 0.1.0
+icon: https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/main/documentation/logo/strimzi_logo.png
+keywords:
+  - kafka
+  - queue
+  - stream
+  - event
+  - messaging
+  - datastore
+  - topic
+home: https://strimzi.io/
+sources:
+  - https://github.com/strimzi/kafka-access-operator
