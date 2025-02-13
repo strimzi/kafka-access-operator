@@ -1,4 +1,7 @@
 image:
+  registry: quay.io
+  repository: strimzi
+  name: access-operator
   tag: latest
 
 resources:
