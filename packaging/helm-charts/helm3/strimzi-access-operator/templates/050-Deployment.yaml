@@ -28,9 +28,9 @@ spec:
             sizeLimit: 1Mi
       containers:
         - name: access-operator
-          image: quay.io/strimzi/access-operator:{{ .Values.image.tag }}
-          {{- if .Values.image.pullPolicy }}
-          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          image: {{ .Values.image.registry }}/{{ .Values.image.repository}}/{{ .Values.image.name }}:{{ .Values.image.tag }}
+          {{- with .Values.image.pullPolicy }}
+          imagePullPolicy: {{ . }}
           {{- end }}
           ports:
             - containerPort: 8080
