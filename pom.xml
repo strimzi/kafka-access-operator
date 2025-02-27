@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.strimzi.kafka.access</groupId>
+    <groupId>io.strimzi.access-operator</groupId>
     <artifactId>kafka-access-operator</artifactId>
     <version>0.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -118,6 +118,8 @@
         <maven.shade.version>3.1.0</maven.shade.version>
         <maven.dependency.version>3.3.0</maven.dependency.version>
         <maven.assembly.version>3.3.0</maven.assembly.version>
+        <maven.gpg.version>3.0.1</maven.gpg.version>
+        <sonatype.nexus.staging>1.7.0</sonatype.nexus.staging>
 
         <!-- Runtime dependencies -->
         <javaoperatorsdk.version>4.4.2</javaoperatorsdk.version>
@@ -283,7 +285,7 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>io.strimzi.kafka.access</groupId>
+                <groupId>io.strimzi.access-operator</groupId>
                 <artifactId>api</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -434,4 +436,54 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>ossrh</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <!--suppress UnresolvedMavenProperty -->
+                <gpg.executable>${env.GPG_EXECUTABLE}</gpg.executable>
+                <!--suppress UnresolvedMavenProperty -->
+                <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven.gpg.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <gpgArguments>
+                                        <arg>--batch</arg>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>${sonatype.nexus.staging}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
