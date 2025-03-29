@@ -7,17 +7,17 @@
 This project provides a Kubernetes operator to help applications bind to an [Apache Kafka®](https://kafka.apache.org) cluster that is managed by the [Strimzi](https://strimzi.io) cluster operator.
 
 The operator creates a single Kubernetes `Secret` resource containing all the connection details for the Kafka cluster.
-The removes the need for applications to query multiple Kubernetes resources to get connection information.
+This removes the need for applications to query multiple Kubernetes resources to get connection information.
 The `Secret` follows the conventions laid out in the [Service Binding Specification for Kubernetes v1.0.0](https://servicebinding.io/spec/core/1.0.0/).
 
 The operator is built using the [Java Operator SDK](https://github.com/java-operator-sdk/java-operator-sdk).
 
 ## Running the Access Operator
 
-The latest release of the Access Operator can be started using the manifests in the `install` directory.
+The latest release of the Access Operator can be deployed using the manifests in the `install` directory.
 The [dev guide](https://github.com/strimzi/kafka-access-operator/blob/main/development-docs/DEV_GUIDE.md) describes how to build and run the Access Operator from source.
 
-For the operator to start successfully you need the Strimzi `Kafka` and `KafkaUser` custom resource definitions installed in your Kubernetes cluster.
+For the operator to start successfully, you need the Strimzi `Kafka` and `KafkaUser` custom resource definitions installed in your Kubernetes cluster.
 You can get these from the Strimzi [GitHub repository](https://github.com/strimzi/strimzi-kafka-operator/tree/main/install/cluster-operator),
 or use the [Strimzi quickstart guide](https://strimzi.io/quickstarts/) to also deploy the Strimzi cluster operator and a Kafka instance at the same time.
 
@@ -39,7 +39,7 @@ To delete the `strimzi-access-operator` deployment:
 kubectl delete -f install
 ```
 
-The command removes all the Kubernetes components associated with the Strimzi Access Operator utility and deletes the deployment.
+This command removes all Kubernetes components associated with the Strimzi Access Operator and deletes the deployment.
 
 ## Using the Access Operator
 
