@@ -123,7 +123,7 @@
 
         <!-- Runtime dependencies -->
         <javaoperatorsdk.version>4.4.2</javaoperatorsdk.version>
-        <fabric8.version>7.0.1</fabric8.version>
+        <fabric8.version>7.2.0</fabric8.version>
         <sundrio.version>0.200.0</sundrio.version>
         <strimzi.version>0.43.0</strimzi.version>
         <kafka.clients.version>3.8.0</kafka.clients.version>
@@ -173,7 +173,7 @@
                 <exclusions>
                     <exclusion>
                         <groupId>io.fabric8</groupId>
-                        <artifactId>kubernetes-httpclient-okhttp</artifactId>
+                        <artifactId>kubernetes-httpclient-vertx</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>

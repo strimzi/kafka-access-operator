@@ -27,7 +27,7 @@
             <exclusions>
                 <exclusion>
                     <groupId>io.fabric8</groupId>
-                    <artifactId>kubernetes-httpclient-okhttp</artifactId>
+                    <artifactId>kubernetes-httpclient-vertx</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -109,6 +109,7 @@
                                 <customResourceClass>io.strimzi.kafka.access.model.KafkaAccess</customResourceClass>
                             </customResourceClasses>
                             <implicitPreserveUnknownFields>true</implicitPreserveUnknownFields>
+                            <minimizeQuotes>true</minimizeQuotes>
                         </configuration>
                     </execution>
                 </executions>
