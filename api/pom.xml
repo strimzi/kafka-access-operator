@@ -27,7 +27,7 @@
             <exclusions>
                 <exclusion>
                     <groupId>io.fabric8</groupId>
-                    <artifactId>kubernetes-httpclient-okhttp</artifactId>
+                    <artifactId>kubernetes-httpclient-vertx</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -50,8 +50,13 @@
         <!-- Required to generate CRD file -->
         <dependency>
             <groupId>io.fabric8</groupId>
-            <artifactId>crd-generator-apt</artifactId>
+            <artifactId>crd-generator-api-v2</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.sundr</groupId>
+            <artifactId>builder-annotations</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>io.strimzi</groupId>
@@ -79,4 +84,36 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>io.fabric8</groupId>
+                    <artifactId>crd-generator-maven-plugin</artifactId>
+                    <version>${fabric8.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>crd-generator-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <customResourceClasses>
+                                <customResourceClass>io.strimzi.kafka.access.model.KafkaAccess</customResourceClass>
+                            </customResourceClasses>
+                            <implicitPreserveUnknownFields>true</implicitPreserveUnknownFields>
+                            <minimizeQuotes>true</minimizeQuotes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

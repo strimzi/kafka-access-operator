@@ -73,10 +73,6 @@ spec:
                 conditions:
                   items:
                     properties:
-                      additionalProperties:
-                        additionalProperties:
-                          type: object
-                        type: object
                       lastTransitionTime:
                         type: string
                       message:
@@ -88,6 +84,7 @@ spec:
                       type:
                         type: string
                     type: object
+                    x-kubernetes-preserve-unknown-fields: true
                   type: array
                 observedGeneration:
                   type: integer

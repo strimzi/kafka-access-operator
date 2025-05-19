@@ -123,7 +123,8 @@
 
         <!-- Runtime dependencies -->
         <javaoperatorsdk.version>4.4.2</javaoperatorsdk.version>
-        <fabric8.version>6.13.4</fabric8.version>
+        <fabric8.version>7.2.0</fabric8.version>
+        <sundrio.version>0.200.0</sundrio.version>
         <strimzi.version>0.43.0</strimzi.version>
         <kafka.clients.version>3.8.0</kafka.clients.version>
         <javax-validation.version>2.0.1.Final</javax-validation.version>
@@ -172,7 +173,7 @@
                 <exclusions>
                     <exclusion>
                         <groupId>io.fabric8</groupId>
-                        <artifactId>kubernetes-httpclient-okhttp</artifactId>
+                        <artifactId>kubernetes-httpclient-vertx</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -206,6 +207,18 @@
                 <version>${fabric8.version}</version>
             </dependency>
             <!-- Required to generate CRD file -->
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>crd-generator-api-v2</artifactId>
+                <version>${fabric8.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.sundr</groupId>
+                <artifactId>builder-annotations</artifactId>
+                <scope>compile</scope>
+                <version>${sundrio.version}</version>
+            </dependency>
             <dependency>
                 <groupId>io.fabric8</groupId>
                 <artifactId>crd-generator-apt</artifactId>
@@ -424,10 +437,11 @@
                             <failOnWarning>true</failOnWarning>
                             <ignoredDependencies>
                                 <!-- Required to generate CRD file -->
-                                <ignoredDependency>io.fabric8:crd-generator-apt:jar:${fabric8.version}</ignoredDependency>
+                                <ignoredDependency>io.fabric8:crd-generator-api-v2:jar:${fabric8.version}</ignoredDependency>
                                 <ignoredDependency>io.fabric8:generator-annotations:jar:${fabric8.version}</ignoredDependency>
                                 <ignoredDependency>io.fabric8:kubernetes-httpclient-jdk:jar:${fabric8.version}</ignoredDependency>
                                 <ignoredDependency>org.apache.logging.log4j:log4j-slf4j-impl</ignoredDependency>
+                                <ignoredDependency>io.sundr:builder-annotations:jar:${sundrio.version}</ignoredDependency>
                             </ignoredDependencies>
                         </configuration>
                     </execution>
