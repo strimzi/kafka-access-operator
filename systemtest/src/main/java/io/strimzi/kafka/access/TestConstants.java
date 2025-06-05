@@ -36,6 +36,8 @@ public interface TestConstants {
     //--------------------------
     String USER_CRT = "user.crt";
     String USER_KEY = "user.key";
+    String USER_P12 = "user.p12";
+    String USER_PASSWORD = "user.password";
     String PASSWORD = "password";
     String SASL_JAAS_CONFIG = "sasl.jaas.config";
 
@@ -50,6 +52,8 @@ public interface TestConstants {
     String SECURITY_PROTOCOL = "securityProtocol";
     String SSL_KEYSTORE_CRT = "ssl.keystore.crt";
     String SSL_KEYSTORE_KEY = "ssl.keystore.key";
+    String SSL_KEYSTORE_P12 = "ssl.keystore.p12";
+    String SSL_KEYSTORE_PASSWORD = "ssl.keystore.password";
 
     //--------------------------
     // Duration constants

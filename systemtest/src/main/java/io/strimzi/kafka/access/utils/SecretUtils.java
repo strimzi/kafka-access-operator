@@ -17,4 +17,12 @@ public class SecretUtils {
         String data = "-----BEGIN CERTIFICATE-----\n" + crt + "\n-----END CERTIFICATE-----\n";
         return Base64Utils.encodeToBase64(data);
     }
+
+    public static String createUserP12(byte[] p12) {
+        return Base64Utils.encodeToBase64(p12);
+    }
+
+    public static String createUserPassword(String password) {
+        return Base64Utils.encodeToBase64(password);
+    }
 }

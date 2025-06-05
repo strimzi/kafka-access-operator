@@ -57,6 +57,8 @@ public class KafkaAccessOperatorST extends AbstractST {
 
         String userKey = SecretUtils.createUserKey("my-super-secret-key");
         String userCrt = SecretUtils.createUserCrt("my-super-secret-crt");
+        String userP12 = SecretUtils.createUserP12(new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05});
+        String userPassword = SecretUtils.createUserPassword("my-super-secret-password");
 
         List<GenericKafkaListener> listeners = List.of(
             ListenerTemplates.tlsListener(internalListenerName, KafkaListenerType.INTERNAL, new KafkaListenerAuthenticationTls(), internalListenerPort),
@@ -66,7 +68,7 @@ public class KafkaAccessOperatorST extends AbstractST {
 
         Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, testStorage.getKafkaClusterName(), defaultHost, listeners).build();
         KafkaUser tlsUser = KafkaUserTemplates.kafkaUser(namespace, tlsUserName, new KafkaUserTlsClientAuthentication());
-        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, testStorage.getKafkaClusterName(), userKey, userCrt);
+        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, testStorage.getKafkaClusterName(), userKey, userCrt, userP12, userPassword);
 
         resourceManager.createResourceWithWait(
             kafka,
@@ -178,6 +180,8 @@ public class KafkaAccessOperatorST extends AbstractST {
         
         String userKey = SecretUtils.createUserKey("my-super-secret-key");
         String userCrt = SecretUtils.createUserCrt("my-super-secret-crt");
+        String userP12 = SecretUtils.createUserP12(new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05});
+        String userPassword = SecretUtils.createUserPassword("my-super-secret-password");
 
         List<GenericKafkaListener> listeners = List.of(
             ListenerTemplates.tlsListener(nodePortListenerName, KafkaListenerType.NODEPORT, new KafkaListenerAuthenticationTls(), nodePortListenerPort),
@@ -186,7 +190,7 @@ public class KafkaAccessOperatorST extends AbstractST {
 
         Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, testStorage.getKafkaClusterName(), defaultHost, listeners).build();
         KafkaUser tlsUser = KafkaUserTemplates.kafkaUser(namespace, tlsUserName, new KafkaUserTlsClientAuthentication());
-        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, testStorage.getKafkaClusterName(), userKey, userCrt);
+        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, testStorage.getKafkaClusterName(), userKey, userCrt, userP12, userPassword);
 
         resourceManager.createResourceWithWait(
             kafka,
@@ -221,6 +225,8 @@ public class KafkaAccessOperatorST extends AbstractST {
         
         String userKey = SecretUtils.createUserKey("my-super-secret-key");
         String userCrt = SecretUtils.createUserCrt("my-super-secret-crt");
+        String userP12 = SecretUtils.createUserP12(new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05});
+        String userPassword = SecretUtils.createUserPassword("my-super-secret-password");
 
         List<GenericKafkaListener> listeners = List.of(
             ListenerTemplates.tlsListener(nodePortListenerName, KafkaListenerType.NODEPORT, new KafkaListenerAuthenticationTls(), nodePortListenerPort),
@@ -230,7 +236,7 @@ public class KafkaAccessOperatorST extends AbstractST {
 
         Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, testStorage.getKafkaClusterName(), defaultHost, listeners).build();
         KafkaUser tlsUser = KafkaUserTemplates.kafkaUser(namespace, tlsUserName, new KafkaUserTlsClientAuthentication());
-        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, testStorage.getKafkaClusterName(), userKey, userCrt);
+        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, testStorage.getKafkaClusterName(), userKey, userCrt, userP12, userPassword);
 
         resourceManager.createResourceWithWait(
             kafka,
@@ -273,6 +279,8 @@ public class KafkaAccessOperatorST extends AbstractST {
 
         String userKey = SecretUtils.createUserKey("my-super-secret-key");
         String userCrt = SecretUtils.createUserCrt("my-super-secret-crt");
+        String userP12 = SecretUtils.createUserP12(new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05});
+        String userPassword = SecretUtils.createUserPassword("my-super-secret-password");
 
         List<GenericKafkaListener> listeners = List.of(
             ListenerTemplates.tlsListener(listenerA, KafkaListenerType.NODEPORT, new KafkaListenerAuthenticationTls(), listenerAPort),
@@ -282,7 +290,7 @@ public class KafkaAccessOperatorST extends AbstractST {
 
         Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, testStorage.getKafkaClusterName(), defaultHost, listeners).build();
         KafkaUser tlsUser = KafkaUserTemplates.kafkaUser(namespace, tlsUserName, new KafkaUserTlsClientAuthentication());
-        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, testStorage.getKafkaClusterName(), userKey, userCrt);
+        Secret tlsUserSecret = SecretTemplates.tlsSecretForUser(namespace, tlsUserName, testStorage.getKafkaClusterName(), userKey, userCrt, userP12, userPassword);
 
         resourceManager.createResourceWithWait(
             kafka,
@@ -336,6 +344,10 @@ public class KafkaAccessOperatorST extends AbstractST {
                 is(Base64Utils.decodeFromBase64ToString(userData.get(TestConstants.USER_CRT))));
             assertThat(Base64Utils.decodeFromBase64ToString(data.get(TestConstants.SSL_KEYSTORE_KEY)),
                 is(Base64Utils.decodeFromBase64ToString(userData.get(TestConstants.USER_KEY))));
+            assertThat(Base64Utils.decodeFromBase64ToString(data.get(TestConstants.SSL_KEYSTORE_P12)),
+                is(Base64Utils.decodeFromBase64ToString(userData.get(TestConstants.USER_P12))));
+            assertThat(Base64Utils.decodeFromBase64ToString(data.get(TestConstants.SSL_KEYSTORE_PASSWORD)),
+                is(Base64Utils.decodeFromBase64ToString(userData.get(TestConstants.USER_PASSWORD))));
         }
     }
 }

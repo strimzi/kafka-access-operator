@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static io.strimzi.kafka.access.Base64Encoder.encodeUtf8;
+import static io.strimzi.kafka.access.Base64Encoder.encode;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 
@@ -193,6 +194,8 @@ public class KafkaAccessReconcilerTest {
     void testReconcileWithKafkaUser() {
         final String cert = encodeUtf8("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
         final String key = encodeUtf8("-----BEGIN PRIVATE KEY-----\nMIIEvA\n-----END PRIVATE KEY-----\n");
+        final String p12 = encode(new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05});
+        final String password = encodeUtf8("my-super-secret-password");
         final Kafka kafka = ResourceProvider.getKafka(
                 KAFKA_NAME,
                 KAFKA_NAMESPACE,
@@ -214,6 +217,8 @@ public class KafkaAccessReconcilerTest {
         final Map<String, String> kafkaUserSecretData = new HashMap<>();
         kafkaUserSecretData.put("user.crt", cert);
         kafkaUserSecretData.put("user.key", key);
+        kafkaUserSecretData.put("user.p12", p12);
+        kafkaUserSecretData.put("user.password", password);
         kafkaUserSecret.setData(kafkaUserSecretData);
         client.secrets().inNamespace(KAFKA_NAMESPACE).resource(kafkaUserSecret).create();
 
@@ -238,7 +243,9 @@ public class KafkaAccessReconcilerTest {
                         CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
                         encodeUtf8(String.format("%s:%s", BOOTSTRAP_HOST, BOOTSTRAP_PORT_9093))
                 ).containsEntry("ssl.keystore.crt", cert)
-                .containsEntry("ssl.keystore.key", key);
+                .containsEntry("ssl.keystore.key", key)
+                .containsEntry("ssl.keystore.p12", p12)
+                .containsEntry("ssl.keystore.password", password);
     }
 
     @Test
