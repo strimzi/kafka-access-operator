@@ -15,10 +15,12 @@ public class SecretTemplates {
 
     private SecretTemplates() {}
 
-    public static Secret tlsSecretForUser(String namespaceName, String userName, String clusterName, String userKey, String userCrt) {
+    public static Secret tlsSecretForUser(String namespaceName, String userName, String clusterName, String userKey, String userCrt, String userP12, String userPassword) {
         Map<String, String> data = Map.of(
             TestConstants.USER_KEY, userKey,
-            TestConstants.USER_CRT, userCrt
+            TestConstants.USER_CRT, userCrt,
+            TestConstants.USER_P12, userP12,
+            TestConstants.USER_PASSWORD, userPassword
         );
 
         return defaultSecretForUser(namespaceName, userName, clusterName, data);

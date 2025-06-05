@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.strimzi.kafka.access.Base64Encoder.encodeUtf8;
+import static io.strimzi.kafka.access.Base64Encoder.encode;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class KafkaUserDataTest {
@@ -111,16 +112,22 @@ public class KafkaUserDataTest {
     void testKafkaUserDataTlsExternalSecret() {
         final String cert = encodeUtf8("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
         final String key = encodeUtf8("-----BEGIN PRIVATE KEY-----\nMIIEvA\n-----END PRIVATE KEY-----\n");
+        final String p12 = encode(new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05});
+        final String password = encodeUtf8("my-super-secret-password");
         final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithStatus(SECRET_NAME, USERNAME, new KafkaUserTlsExternalClientAuthentication());
 
         final Map<String, String> kafkaUserSecretData = new HashMap<>();
         kafkaUserSecretData.put("user.crt", cert);
         kafkaUserSecretData.put("user.key", key);
+        kafkaUserSecretData.put("user.p12", p12);
+        kafkaUserSecretData.put("user.password", password);
         final Secret kafkaUserSecret = new SecretBuilder().withData(kafkaUserSecretData).build();
 
         final Map<String, String> secretData = new KafkaUserData(kafkaUser).withSecret(kafkaUserSecret).getConnectionSecretData();
         assertThat(secretData.get("ssl.keystore.crt")).isEqualTo(cert);
         assertThat(secretData.get("ssl.keystore.key")).isEqualTo(key);
+        assertThat(secretData.get("ssl.keystore.p12")).isEqualTo(p12);
+        assertThat(secretData.get("ssl.keystore.password")).isEqualTo(password);
     }
 
     @Test
