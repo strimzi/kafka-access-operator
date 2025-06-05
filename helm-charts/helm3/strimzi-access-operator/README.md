@@ -112,8 +112,6 @@ data:
     # Provided if selected user is mTLS:
     ssl.keystore.crt: # certificate for the consuming client signed by the clients' CA
     ssl.keystore.key: # private key for the consuming client
-    ssl.keystore.p12: # certificate and private key as PKCS12 keystore for the consuming client
-    ssl.keystore.password: # keystore password for the PKCS12 keystore for the consuming client
 ```
 
 Developers can make this `Secret` available to their applications themselves, or use an operator that implements the [Service Binding specification](https://servicebinding.io/spec/core/1.0.0/) to do it.
