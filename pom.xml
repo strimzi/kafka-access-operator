@@ -441,7 +441,7 @@
 
     <profiles>
         <profile>
-            <id>central-publishing</id>
+            <id>central</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
