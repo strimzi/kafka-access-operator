@@ -83,6 +83,10 @@ public class KafkaUserData {
                     .ifPresent(cert -> secretData.put("ssl.keystore.crt", cert));
             Optional.ofNullable(rawUserData.get("user.key"))
                     .ifPresent(key -> secretData.put("ssl.keystore.key", key));
+            Optional.ofNullable(rawUserData.get("user.p12"))
+                    .ifPresent(key -> secretData.put("ssl.keystore.p12", key));
+            Optional.ofNullable(rawUserData.get("user.password"))
+                    .ifPresent(key -> secretData.put("ssl.keystore.password", key));
         }
         return secretData;
     }
