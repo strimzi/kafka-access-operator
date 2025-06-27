@@ -14,4 +14,7 @@ public class Base64Encoder {
     public static String encodeUtf8(String data) {
         return ENCODER.encodeToString(data.getBytes(StandardCharsets.UTF_8));
     }
+    public static String encode(byte[] data) {
+        return ENCODER.encodeToString(data);
+    }
 }
