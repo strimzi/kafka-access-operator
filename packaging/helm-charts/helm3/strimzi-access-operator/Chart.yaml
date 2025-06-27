@@ -16,3 +16,7 @@ keywords:
 home: https://strimzi.io/
 sources:
   - https://github.com/strimzi/kafka-access-operator
+maintainers:
+  - name: Strimzi Project Maintainers
+    email: cncf-strimzi-maintainers@lists.cncf.io
+    url: https://github.com/strimzi/governance
