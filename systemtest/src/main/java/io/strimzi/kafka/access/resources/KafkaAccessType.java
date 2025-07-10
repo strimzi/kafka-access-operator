@@ -74,6 +74,6 @@ public class KafkaAccessType implements ResourceType<KafkaAccess> {
     }
 
     public static MixedOperation<KafkaAccess, KubernetesResourceList<KafkaAccess>, Resource<KafkaAccess>> kafkaAccessClient() {
-        return KubeResourceManager.getKubeClient().getClient().resources(KafkaAccess.class);
+        return KubeResourceManager.get().kubeClient().getClient().resources(KafkaAccess.class);
     }
 }

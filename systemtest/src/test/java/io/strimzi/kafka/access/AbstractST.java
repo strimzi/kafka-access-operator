@@ -23,14 +23,14 @@ import org.junit.jupiter.api.TestInstance;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SuppressWarnings("ClassDataAbstractionCoupling")
 public abstract class AbstractST {
-    protected final KubeResourceManager resourceManager = KubeResourceManager.getInstance();
+    protected final KubeResourceManager resourceManager = KubeResourceManager.get();
     public final String namespace = "main-namespace";
     private final String kafkaCrdUrl = "https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/%s/packaging/install/cluster-operator/040-Crd-kafka.yaml".formatted(TestConstants.STRIMZI_API_VERSION);
     private final String kafkaUserCrdUrl = "https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/%s/packaging/install/cluster-operator/044-Crd-kafkauser.yaml".formatted(TestConstants.STRIMZI_API_VERSION);
     private final SetupAccessOperator setupAccessOperator = new SetupAccessOperator(namespace);
 
     static {
-        KubeResourceManager.getInstance().setResourceTypes(
+        KubeResourceManager.get().setResourceTypes(
             new ClusterRoleBindingType(),
             new ClusterRoleType(),
             new CustomResourceDefinitionType(),
@@ -43,8 +43,8 @@ public abstract class AbstractST {
     @BeforeAll
     void createResources() {
         // apply Kafka and KafkaUser CRDs for the tests
-        KubeResourceManager.getKubeCmdClient().inNamespace(namespace).exec("apply", "-f", kafkaCrdUrl);
-        KubeResourceManager.getKubeCmdClient().inNamespace(namespace).exec("apply", "-f", kafkaUserCrdUrl);
+        KubeResourceManager.get().kubeCmdClient().inNamespace(namespace).exec("apply", "-f", kafkaCrdUrl);
+        KubeResourceManager.get().kubeCmdClient().inNamespace(namespace).exec("apply", "-f", kafkaUserCrdUrl);
 
         // install KafkaAccessOperator
         setupAccessOperator.install();
@@ -56,7 +56,7 @@ public abstract class AbstractST {
         setupAccessOperator.delete();
 
         // delete CRDs
-        KubeResourceManager.getKubeCmdClient().inNamespace(namespace).exec("delete", "-f", kafkaCrdUrl);
-        KubeResourceManager.getKubeCmdClient().inNamespace(namespace).exec("delete", "-f", kafkaUserCrdUrl);
+        KubeResourceManager.get().kubeCmdClient().inNamespace(namespace).exec("delete", "-f", kafkaCrdUrl);
+        KubeResourceManager.get().kubeCmdClient().inNamespace(namespace).exec("delete", "-f", kafkaUserCrdUrl);
     }
 }
