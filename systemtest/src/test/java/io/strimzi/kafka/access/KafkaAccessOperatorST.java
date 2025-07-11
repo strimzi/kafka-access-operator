@@ -74,8 +74,8 @@ public class KafkaAccessOperatorST extends AbstractST {
             KafkaUserTemplates.kafkaUser(namespace, scramShaUserName, new KafkaUserScramSha512ClientAuthentication()),
             tlsUserSecret
         );
-        KubeResourceManager.getKubeClient().getClient().resource(kafka).updateStatus();
-        KubeResourceManager.getKubeClient().getClient().resource(tlsUser).updateStatus();
+        KubeResourceManager.get().kubeClient().getClient().resource(kafka).updateStatus();
+        KubeResourceManager.get().kubeClient().getClient().resource(tlsUser).updateStatus();
 
         resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, testStorage.getKafkaAccessName())
             .withNewSpec()
@@ -119,8 +119,8 @@ public class KafkaAccessOperatorST extends AbstractST {
             scramUser,
             scramSecret
         );
-        KubeResourceManager.getKubeClient().getClient().resource(kafka).updateStatus();
-        KubeResourceManager.getKubeClient().getClient().resource(scramUser).updateStatus();
+        KubeResourceManager.get().kubeClient().getClient().resource(kafka).updateStatus();
+        KubeResourceManager.get().kubeClient().getClient().resource(scramUser).updateStatus();
 
         resourceManager.createResourceWithoutWait(KafkaAccessTemplates.kafkaAccess(namespace, testStorage.getKafkaAccessName())
             .withNewSpec()
@@ -158,7 +158,7 @@ public class KafkaAccessOperatorST extends AbstractST {
         Kafka kafka = KafkaTemplates.kafkaWithListeners(namespace, testStorage.getKafkaClusterName(), defaultHost, listeners).build();
 
         resourceManager.createResourceWithWait(kafka);
-        KubeResourceManager.getKubeClient().getClient().resource(kafka).updateStatus();
+        KubeResourceManager.get().kubeClient().getClient().resource(kafka).updateStatus();
 
         resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, testStorage.getKafkaAccessName())
             .withNewSpec()
@@ -193,8 +193,8 @@ public class KafkaAccessOperatorST extends AbstractST {
             tlsUser,
             tlsUserSecret
         );
-        KubeResourceManager.getKubeClient().getClient().resource(kafka).updateStatus();
-        KubeResourceManager.getKubeClient().getClient().resource(tlsUser).updateStatus();
+        KubeResourceManager.get().kubeClient().getClient().resource(kafka).updateStatus();
+        KubeResourceManager.get().kubeClient().getClient().resource(tlsUser).updateStatus();
 
         resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, testStorage.getKafkaAccessName())
             .withNewSpec()
@@ -237,8 +237,8 @@ public class KafkaAccessOperatorST extends AbstractST {
             tlsUser,
             tlsUserSecret
         );
-        KubeResourceManager.getKubeClient().getClient().resource(kafka).updateStatus();
-        KubeResourceManager.getKubeClient().getClient().resource(tlsUser).updateStatus();
+        KubeResourceManager.get().kubeClient().getClient().resource(kafka).updateStatus();
+        KubeResourceManager.get().kubeClient().getClient().resource(tlsUser).updateStatus();
 
         resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, testStorage.getKafkaAccessName())
             .withNewSpec()
@@ -289,8 +289,8 @@ public class KafkaAccessOperatorST extends AbstractST {
             tlsUser,
             tlsUserSecret
         );
-        KubeResourceManager.getKubeClient().getClient().resource(kafka).updateStatus();
-        KubeResourceManager.getKubeClient().getClient().resource(tlsUser).updateStatus();
+        KubeResourceManager.get().kubeClient().getClient().resource(kafka).updateStatus();
+        KubeResourceManager.get().kubeClient().getClient().resource(tlsUser).updateStatus();
 
         resourceManager.createResourceWithWait(KafkaAccessTemplates.kafkaAccess(namespace, testStorage.getKafkaAccessName())
             .withNewSpec()
@@ -325,7 +325,7 @@ public class KafkaAccessOperatorST extends AbstractST {
         SecurityProtocol expectedSecurityProtocol,
         Map<String, String> userData
     ) {
-        Secret accessSecret = KubeResourceManager.getKubeClient().getClient().secrets().inNamespace(namespace).withName(accessName).get();
+        Secret accessSecret = KubeResourceManager.get().kubeClient().getClient().secrets().inNamespace(namespace).withName(accessName).get();
         Map<String, String> data = accessSecret.getData();
 
         assertThat(Base64Utils.decodeFromBase64ToString(data.get(TestConstants.BOOTSTRAP_SERVERS)), is(expectedBootstrap));

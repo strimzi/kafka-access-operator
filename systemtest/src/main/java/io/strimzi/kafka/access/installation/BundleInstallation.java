@@ -44,7 +44,7 @@ public class BundleInstallation implements InstallationMethod {
             switch (resourceType) {
                 case TestConstants.NAMESPACE:
                     // create Namespace
-                    KubeResourceManager.getInstance().createResourceWithWait(new NamespaceBuilder()
+                    KubeResourceManager.get().createResourceWithWait(new NamespaceBuilder()
                         .editOrNewMetadata()
                             .withName(installationNamespace)
                         .endMetadata()
@@ -53,7 +53,7 @@ public class BundleInstallation implements InstallationMethod {
                     break;
                 case TestConstants.SERVICE_ACCOUNT:
                     ServiceAccount serviceAccount = TestFrameUtils.configFromYaml(file, ServiceAccount.class);
-                    KubeResourceManager.getInstance().createOrUpdateResourceWithWait(new ServiceAccountBuilder(serviceAccount)
+                    KubeResourceManager.get().createOrUpdateResourceWithWait(new ServiceAccountBuilder(serviceAccount)
                         .editMetadata()
                             .withNamespace(installationNamespace)
                         .endMetadata()
@@ -62,11 +62,11 @@ public class BundleInstallation implements InstallationMethod {
                     break;
                 case TestConstants.CLUSTER_ROLE:
                     ClusterRole clusterRole = TestFrameUtils.configFromYaml(file, ClusterRole.class);
-                    KubeResourceManager.getInstance().createOrUpdateResourceWithWait(clusterRole);
+                    KubeResourceManager.get().createOrUpdateResourceWithWait(clusterRole);
                     break;
                 case TestConstants.CLUSTER_ROLE_BINDING:
                     ClusterRoleBinding clusterRoleBinding = TestFrameUtils.configFromYaml(file, ClusterRoleBinding.class);
-                    KubeResourceManager.getInstance().createOrUpdateResourceWithWait(new ClusterRoleBindingBuilder(clusterRoleBinding)
+                    KubeResourceManager.get().createOrUpdateResourceWithWait(new ClusterRoleBindingBuilder(clusterRoleBinding)
                         .editOrNewMetadata()
                             .withNamespace(installationNamespace)
                         .endMetadata()
@@ -78,7 +78,7 @@ public class BundleInstallation implements InstallationMethod {
                     break;
                 case TestConstants.CUSTOM_RESOURCE_DEFINITION_SHORT:
                     CustomResourceDefinition customResourceDefinition = TestFrameUtils.configFromYaml(file, CustomResourceDefinition.class);
-                    KubeResourceManager.getInstance().createOrUpdateResourceWithWait(customResourceDefinition);
+                    KubeResourceManager.get().createOrUpdateResourceWithWait(customResourceDefinition);
                     break;
                 case TestConstants.DEPLOYMENT:
                     deployKafkaAccessOperator(file);
@@ -122,6 +122,6 @@ public class BundleInstallation implements InstallationMethod {
             .endSpec()
             .build();
 
-        KubeResourceManager.getInstance().createResourceWithWait(accessOperatorDeployment);
+        KubeResourceManager.get().createResourceWithWait(accessOperatorDeployment);
     }
 }
