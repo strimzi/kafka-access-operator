@@ -42,11 +42,11 @@ import java.util.Optional;
 public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSourceInitializer<KafkaAccess>, ErrorStatusHandler<KafkaAccess> {
 
     private final KubernetesClient kubernetesClient;
-    private InformerEventSource<Secret, KafkaAccess> kafkaAccessSecretEventSource;
+    InformerEventSource<Secret, KafkaAccess> kafkaAccessSecretEventSource;
     private final SecretDependentResource secretDependentResource;
     private final Map<String, String> commonSecretLabels = new HashMap<>();
     private static final String SECRET_TYPE = "servicebinding.io/kafka";
-    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessOperator.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessReconciler.class);
 
     /**
      * Name of the event source for Strimzi Secret resources
@@ -99,16 +99,28 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
     private void createOrUpdateSecret(final Map<String, String> data, final KafkaAccess kafkaAccess) {
         final String kafkaAccessName = kafkaAccess.getMetadata().getName();
         final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
+        final String userProvidedSecretName = kafkaAccess.getSpec().getSecretName();
+        final String secretName;
+        if (userProvidedSecretName != null && !userProvidedSecretName.isEmpty()) {
+            // If the user provides a specific secretName in the spec, and it's not empty, use that.
+            secretName = userProvidedSecretName;
+            LOGGER.info("Using user-provided secret name: {}", secretName);
+        } else {
+            // Otherwise, default to the KafkaAccess resource's name.
+            secretName = kafkaAccessName;
+            LOGGER.info("Using default secret name: {}", secretName);
+        }
+
         if (kafkaAccessSecretEventSource == null) {
             throw new IllegalStateException("Event source for Kafka Access Secret not initialized, cannot reconcile");
         }
-        kafkaAccessSecretEventSource.get(new ResourceID(kafkaAccessName, kafkaAccessNamespace))
+        kafkaAccessSecretEventSource.get(new ResourceID(secretName, kafkaAccessNamespace))
                 .ifPresentOrElse(secret -> {
                     final Map<String, String> currentData = secret.getData();
                     if (!data.equals(currentData)) {
                         kubernetesClient.secrets()
                                 .inNamespace(kafkaAccessNamespace)
-                                .withName(kafkaAccessName)
+                                .withName(secretName)
                                 .edit(s -> new SecretBuilder(s).withData(data).build());
                     }
                 }, () -> kubernetesClient
@@ -118,7 +130,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                                 new SecretBuilder()
                                         .withType(SECRET_TYPE)
                                         .withNewMetadata()
-                                        .withName(kafkaAccessName)
+                                        .withName(secretName)
                                         .withLabels(commonSecretLabels)
                                         .withOwnerReferences(
                                                 new OwnerReferenceBuilder()

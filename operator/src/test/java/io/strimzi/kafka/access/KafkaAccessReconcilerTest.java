@@ -53,6 +53,7 @@ import static org.assertj.core.data.MapEntry.entry;
 public class KafkaAccessReconcilerTest {
 
     private static final String NAME = "kafka-access-name";
+    private static final String USER_PROVIDED_SECRET_NAME = "my-kafka-access-secret";
     private static final String NAMESPACE = "kafka-access-namespace";
     private static final String LISTENER_1 = "listener-1";
     private static final String LISTENER_2 = "listener-2";
@@ -63,7 +64,6 @@ public class KafkaAccessReconcilerTest {
     private static final int BOOTSTRAP_PORT_9092 = 9092;
     private static final int BOOTSTRAP_PORT_9093 = 9093;
     private static final long TEST_TIMEOUT = 1000;
-
     KubernetesClient client;
     Operator operator;
 
@@ -522,5 +522,36 @@ public class KafkaAccessReconcilerTest {
         assertThat(readyCondition.getLastTransitionTime()).isNotEmpty();
         assertThat(readyCondition.getMessage()).isEqualTo("User kind must be KafkaUser and apiGroup must be kafka.strimzi.io");
         assertThat(readyCondition.getReason()).isEqualTo("InvalidUserKind");
+    }
+
+    @Test
+    @DisplayName("Reconciler should use user-provided secret name if it is set")
+    void testReconcileWithUserProvidedSecretName() {
+        final Kafka kafka = ResourceProvider.getKafka(
+                KAFKA_NAME,
+                KAFKA_NAMESPACE,
+                List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false)),
+                List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
+        );
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
+
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference);
+
+        kafkaAccess.getSpec().setSecretName(USER_PROVIDED_SECRET_NAME);
+
+        client.resources(KafkaAccess.class).resource(kafkaAccess).create();
+        client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
+            final Optional<String> bindingName = Optional.ofNullable(updatedKafkaAccess)
+                    .map(KafkaAccess::getStatus)
+                    .map(KafkaAccessStatus::getBinding)
+                    .map(BindingStatus::getName);
+            return bindingName.isPresent() && NAME.equals(bindingName.get());
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        Secret secret = client.secrets().inNamespace(NAMESPACE).withName(USER_PROVIDED_SECRET_NAME).get();
+        assertThat(secret).isNotNull();
+        assertThat(secret.getType()).isEqualTo("servicebinding.io/kafka");
+        assertThat(secret.getMetadata().getName()).isEqualTo(USER_PROVIDED_SECRET_NAME);
     }
 }
