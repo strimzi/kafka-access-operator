@@ -42,7 +42,7 @@ import java.util.Optional;
 public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSourceInitializer<KafkaAccess>, ErrorStatusHandler<KafkaAccess> {
 
     private final KubernetesClient kubernetesClient;
-    InformerEventSource<Secret, KafkaAccess> kafkaAccessSecretEventSource;
+    private InformerEventSource<Secret, KafkaAccess> kafkaAccessSecretEventSource;
     private final SecretDependentResource secretDependentResource;
     private final Map<String, String> commonSecretLabels = new HashMap<>();
     private static final String SECRET_TYPE = "servicebinding.io/kafka";
@@ -80,6 +80,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         final String kafkaAccessName = kafkaAccess.getMetadata().getName();
         final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
         LOGGER.info("Reconciling KafkaAccess {}/{}", kafkaAccessNamespace, kafkaAccessName);
+        final String secretName = determineSecretName(kafkaAccess);
 
         createOrUpdateSecret(secretDependentResource.desired(kafkaAccess.getSpec(), kafkaAccessNamespace, context), kafkaAccess);
 
@@ -90,7 +91,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                     return status;
                 });
 
-        kafkaAccessStatus.setBinding(new BindingStatus(kafkaAccessName));
+        kafkaAccessStatus.setBinding(new BindingStatus(secretName));
         kafkaAccessStatus.setReadyCondition(true, "Ready", "Ready");
 
         return UpdateControl.updateStatus(kafkaAccess);
@@ -99,18 +100,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
     private void createOrUpdateSecret(final Map<String, String> data, final KafkaAccess kafkaAccess) {
         final String kafkaAccessName = kafkaAccess.getMetadata().getName();
         final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
-        final String userProvidedSecretName = kafkaAccess.getSpec().getSecretName();
-        final String secretName;
-        if (userProvidedSecretName != null && !userProvidedSecretName.isEmpty()) {
-            // If the user provides a specific secretName in the spec, and it's not empty, use that.
-            secretName = userProvidedSecretName;
-            LOGGER.info("Using user-provided secret name: {}", secretName);
-        } else {
-            // Otherwise, default to the KafkaAccess resource's name.
-            secretName = kafkaAccessName;
-            LOGGER.info("Using default secret name: {}", secretName);
-        }
-
+        final String secretName = determineSecretName(kafkaAccess);
         if (kafkaAccessSecretEventSource == null) {
             throw new IllegalStateException("Event source for Kafka Access Secret not initialized, cannot reconcile");
         }
@@ -148,6 +138,29 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                         )
                         .create()
             );
+    }
+
+    /**
+     * Determines the name of the Kubernetes Secret based on the KafkaAccess resource.
+     * If kafkaAccess.spec.secretName is provided and not empty, it is used.
+     * Otherwise, the name of the KafkaAccess resource is used as the default.
+     *
+     * @param kafkaAccess The KafkaAccess custom resource.
+     * @return The determined secret name.
+     */
+    private String determineSecretName(final KafkaAccess kafkaAccess) {
+        final String kafkaAccessName = kafkaAccess.getMetadata().getName();
+        final String userProvidedSecretName = kafkaAccess.getSpec().getSecretName();
+        final String secretName;
+
+        if (userProvidedSecretName != null && !userProvidedSecretName.isEmpty()) {
+            secretName = userProvidedSecretName;
+            LOGGER.debug("Determined secret name: '{}' (user-provided)", secretName);
+        } else {
+            secretName = kafkaAccessName;
+            LOGGER.debug("Determined secret name: '{}' (default from KafkaAccess name)", secretName);
+        }
+        return secretName;
     }
 
     /**

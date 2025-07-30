@@ -58,9 +58,8 @@ public class KafkaAccessSpec {
         this.user = kafkaUser;
     }
 
-    //option to specify secret name for user authentication
     /**
-     * Gets the secret name
+     * Gets the name of the Secret the operator will create to store credentials
      *
      * @return The secret name
      */
@@ -69,7 +68,7 @@ public class KafkaAccessSpec {
     }
 
     /**
-     * Sets the secret name
+     * Sets the name of the Secret the operator will create to store credentials
      *
      * @param secretName The secret name
      */

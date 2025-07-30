@@ -546,7 +546,7 @@ public class KafkaAccessReconcilerTest {
                     .map(KafkaAccess::getStatus)
                     .map(KafkaAccessStatus::getBinding)
                     .map(BindingStatus::getName);
-            return bindingName.isPresent() && NAME.equals(bindingName.get());
+            return bindingName.isPresent() && USER_PROVIDED_SECRET_NAME.equals(bindingName.get());
         }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
         Secret secret = client.secrets().inNamespace(NAMESPACE).withName(USER_PROVIDED_SECRET_NAME).get();
