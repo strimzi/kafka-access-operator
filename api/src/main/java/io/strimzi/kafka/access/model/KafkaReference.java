@@ -18,10 +18,8 @@ import io.sundr.builder.annotations.Buildable;
 public class KafkaReference {
 
     @Required
-    @io.fabric8.crd.generator.annotation.PrinterColumn(name = "Cluster")
     private String name;
     private String namespace;
-    @io.fabric8.crd.generator.annotation.PrinterColumn(name = "Listener")
     private String listener;
 
     /**
