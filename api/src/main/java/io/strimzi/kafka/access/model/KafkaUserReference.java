@@ -22,7 +22,6 @@ public class KafkaUserReference {
     @Required
     private String apiGroup;
     @Required
-    @io.fabric8.crd.generator.annotation.PrinterColumn(name = "User")
     private String name;
     private String namespace;
 

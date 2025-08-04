@@ -4,8 +4,11 @@
  */
 package io.strimzi.kafka.access.model;
 
+import io.fabric8.crd.generator.annotation.AdditionalPrinterColumn;
+import io.fabric8.crd.generator.annotation.AdditionalPrinterColumns;
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
+import io.fabric8.kubernetes.model.annotation.Categories;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.ShortNames;
 import io.fabric8.kubernetes.model.annotation.Version;
@@ -26,6 +29,14 @@ import java.io.Serial;
     builderPackage = Constants.FABRIC8_KUBERNETES_API,
     refs = {@BuildableReference(CustomResource.class), @BuildableReference(io.fabric8.kubernetes.api.model.ObjectMeta.class)}
 )
+
+@Categories(value = "strimzi")
+@AdditionalPrinterColumns(value = { 
+    @AdditionalPrinterColumn(jsonPath = ".spec.kafka.listener", name = "Listener"),
+    @AdditionalPrinterColumn(jsonPath = ".spec.kafka.name", name = "Cluster"),
+    @AdditionalPrinterColumn(jsonPath = ".spec.user.name", name = "User"),
+    @AdditionalPrinterColumn(jsonPath = ".status.conditions[?(@.type==\"Ready\")].status", name = "Ready")
+})
 public class KafkaAccess extends CustomResource<KafkaAccessSpec, KafkaAccessStatus> implements Namespaced {
     @Serial
     private static final long serialVersionUID = 1L;

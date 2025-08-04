@@ -9,6 +9,8 @@ spec:
   group: access.strimzi.io
   names:
     kind: KafkaAccess
+    categories:
+      - strimzi
     plural: kafkaaccesses
     shortNames:
       - ka
@@ -26,6 +28,10 @@ spec:
           type: string
         - jsonPath: .spec.user.name
           name: User
+          priority: 0
+          type: string
+        - jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
           priority: 0
           type: string
       name: v1alpha1
