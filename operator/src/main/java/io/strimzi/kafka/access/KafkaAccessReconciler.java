@@ -82,7 +82,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         LOGGER.info("Reconciling KafkaAccess {}/{}", kafkaAccessNamespace, kafkaAccessName);
         final String secretName = determineSecretName(kafkaAccess);
 
-        createOrUpdateSecret(secretDependentResource.desired(kafkaAccess.getSpec(), kafkaAccessNamespace, context), kafkaAccess);
+        createOrUpdateSecret(secretDependentResource.desired(kafkaAccess.getSpec(), kafkaAccessNamespace, context), kafkaAccess, secretName);
 
         final KafkaAccessStatus kafkaAccessStatus = Optional.ofNullable(kafkaAccess.getStatus())
                 .orElseGet(() -> {
@@ -97,10 +97,9 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         return UpdateControl.updateStatus(kafkaAccess);
     }
 
-    private void createOrUpdateSecret(final Map<String, String> data, final KafkaAccess kafkaAccess) {
+    private void createOrUpdateSecret(final Map<String, String> data, final KafkaAccess kafkaAccess, final String secretName) {
         final String kafkaAccessName = kafkaAccess.getMetadata().getName();
         final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
-        final String secretName = determineSecretName(kafkaAccess);
         if (kafkaAccessSecretEventSource == null) {
             throw new IllegalStateException("Event source for Kafka Access Secret not initialized, cannot reconcile");
         }
