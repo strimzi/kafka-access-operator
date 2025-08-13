@@ -7,6 +7,7 @@ package io.strimzi.kafka.access;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.kubernetes.api.model.StatusDetails;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.config.informer.InformerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
@@ -27,6 +28,7 @@ import io.strimzi.kafka.access.internal.MissingKubernetesResourceException;
 import io.strimzi.kafka.access.model.BindingStatus;
 import io.strimzi.kafka.access.model.KafkaAccess;
 import io.strimzi.kafka.access.model.KafkaAccessStatus;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,9 +82,10 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         final String kafkaAccessName = kafkaAccess.getMetadata().getName();
         final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
         LOGGER.info("Reconciling KafkaAccess {}/{}", kafkaAccessNamespace, kafkaAccessName);
-        final String secretName = determineSecretName(kafkaAccess);
+        final String newSecretName = determineSecretName(kafkaAccess);
 
-        createOrUpdateSecret(secretDependentResource.desired(kafkaAccess.getSpec(), kafkaAccessNamespace, context), kafkaAccess, secretName);
+        createOrUpdateSecret(secretDependentResource.desired(kafkaAccess.getSpec(), kafkaAccessNamespace, context), kafkaAccess, newSecretName);
+        deleteOldSecretIfRenamed(kafkaAccess.getStatus(), newSecretName, kafkaAccessNamespace, kafkaAccessName);
 
         final KafkaAccessStatus kafkaAccessStatus = Optional.ofNullable(kafkaAccess.getStatus())
                 .orElseGet(() -> {
@@ -91,7 +94,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                     return status;
                 });
 
-        kafkaAccessStatus.setBinding(new BindingStatus(secretName));
+        kafkaAccessStatus.setBinding(new BindingStatus(newSecretName));
         kafkaAccessStatus.setReadyCondition(true, "Ready", "Ready");
 
         return UpdateControl.updateStatus(kafkaAccess);
@@ -137,29 +140,6 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                         )
                         .create()
             );
-    }
-
-    /**
-     * Determines the name of the Kubernetes Secret based on the KafkaAccess resource.
-     * If kafkaAccess.spec.secretName is provided and not empty, it is used.
-     * Otherwise, the name of the KafkaAccess resource is used as the default.
-     *
-     * @param kafkaAccess The KafkaAccess custom resource.
-     * @return The determined secret name.
-     */
-    private String determineSecretName(final KafkaAccess kafkaAccess) {
-        final String kafkaAccessName = kafkaAccess.getMetadata().getName();
-        final String userProvidedSecretName = kafkaAccess.getSpec().getSecretName();
-        final String secretName;
-
-        if (userProvidedSecretName != null && !userProvidedSecretName.isEmpty()) {
-            secretName = userProvidedSecretName;
-            LOGGER.debug("Determined secret name: '{}' (user-provided)", secretName);
-        } else {
-            secretName = kafkaAccessName;
-            LOGGER.debug("Determined secret name: '{}' (default from KafkaAccess name)", secretName);
-        }
-        return secretName;
     }
 
     /**
@@ -230,5 +210,53 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         status.setReadyCondition(false, e.getMessage(), reason);
 
         return ErrorStatusUpdateControl.updateStatus(kafkaAccess);
+    }
+
+    /**
+     * Determines the name of the Kubernetes Secret based on the KafkaAccess resource.
+     * If kafkaAccess.spec.secretName is provided and not empty, it is used.
+     * Otherwise, the name of the KafkaAccess resource is used as the default.
+     *
+     * @param kafkaAccess The KafkaAccess custom resource.
+     * @return The determined secret name.
+     */
+    private String determineSecretName(final KafkaAccess kafkaAccess) {
+        final String kafkaAccessName = kafkaAccess.getMetadata().getName();
+        final String userProvidedSecretName = kafkaAccess.getSpec().getSecretName();
+        final String secretName;
+
+        if (userProvidedSecretName != null && !userProvidedSecretName.isEmpty()) {
+            secretName = userProvidedSecretName;
+            LOGGER.debug("Determined secret name: '{}' (user-provided)", secretName);
+        } else {
+            secretName = kafkaAccessName;
+            LOGGER.debug("Determined secret name: '{}' (default from KafkaAccess name)", secretName);
+        }
+        return secretName;
+    }
+
+    private void deleteOldSecretIfRenamed(final KafkaAccessStatus status, final String newSecretName, final String namespace, final String kafkaAccessName) {
+        BindingStatus binding = (status != null) ? status.getBinding() : null;
+        if (binding == null || newSecretName.equals(binding.getName())) {
+            return; // No binding or no rename → nothing to delete
+        }
+
+        String oldSecretName = binding.getName();
+        LOGGER.info("Detected secret name change for KafkaAccess {}/{}. Deleting old secret: {}",
+                namespace, kafkaAccessName, oldSecretName);
+
+        List<StatusDetails> deletionStatusDetails = kubernetesClient.secrets()
+                .inNamespace(namespace)
+                .withName(oldSecretName)
+                .delete();
+
+        if (deletionStatusDetails != null && !deletionStatusDetails.isEmpty()) {
+            LOGGER.info("Successfully initiated deletion for old secret '{}' for KafkaAccess {}/{}. Status details: {}",
+                    oldSecretName, namespace, kafkaAccessName, deletionStatusDetails);
+        } else {
+            LOGGER.warn("Deletion attempt for old secret '{}' returned no status details for KafkaAccess {}/{} (might not have existed).",
+                    oldSecretName, namespace, kafkaAccessName);
+        }
+
     }
 }

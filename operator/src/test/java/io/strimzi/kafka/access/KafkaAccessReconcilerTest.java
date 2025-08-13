@@ -53,7 +53,6 @@ import static org.assertj.core.data.MapEntry.entry;
 public class KafkaAccessReconcilerTest {
 
     private static final String NAME = "kafka-access-name";
-    private static final String USER_PROVIDED_SECRET_NAME = "my-kafka-access-secret";
     private static final String NAMESPACE = "kafka-access-namespace";
     private static final String LISTENER_1 = "listener-1";
     private static final String LISTENER_2 = "listener-2";
@@ -61,6 +60,8 @@ public class KafkaAccessReconcilerTest {
     private static final String KAFKA_NAME = "my-kafka-name";
     private static final String KAFKA_NAMESPACE = "kafka-namespace";
     private static final String KAFKA_USER_NAME = "my-kafka-user";
+    private static final String USER_PROVIDED_SECRET_NAME = "my-kafka-access-secret";
+    private static final String NEW_USER_PROVIDED_SECRET_NAME = "my-new-kafka-access-secret";
     private static final int BOOTSTRAP_PORT_9092 = 9092;
     private static final int BOOTSTRAP_PORT_9093 = 9093;
     private static final long TEST_TIMEOUT = 1000;
@@ -553,5 +554,58 @@ public class KafkaAccessReconcilerTest {
         assertThat(secret).isNotNull();
         assertThat(secret.getType()).isEqualTo("servicebinding.io/kafka");
         assertThat(secret.getMetadata().getName()).isEqualTo(USER_PROVIDED_SECRET_NAME);
+    }
+
+    @Test
+    @DisplayName("Reconciler should delete old secret if KafkaAccess spec.secretName changes")
+    void testReconcileSecretNameChangeTriggersOldSecretDeletion() {
+        final Kafka kafka = ResourceProvider.getKafka(
+                KAFKA_NAME,
+                KAFKA_NAMESPACE,
+                List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false)),
+                List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
+        );
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
+
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference);
+        kafkaAccess.getSpec().setSecretName(USER_PROVIDED_SECRET_NAME);
+
+        client.resources(KafkaAccess.class).resource(kafkaAccess).create();
+        client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
+            final Optional<String> bindingName = Optional.ofNullable(updatedKafkaAccess)
+                    .map(KafkaAccess::getStatus)
+                    .map(KafkaAccessStatus::getBinding)
+                    .map(BindingStatus::getName);
+            return bindingName.isPresent() && USER_PROVIDED_SECRET_NAME.equals(bindingName.get());
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        Secret oldSecretBeforeRename = client.secrets().inNamespace(NAMESPACE).withName(USER_PROVIDED_SECRET_NAME).get();
+        assertThat(oldSecretBeforeRename).isNotNull();
+        assertThat(oldSecretBeforeRename.getType()).isEqualTo("servicebinding.io/kafka");
+        assertThat(oldSecretBeforeRename.getMetadata().getName()).isEqualTo(USER_PROVIDED_SECRET_NAME);
+
+        KafkaAccess currentKafkaAccess = client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get();
+        assertThat(currentKafkaAccess).isNotNull();
+
+        // Update the spec.secretName to the new value
+        currentKafkaAccess.getSpec().setSecretName(NEW_USER_PROVIDED_SECRET_NAME);
+        client.resources(KafkaAccess.class).resource(currentKafkaAccess).update();
+
+        client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
+            final Optional<String> bindingName = Optional.ofNullable(updatedKafkaAccess)
+                    .map(KafkaAccess::getStatus)
+                    .map(KafkaAccessStatus::getBinding)
+                    .map(BindingStatus::getName);
+            return bindingName.isPresent() && NEW_USER_PROVIDED_SECRET_NAME.equals(bindingName.get());
+        }, TEST_TIMEOUT, TimeUnit.SECONDS); // Increased timeout
+
+        Secret deletedOldSecret = client.secrets().inNamespace(NAMESPACE).withName(USER_PROVIDED_SECRET_NAME).get();
+        assertThat(deletedOldSecret).isNull(); // It should be null if deleted successfully
+
+        // Verify that the NEW secret exists
+        Secret newSecret = client.secrets().inNamespace(NAMESPACE).withName(NEW_USER_PROVIDED_SECRET_NAME).get();
+        assertThat(newSecret).isNotNull();
+        assertThat(newSecret.getMetadata().getName()).isEqualTo(NEW_USER_PROVIDED_SECRET_NAME);
     }
 }
