@@ -7,8 +7,8 @@ package io.strimzi.kafka.access;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
-import io.fabric8.kubernetes.api.model.StatusDetails;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.javaoperatorsdk.operator.api.config.informer.InformerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
@@ -28,7 +28,6 @@ import io.strimzi.kafka.access.internal.MissingKubernetesResourceException;
 import io.strimzi.kafka.access.model.BindingStatus;
 import io.strimzi.kafka.access.model.KafkaAccess;
 import io.strimzi.kafka.access.model.KafkaAccessStatus;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -238,25 +237,22 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
     private void deleteOldSecretIfRenamed(final KafkaAccessStatus status, final String newSecretName, final String namespace, final String kafkaAccessName) {
         BindingStatus binding = (status != null) ? status.getBinding() : null;
         if (binding == null || newSecretName.equals(binding.getName())) {
-            return; // No binding or no rename → nothing to delete
+            return;
         }
 
         String oldSecretName = binding.getName();
-        LOGGER.info("Detected secret name change for KafkaAccess {}/{}. Deleting old secret: {}",
-                namespace, kafkaAccessName, oldSecretName);
 
-        List<StatusDetails> deletionStatusDetails = kubernetesClient.secrets()
-                .inNamespace(namespace)
-                .withName(oldSecretName)
-                .delete();
+        LOGGER.info("Deleting old secret '{}' for KafkaAccess {}/{}.",
+                oldSecretName, namespace, kafkaAccessName);
 
-        if (deletionStatusDetails != null && !deletionStatusDetails.isEmpty()) {
-            LOGGER.info("Successfully initiated deletion for old secret '{}' for KafkaAccess {}/{}. Status details: {}",
-                    oldSecretName, namespace, kafkaAccessName, deletionStatusDetails);
-        } else {
-            LOGGER.warn("Deletion attempt for old secret '{}' returned no status details for KafkaAccess {}/{} (might not have existed).",
-                    oldSecretName, namespace, kafkaAccessName);
+        try {
+            kubernetesClient.secrets()
+                    .inNamespace(namespace)
+                    .withName(oldSecretName)
+                    .delete();
+        } catch (KubernetesClientException e) {
+            LOGGER.error("Encountered error when deleting old secret '{}' for KafkaAccess {}/{}. Secret must be deleted manually. Exception: {}",
+                    oldSecretName, namespace, kafkaAccessName, e.getMessage());
         }
-
     }
 }
