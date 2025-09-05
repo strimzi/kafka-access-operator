@@ -548,7 +548,7 @@ public class KafkaAccessReconcilerTest {
                     .map(KafkaAccessStatus::getBinding)
                     .map(BindingStatus::getName);
             return bindingName.isPresent() && USER_PROVIDED_SECRET_NAME.equals(bindingName.get());
-        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
+        }, TEST_TIMEOUT, TimeUnit.SECONDS);
 
         Secret oldSecretBeforeRename = client.secrets().inNamespace(NAMESPACE).withName(USER_PROVIDED_SECRET_NAME).get();
         assertThat(oldSecretBeforeRename).isNotNull();
@@ -567,7 +567,7 @@ public class KafkaAccessReconcilerTest {
                     .map(KafkaAccessStatus::getBinding)
                     .map(BindingStatus::getName);
             return bindingName.isPresent() && NEW_USER_PROVIDED_SECRET_NAME.equals(bindingName.get());
-        }, 100, TimeUnit.SECONDS);
+        }, 200, TimeUnit.MILLISECONDS);
 
         Secret oldSecretAfterRename = client.secrets().inNamespace(NAMESPACE).withName(USER_PROVIDED_SECRET_NAME).get();
         assertThat(oldSecretAfterRename).isNull();
