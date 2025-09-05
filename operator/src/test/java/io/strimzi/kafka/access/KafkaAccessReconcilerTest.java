@@ -569,6 +569,9 @@ public class KafkaAccessReconcilerTest {
             return bindingName.isPresent() && NEW_USER_PROVIDED_SECRET_NAME.equals(bindingName.get());
         }, 100, TimeUnit.SECONDS);
 
+        Secret oldSecretAfterRename = client.secrets().inNamespace(NAMESPACE).withName(USER_PROVIDED_SECRET_NAME).get();
+        assertThat(oldSecretAfterRename).isNull();
+
         Secret newSecret = client.secrets().inNamespace(NAMESPACE).withName(NEW_USER_PROVIDED_SECRET_NAME).get();
         assertThat(newSecret).isNotNull();
         assertThat(newSecret.getType()).isEqualTo("servicebinding.io/kafka");

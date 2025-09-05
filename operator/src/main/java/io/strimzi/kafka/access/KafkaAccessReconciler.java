@@ -81,10 +81,10 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         final String kafkaAccessName = kafkaAccess.getMetadata().getName();
         final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
         LOGGER.info("Reconciling KafkaAccess {}/{}", kafkaAccessNamespace, kafkaAccessName);
-        final String newSecretName = determineSecretName(kafkaAccess);
+        final String secretName = determineSecretName(kafkaAccess);
 
-        createOrUpdateSecret(secretDependentResource.desired(kafkaAccess.getSpec(), kafkaAccessNamespace, context), kafkaAccess, newSecretName);
-        deleteOldSecretIfRenamed(kafkaAccess.getStatus(), newSecretName, kafkaAccessNamespace, kafkaAccessName);
+        createOrUpdateSecret(secretDependentResource.desired(kafkaAccess.getSpec(), kafkaAccessNamespace, context), kafkaAccess, secretName);
+        deleteOldSecretIfRenamed(kafkaAccess.getStatus(), secretName, kafkaAccessNamespace, kafkaAccessName);
 
         final KafkaAccessStatus kafkaAccessStatus = Optional.ofNullable(kafkaAccess.getStatus())
                 .orElseGet(() -> {
@@ -93,7 +93,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                     return status;
                 });
 
-        kafkaAccessStatus.setBinding(new BindingStatus(newSecretName));
+        kafkaAccessStatus.setBinding(new BindingStatus(secretName));
         kafkaAccessStatus.setReadyCondition(true, "Ready", "Ready");
 
         return UpdateControl.updateStatus(kafkaAccess);
@@ -220,7 +220,6 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
      * @return The determined secret name.
      */
     private String determineSecretName(final KafkaAccess kafkaAccess) {
-        final String kafkaAccessName = kafkaAccess.getMetadata().getName();
         final String userProvidedSecretName = kafkaAccess.getSpec().getSecretName();
         final String secretName;
 
@@ -228,19 +227,18 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
             secretName = userProvidedSecretName;
             LOGGER.debug("Determined secret name: '{}' (user-provided)", secretName);
         } else {
-            secretName = kafkaAccessName;
+            secretName = kafkaAccess.getMetadata().getName();
             LOGGER.debug("Determined secret name: '{}' (default from KafkaAccess name)", secretName);
         }
         return secretName;
     }
 
     private void deleteOldSecretIfRenamed(final KafkaAccessStatus status, final String newSecretName, final String namespace, final String kafkaAccessName) {
-        BindingStatus binding = (status != null) ? status.getBinding() : null;
-        if (binding == null || newSecretName.equals(binding.getName())) {
+        String oldSecretName = (status != null && status.getBinding() != null) ? status.getBinding().getName() : null;
+
+        if (oldSecretName == null || newSecretName.equals(oldSecretName)) {
             return;
         }
-
-        String oldSecretName = binding.getName();
 
         LOGGER.info("Deleting old secret '{}' for KafkaAccess {}/{}.",
                 oldSecretName, namespace, kafkaAccessName);
