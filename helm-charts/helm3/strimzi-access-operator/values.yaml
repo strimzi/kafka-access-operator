@@ -1,4 +1,6 @@
 image:
+  repo: quay.io/strimzi
+  name: access-operator
   tag: 0.1.1
 
 resources:
