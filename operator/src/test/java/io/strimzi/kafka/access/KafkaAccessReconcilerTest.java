@@ -553,7 +553,6 @@ public class KafkaAccessReconcilerTest {
         Secret oldSecretBeforeRename = client.secrets().inNamespace(NAMESPACE).withName(USER_PROVIDED_SECRET_NAME).get();
         assertThat(oldSecretBeforeRename).isNotNull();
         assertThat(oldSecretBeforeRename.getType()).isEqualTo("servicebinding.io/kafka");
-        assertThat(oldSecretBeforeRename.getMetadata().getName()).isEqualTo(USER_PROVIDED_SECRET_NAME);
 
         KafkaAccess currentKafkaAccess = client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get();
         assertThat(currentKafkaAccess).isNotNull();
@@ -575,6 +574,5 @@ public class KafkaAccessReconcilerTest {
         Secret newSecret = client.secrets().inNamespace(NAMESPACE).withName(NEW_USER_PROVIDED_SECRET_NAME).get();
         assertThat(newSecret).isNotNull();
         assertThat(newSecret.getType()).isEqualTo("servicebinding.io/kafka");
-        assertThat(newSecret.getMetadata().getName()).isEqualTo(NEW_USER_PROVIDED_SECRET_NAME);
     }
 }
