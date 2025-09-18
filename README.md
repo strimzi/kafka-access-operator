@@ -45,7 +45,7 @@ This command removes all Kubernetes components associated with the Strimzi Acces
 
 To make use of the Access Operator, create a `KafkaAccess` custom resource (CR).
 You must specify the name of the `Kafka` CR you want to connect to.
-You can optionally also specify the name of the listener in the `Kafka` CR and a `KafkaUser`.
+You can optionally also specify the name of the listener in the `Kafka` CR using `spec.kafka.listener`, the name of the secret the Kafka Access Operator creates using `spec.secretName`, and a `KafkaUser` using `spec.user`.
 See the [examples folder](https://github.com/strimzi/kafka-access-operator/tree/main/examples) for some valid `KafkaAccess` specifications.
 
 If you do not specify which listener you want to connect to, the operator uses the following rules to choose a listener:

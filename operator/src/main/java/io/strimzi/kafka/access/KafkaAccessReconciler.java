@@ -8,6 +8,7 @@ import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.javaoperatorsdk.operator.api.config.informer.InformerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
@@ -46,7 +47,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
     private final SecretDependentResource secretDependentResource;
     private final Map<String, String> commonSecretLabels = new HashMap<>();
     private static final String SECRET_TYPE = "servicebinding.io/kafka";
-    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessOperator.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessReconciler.class);
 
     /**
      * Name of the event source for Strimzi Secret resources
@@ -80,8 +81,10 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         final String kafkaAccessName = kafkaAccess.getMetadata().getName();
         final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
         LOGGER.info("Reconciling KafkaAccess {}/{}", kafkaAccessNamespace, kafkaAccessName);
+        final String secretName = determineSecretName(kafkaAccess);
 
-        createOrUpdateSecret(secretDependentResource.desired(kafkaAccess.getSpec(), kafkaAccessNamespace, context), kafkaAccess);
+        createOrUpdateSecret(secretDependentResource.desired(kafkaAccess.getSpec(), kafkaAccessNamespace, context), kafkaAccess, secretName);
+        deleteOldSecretIfRenamed(kafkaAccess.getStatus(), secretName, kafkaAccessNamespace, kafkaAccessName);
 
         final KafkaAccessStatus kafkaAccessStatus = Optional.ofNullable(kafkaAccess.getStatus())
                 .orElseGet(() -> {
@@ -90,25 +93,25 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                     return status;
                 });
 
-        kafkaAccessStatus.setBinding(new BindingStatus(kafkaAccessName));
+        kafkaAccessStatus.setBinding(new BindingStatus(secretName));
         kafkaAccessStatus.setReadyCondition(true, "Ready", "Ready");
 
         return UpdateControl.updateStatus(kafkaAccess);
     }
 
-    private void createOrUpdateSecret(final Map<String, String> data, final KafkaAccess kafkaAccess) {
+    private void createOrUpdateSecret(final Map<String, String> data, final KafkaAccess kafkaAccess, final String secretName) {
         final String kafkaAccessName = kafkaAccess.getMetadata().getName();
         final String kafkaAccessNamespace = kafkaAccess.getMetadata().getNamespace();
         if (kafkaAccessSecretEventSource == null) {
             throw new IllegalStateException("Event source for Kafka Access Secret not initialized, cannot reconcile");
         }
-        kafkaAccessSecretEventSource.get(new ResourceID(kafkaAccessName, kafkaAccessNamespace))
+        kafkaAccessSecretEventSource.get(new ResourceID(secretName, kafkaAccessNamespace))
                 .ifPresentOrElse(secret -> {
                     final Map<String, String> currentData = secret.getData();
                     if (!data.equals(currentData)) {
                         kubernetesClient.secrets()
                                 .inNamespace(kafkaAccessNamespace)
-                                .withName(kafkaAccessName)
+                                .withName(secretName)
                                 .edit(s -> new SecretBuilder(s).withData(data).build());
                     }
                 }, () -> kubernetesClient
@@ -118,7 +121,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                                 new SecretBuilder()
                                         .withType(SECRET_TYPE)
                                         .withNewMetadata()
-                                        .withName(kafkaAccessName)
+                                        .withName(secretName)
                                         .withLabels(commonSecretLabels)
                                         .withOwnerReferences(
                                                 new OwnerReferenceBuilder()
@@ -206,5 +209,48 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         status.setReadyCondition(false, e.getMessage(), reason);
 
         return ErrorStatusUpdateControl.updateStatus(kafkaAccess);
+    }
+
+    /**
+     * Determines the name of the Kubernetes Secret based on the KafkaAccess resource.
+     * If kafkaAccess.spec.secretName is provided and not empty, it is used.
+     * Otherwise, the name of the KafkaAccess resource is used as the default.
+     *
+     * @param kafkaAccess The KafkaAccess custom resource.
+     * @return The determined secret name.
+     */
+    private String determineSecretName(final KafkaAccess kafkaAccess) {
+        final String userProvidedSecretName = kafkaAccess.getSpec().getSecretName();
+        final String secretName;
+
+        if (userProvidedSecretName != null && !userProvidedSecretName.isEmpty()) {
+            secretName = userProvidedSecretName;
+            LOGGER.debug("Determined secret name: '{}' (user-provided)", secretName);
+        } else {
+            secretName = kafkaAccess.getMetadata().getName();
+            LOGGER.debug("Determined secret name: '{}' (default from KafkaAccess name)", secretName);
+        }
+        return secretName;
+    }
+
+    private void deleteOldSecretIfRenamed(final KafkaAccessStatus status, final String newSecretName, final String namespace, final String kafkaAccessName) {
+        String oldSecretName = (status != null && status.getBinding() != null) ? status.getBinding().getName() : null;
+
+        if (oldSecretName == null || newSecretName.equals(oldSecretName)) {
+            return;
+        }
+
+        LOGGER.info("Deleting old secret '{}' for KafkaAccess {}/{}.",
+                oldSecretName, namespace, kafkaAccessName);
+
+        try {
+            kubernetesClient.secrets()
+                    .inNamespace(namespace)
+                    .withName(oldSecretName)
+                    .delete();
+        } catch (KubernetesClientException e) {
+            LOGGER.error("Encountered error when deleting old secret '{}' for KafkaAccess {}/{}. Secret must be deleted manually. Exception: {}",
+                    oldSecretName, namespace, kafkaAccessName, e.getMessage());
+        }
     }
 }

@@ -20,6 +20,7 @@ public class KafkaAccessSpec {
     @Required
     private KafkaReference kafka;
     private KafkaUserReference user;
+    private String secretName;
 
     /**
      * Gets the KafkaReference instance
@@ -57,4 +58,21 @@ public class KafkaAccessSpec {
         this.user = kafkaUser;
     }
 
+    /**
+     * Gets the name of the Secret the operator will create to store credentials
+     *
+     * @return The secret name
+     */
+    public String getSecretName() {
+        return secretName;
+    }
+
+    /**
+     * Sets the name of the Secret the operator will create to store credentials
+     *
+     * @param secretName The secret name
+     */
+    public void setSecretName(String secretName) {
+        this.secretName = secretName;
+    }
 }
