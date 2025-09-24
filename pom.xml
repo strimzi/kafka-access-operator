@@ -391,6 +391,7 @@
                                 <ignoredDependency>io.fabric8:kubernetes-httpclient-jdk:jar:${fabric8.version}</ignoredDependency>
                                 <ignoredDependency>org.apache.logging.log4j:log4j-slf4j-impl</ignoredDependency>
                                 <ignoredDependency>io.sundr:builder-annotations:jar:${sundrio.version}</ignoredDependency>
+                                <ignoredDependency>io.javaoperatorsdk:operator-framework-core</ignoredDependency>
                             </ignoredDependencies>
                         </configuration>
                     </execution>
