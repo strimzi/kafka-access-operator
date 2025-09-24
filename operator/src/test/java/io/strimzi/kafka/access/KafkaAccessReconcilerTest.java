@@ -71,7 +71,8 @@ public class KafkaAccessReconcilerTest {
 
     @BeforeEach
     void beforeEach() {
-        operator = new Operator(overrider -> overrider.withKubernetesClient(client));
+        operator = new Operator(overrider -> overrider.withKubernetesClient(client)
+                .withUseSSAToPatchPrimaryResource(false));
         operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()));
         operator.start();
     }
@@ -566,7 +567,7 @@ public class KafkaAccessReconcilerTest {
                     .map(KafkaAccessStatus::getBinding)
                     .map(BindingStatus::getName);
             return bindingName.isPresent() && NEW_USER_PROVIDED_SECRET_NAME.equals(bindingName.get());
-        }, 100, TimeUnit.MILLISECONDS);
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
         Secret oldSecretAfterRename = client.secrets().inNamespace(NAMESPACE).withName(USER_PROVIDED_SECRET_NAME).get();
         assertThat(oldSecretAfterRename).isNull();
