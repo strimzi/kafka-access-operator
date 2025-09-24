@@ -5,6 +5,7 @@
 package io.strimzi.kafka.access;
 
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.processing.event.EventSourceRetriever;
 import io.javaoperatorsdk.operator.processing.event.ResourceID;
@@ -85,15 +86,24 @@ public class SecretDependentResourceTest {
         final String cert = encodeUtf8("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
         final Map<String, String> certSecretData = new HashMap<>();
         certSecretData.put("ca.crt", cert);
-        final Secret certSecret = ResourceProvider.getStrimziSecret(KafkaResources.clusterCaCertificateSecretName(KAFKA_NAME), KAFKA_NAMESPACE, KAFKA_NAME);
-        certSecret.setData(certSecretData);
+//        final Secret certSecret = ResourceProvider.getStrimziSecret(KafkaResources.clusterCaCertificateSecretName(KAFKA_NAME), KAFKA_NAMESPACE, KAFKA_NAME);
+//        certSecret.setData(certSecretData);
+        // Use SecretBuilder to create the Secret
+        final Secret certSecret = new SecretBuilder()
+                .withNewMetadata()
+                .withName(KafkaResources.clusterCaCertificateSecretName(KAFKA_NAME))
+                .withNamespace(KAFKA_NAMESPACE)
+                .endMetadata()
+                .addToData(certSecretData)
+                .build();
+
         final Kafka kafka = ResourceProvider.getKafka(
                 KAFKA_NAME,
                 KAFKA_NAMESPACE,
                 List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, true)),
                 List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
         );
-        final Context<KafkaAccess> mockContext = mock(Context.class);
+        final Context mockContext = mock(Context.class);
         when(mockContext.getSecondaryResource(Kafka.class)).thenReturn(Optional.of(kafka));
 
         final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
@@ -102,7 +112,7 @@ public class SecretDependentResourceTest {
         final EventSourceRetriever<KafkaAccess> mockEventSourceRetriever = mock(EventSourceRetriever.class);
         final InformerEventSource<Secret, KafkaAccess> mockInformerEventSource = mock(InformerEventSource.class);
         when(mockContext.eventSourceRetriever()).thenReturn(mockEventSourceRetriever);
-        when(mockEventSourceRetriever.getResourceEventSourceFor(Secret.class, KafkaAccessReconciler.STRIMZI_SECRET_EVENT_SOURCE)).thenReturn(mockInformerEventSource);
+        when(mockEventSourceRetriever.getEventSourceFor(Secret.class, KafkaAccessReconciler.STRIMZI_SECRET_EVENT_SOURCE)).thenReturn(mockInformerEventSource);
         when(mockInformerEventSource.get(any(ResourceID.class))).thenReturn(Optional.of(certSecret));
 
         Map<String, String> data = new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext);
@@ -138,7 +148,7 @@ public class SecretDependentResourceTest {
         final EventSourceRetriever<KafkaAccess> mockEventSourceRetriever = mock(EventSourceRetriever.class);
         final InformerEventSource<Secret, KafkaAccess> mockInformerEventSource = mock(InformerEventSource.class);
         when(mockContext.eventSourceRetriever()).thenReturn(mockEventSourceRetriever);
-        when(mockEventSourceRetriever.getResourceEventSourceFor(Secret.class, KafkaAccessReconciler.KAFKA_USER_SECRET_EVENT_SOURCE)).thenReturn(mockInformerEventSource);
+        when(mockEventSourceRetriever.getEventSourceFor(Secret.class, KafkaAccessReconciler.KAFKA_USER_SECRET_EVENT_SOURCE)).thenReturn(mockInformerEventSource);
         when(mockInformerEventSource.get(any(ResourceID.class))).thenReturn(Optional.of(ResourceProvider.getStrimziUserSecret(KAFKA_USER_SECRET_NAME, KAFKA_NAMESPACE, KAFKA_NAME)));
 
         Map<String, String> data = new SecretDependentResource().desired(kafkaAccess.getSpec(), NAMESPACE, mockContext);
@@ -244,7 +254,7 @@ public class SecretDependentResourceTest {
         final InformerEventSource<Secret, KafkaAccess> mockInformerEventSource = mock(InformerEventSource.class);
         when(mockContext.getSecondaryResource(Kafka.class)).thenReturn(Optional.of(kafka));
         when(mockContext.eventSourceRetriever()).thenReturn(mockEventSourceRetriever);
-        when(mockEventSourceRetriever.getResourceEventSourceFor(Secret.class, KafkaAccessReconciler.KAFKA_USER_SECRET_EVENT_SOURCE)).thenReturn(mockInformerEventSource);
+        when(mockEventSourceRetriever.getEventSourceFor(Secret.class, KafkaAccessReconciler.KAFKA_USER_SECRET_EVENT_SOURCE)).thenReturn(mockInformerEventSource);
         when(mockInformerEventSource.get(any(ResourceID.class))).thenReturn(Optional.empty());
 
         final KafkaUser kafkaUser = ResourceProvider.getKafkaUserWithStatus(KAFKA_USER_NAME, KAFKA_NAMESPACE, KAFKA_USER_SECRET_NAME, "user", new KafkaUserScramSha512ClientAuthentication());

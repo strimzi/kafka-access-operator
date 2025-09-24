@@ -4,7 +4,6 @@
  */
 package io.strimzi.kafka.access.model;
 
-import io.javaoperatorsdk.operator.api.ObservedGenerationAwareStatus;
 import io.strimzi.api.kafka.model.common.Constants;
 import io.strimzi.api.kafka.model.common.Condition;
 import io.strimzi.kafka.access.internal.StatusUtils;
@@ -20,7 +19,7 @@ import java.util.List;
     editableEnabled = false,
     builderPackage = Constants.FABRIC8_KUBERNETES_API
 )
-public class KafkaAccessStatus extends ObservedGenerationAwareStatus {
+public class KafkaAccessStatus {
 
     private BindingStatus binding;
     private final List<Condition> conditions = new ArrayList<>();
