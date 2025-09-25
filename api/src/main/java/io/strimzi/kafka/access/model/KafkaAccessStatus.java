@@ -4,7 +4,6 @@
  */
 package io.strimzi.kafka.access.model;
 
-import io.javaoperatorsdk.operator.api.ObservedGenerationAwareStatus;
 import io.strimzi.api.kafka.model.common.Constants;
 import io.strimzi.api.kafka.model.common.Condition;
 import io.strimzi.kafka.access.internal.StatusUtils;
@@ -20,9 +19,10 @@ import java.util.List;
     editableEnabled = false,
     builderPackage = Constants.FABRIC8_KUBERNETES_API
 )
-public class KafkaAccessStatus extends ObservedGenerationAwareStatus {
+public class KafkaAccessStatus {
 
     private BindingStatus binding;
+    private Long observedGeneration;
     private final List<Condition> conditions = new ArrayList<>();
 
     /**
@@ -76,5 +76,31 @@ public class KafkaAccessStatus extends ObservedGenerationAwareStatus {
             this.conditions,
             StatusUtils.buildReadyCondition(ready, reason, message)
         );
+    }
+
+    /**
+     * Gets the observed generation of the KafkaAccess resource.
+     *
+     * @return The observed generation.
+     */
+    public Long getObservedGeneration() {
+        return observedGeneration;
+    }
+
+    /**
+     * Sets the observed generation of the KafkaAccess resource.
+     *
+     * <p>
+     * The **observed generation** is a key field in a Kubernetes resource's status.
+     * It is used by the controller to track the {@link io.fabric8.kubernetes.api.model.ObjectMeta#getGeneration() metadata.generation}
+     * of the resource that has been successfully reconciled. By setting this field,
+     * the controller signals that the reported status accurately reflects the state
+     * of the corresponding resource specification.
+     * </p>
+     *
+     * @param observedGeneration The generation number of the processed resource specification.
+     */
+    public void setObservedGeneration(Long observedGeneration) {
+        this.observedGeneration = observedGeneration;
     }
 }

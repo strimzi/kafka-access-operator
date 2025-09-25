@@ -68,7 +68,7 @@
         <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
 
         <!-- Runtime dependencies -->
-        <javaoperatorsdk.version>4.4.2</javaoperatorsdk.version>
+        <javaoperatorsdk.version>5.1.2</javaoperatorsdk.version>
         <fabric8.version>7.2.0</fabric8.version>
         <sundrio.version>0.200.0</sundrio.version>
         <strimzi.version>0.43.0</strimzi.version>
@@ -377,6 +377,7 @@
                                 <ignoredDependency>io.fabric8:kubernetes-httpclient-jdk:jar:${fabric8.version}</ignoredDependency>
                                 <ignoredDependency>org.apache.logging.log4j:log4j-slf4j-impl</ignoredDependency>
                                 <ignoredDependency>io.sundr:builder-annotations:jar:${sundrio.version}</ignoredDependency>
+                                <ignoredDependency>io.javaoperatorsdk:operator-framework-core</ignoredDependency>
                             </ignoredDependencies>
                         </configuration>
                     </execution>
