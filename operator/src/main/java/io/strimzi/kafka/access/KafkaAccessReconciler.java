@@ -97,6 +97,8 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
 
         kafkaAccessStatus.setBinding(new BindingStatus(secretName));
         kafkaAccessStatus.setReadyCondition(true, "Ready", "Ready");
+        // replaces using the old ObservedGenerationAwareStatus method
+        kafkaAccessStatus.setObservedGeneration(kafkaAccess.getMetadata().getGeneration());
 
         return UpdateControl.patchStatus(kafkaAccess);
     }
