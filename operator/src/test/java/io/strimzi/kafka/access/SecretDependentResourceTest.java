@@ -5,7 +5,6 @@
 package io.strimzi.kafka.access;
 
 import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.processing.event.EventSourceRetriever;
 import io.javaoperatorsdk.operator.processing.event.ResourceID;
@@ -86,17 +85,8 @@ public class SecretDependentResourceTest {
         final String cert = encodeUtf8("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
         final Map<String, String> certSecretData = new HashMap<>();
         certSecretData.put("ca.crt", cert);
-//        final Secret certSecret = ResourceProvider.getStrimziSecret(KafkaResources.clusterCaCertificateSecretName(KAFKA_NAME), KAFKA_NAMESPACE, KAFKA_NAME);
-//        certSecret.setData(certSecretData);
-        // Use SecretBuilder to create the Secret
-        final Secret certSecret = new SecretBuilder()
-                .withNewMetadata()
-                .withName(KafkaResources.clusterCaCertificateSecretName(KAFKA_NAME))
-                .withNamespace(KAFKA_NAMESPACE)
-                .endMetadata()
-                .addToData(certSecretData)
-                .build();
-
+        final Secret certSecret = ResourceProvider.getStrimziSecret(KafkaResources.clusterCaCertificateSecretName(KAFKA_NAME), KAFKA_NAMESPACE, KAFKA_NAME);
+        certSecret.setData(certSecretData);
         final Kafka kafka = ResourceProvider.getKafka(
                 KAFKA_NAME,
                 KAFKA_NAMESPACE,
