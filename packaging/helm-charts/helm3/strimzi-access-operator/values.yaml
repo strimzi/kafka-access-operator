@@ -3,6 +3,7 @@ image:
   repository: strimzi
   name: access-operator
   tag: latest
+  imagePullSecrets: []
 
 resources:
   limits:

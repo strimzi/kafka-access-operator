@@ -21,6 +21,12 @@ spec:
         strimzi.io/kind: access-operator
     spec:
       serviceAccountName: strimzi-access-operator
+      {{- if .Values.image.imagePullSecrets }}
+      imagePullSecrets:
+        {{- with .Values.image.imagePullSecrets }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
       volumes:
         - name: strimzi-tmp
           emptyDir:
