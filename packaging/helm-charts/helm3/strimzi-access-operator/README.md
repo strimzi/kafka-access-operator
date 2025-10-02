@@ -36,21 +36,23 @@ The command removes all the Kubernetes components associated with the Strimzi Ac
 
 ### Configuration
 
-The following table lists some available configurable parameters of the Strimzi chart and their default values.
-For a full list of supported options, check the [`values.yaml` file](./values.yaml).
+The following table lists the available configurable parameters of the Strimzi chart and their default values as specified in the [`values.yaml` file](./values.yaml).
 
-| Parameter                            | Description                                               | Default  |
-|--------------------------------------|-----------------------------------------------------------|----------|
-| `image.tag`                          | Override default Drain Cleaner image tag                  | `latest` |
-| `image.imagePullPolicy`              | Image pull policy for all pods deployed by Drain Cleaner  | `nil`    |
-| `resources.limits.cpu`               | Configures the CPU limit for the Access Operator Pod      | `256Mi`  |
-| `resources.limits.memory`            | Configures the memory limit for the Access Operator Pod   | `500m`   |
-| `resources.requests.cpu`             | Configures the CPU request for the Access Operator Pod    | `256Mi`  |
-| `resources.requests.memory`          | Configures the memory request for the Access Operator Pod | `100m`   |
-| `livenessProbe.initialDelaySeconds`  | Liveness probe initial delay (in seconds)                 | `10`     |
-| `livenessProbe.periodSeconds`        | Liveness probe period (in seconds)                        | `30`     |
-| `readinessProbe.initialDelaySeconds` | Readiness probe initial delay (in seconds)                | `10`     |
-| `readinessProbe.periodSeconds`       | Readiness probe period (in seconds)                       | `30`     |
+| Parameter                            | Description                                                | Default   |
+|--------------------------------------|------------------------------------------------------------|-----------|
+| `image.registry`                     | Override default Access Operator image registry            | `quay.io` |
+| `image.repository`                   | Override default Access Operator image repository          | `strimzi` |
+| `image.tag`                          | Override default Access Operator image tag                 | `latest`  |
+| `image.imagePullSecrets`             | List of container registry pull secrets                    | `[]`      |
+| `image.imagePullPolicy`              | Image pull policy for all pods deployed by Access Operator | `nil`     |
+| `resources.limits.cpu`               | Configures the CPU limit for the Access Operator Pod       | `256Mi`   |
+| `resources.limits.memory`            | Configures the memory limit for the Access Operator Pod    | `500m`    |
+| `resources.requests.cpu`             | Configures the CPU request for the Access Operator Pod     | `256Mi`   |
+| `resources.requests.memory`          | Configures the memory request for the Access Operator Pod  | `100m`    |
+| `livenessProbe.initialDelaySeconds`  | Liveness probe initial delay (in seconds)                  | `10`      |
+| `livenessProbe.periodSeconds`        | Liveness probe period (in seconds)                         | `30`      |
+| `readinessProbe.initialDelaySeconds` | Readiness probe initial delay (in seconds)                 | `10`      |
+| `readinessProbe.periodSeconds`       | Readiness probe period (in seconds)                        | `30`      |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
