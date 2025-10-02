@@ -9,7 +9,7 @@
         <artifactId>kafka-access-operator</artifactId>
         <version>0.2.0-SNAPSHOT</version>
     </parent>
-
+    <name>Kafka Access Operator - API</name>
     <artifactId>api</artifactId>
 
     <properties>
