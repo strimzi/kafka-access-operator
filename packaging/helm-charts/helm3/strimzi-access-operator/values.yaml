@@ -2,7 +2,7 @@ image:
   registry: quay.io
   repository: strimzi
   name: access-operator
-  tag: latest
+  tag: 0.2.0
   imagePullSecrets: []
 
 resources:

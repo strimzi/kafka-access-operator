@@ -42,7 +42,7 @@ The following table lists the available configurable parameters of the Strimzi c
 |--------------------------------------|------------------------------------------------------------|-----------|
 | `image.registry`                     | Override default Access Operator image registry            | `quay.io` |
 | `image.repository`                   | Override default Access Operator image repository          | `strimzi` |
-| `image.tag`                          | Override default Access Operator image tag                 | `latest`  |
+| `image.tag`                          | Override default Access Operator image tag                 | `0.2.0`  |
 | `image.imagePullSecrets`             | List of container registry pull secrets                    | `[]`      |
 | `image.imagePullPolicy`              | Image pull policy for all pods deployed by Access Operator | `nil`     |
 | `resources.limits.cpu`               | Configures the CPU limit for the Access Operator Pod       | `256Mi`   |
