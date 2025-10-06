@@ -1,0 +1,126 @@
+# Releasing Access Operator
+
+This document describes how to release a new version of the Access Operator.
+
+## Regular releases
+
+### Create release branch
+
+Before releasing a new major or minor version of Access Operator, the release branch has to be created.
+The release branch should be named as `release-<Major>.<Minor>.x`.
+For example for release 1.2.0, the branch should be named `release-1.2.x`.
+The release branch is normally created from the `main` branch.
+This is normally done locally and the branch is just pushed into the GitHub repository.
+
+When releasing a new patch version, the release branch should already exist.
+You just need to cherry-pick bug fixes or add them through PRs.
+
+### Prepare the release
+
+For any new release - major, minor or patch - we need to prepare the release.
+The release preparation includes updating the installation files for the new version or changing the version of the Maven project.
+
+1. Move to the release branch and run `make clean`
+2. Run the command `RELEASE_VERSION=<NewRealeaseVersion> make release`.
+   For example, for release 1.2.0, you would run `RELEASE_VERSION=1.2.0 make release`.
+   * For `RELEASE_VERSION` always use the GA version here (e.g. `1.2.0`) and not the RC version (e.g `1.2.0-rc1`).
+   * This will automatically update several `pom.xml` files and all files in `packaging/`, `install/`, `example/` and `helm-charts/` folders. 
+3. Update the checksums for released files in `.checksums` in the release branch.
+   * Use the Make commands `make checksum_helm`, `make checksum_install`, and make `checksum_examples` to generate the new checksums.
+   * Update the checksums in the `.checksums` file in the root directory of the GitHub repository.
+
+Review and commit the changes done by the `make` command and push them into the repository (do not add the newly created top level tar.gz and zip archives named like `strimzi-*` into Git).
+
+The build pipeline should automatically start for any new commit pushed into the release branch.
+
+### Running the release pipeline
+
+Wait until the build pipeline is (successfully) finished for the last commit in the release branch.
+When it's done:
+* Mark the build in the Azure Pipelines UI to be retained forever.
+* Copy the build ID (from the URL in Azure Pipelines) to use in the next step.
+
+Then run the release pipeline manually from the Azure Pipelines UI.
+The release pipeline is named `access-operator-release`.
+
+> **Note for RCs:**
+> 
+> Release candidates are built with the same release pipeline as the final releases.
+> When starting the pipeline, use the RC name as the release version.
+> For example `1.2.0-rc1` or `1.2.0-rc2`.
+> For release pipelines, you should skip the suffixed build since it is not needed.
+
+When starting the new run, it will ask for several parameters which you need to fill:
+
+* Release version (for example `1.2.0` GA releases, or 1.2.0-rc1 for RCs).
+* Release suffix (for example `0` - used to create the suffixed images such as `strimzi/strimzi-access-operator:1.2.0-0` to identify different builds done for example due to base image CVEs. For release candidate pipelines, you should skip the suffixed build since it is not needed).
+* Source pipeline ID (currently, only the build pipeline with ID `51` can be used).
+* Source build ID (the ID of the build from the release branch - use the long build ID from the URL and not the shorter build number).
+
+The release pipeline will push the images to the registry.
+It will also prepare in artifacts the ZIP and TAR.GZ archives with the installation files and the Helm Chart.
+You will need these later to attach them to the GitHub release.
+
+Once it completes, mark the build in the Azure Pipelines UI to be retained forever.
+
+### Smoke tests
+
+After the release pipeline is finished, it is always a good idea to do some smoke tests of the images to double-check they were pushed correctly.
+Also check the helm chart using the helm show command, e.g.:
+helm show chart oci://quay.io/strimzi-helm/strimzi-access-operator:1.2.0
+
+### Creating the release
+
+After the release pipeline is finished, the release has to be created:
+
+1. Tag the right commit from the release branch with the release name (e.g. `git tag 1.2.0`) and push it to GitHub.
+2. Go to **Maven Central** > **Publish** to publish the release artifacts.
+3. On GitHub, create the release and attach the ZIP / TAR.GZ artifacts from the build pipeline artifacts.
+
+### Post release (_only for GA, not for RCs_)
+
+In the Access Operator repo create a PR into main to update:
+* The `install` directory.
+* The `helm-charts` directory.
+* The `examples` directory.
+* The checksums in the `checksums` file.
+* The version to the next SNAPSHOT version.
+  * To do this run the `next_version` `make` target: `NEXT_VERSION=1.3.0-SNAPSHOT make next_version`
+  * This updates the `pom.xml` files and the `release.version` file.
+
+In the Strimzi cluster opertor repo create a PR into main to update:
+* The `packaging/install/access-operator` directory.
+* The `packaging/examples/kafka-access` directory.
+* The `access-operator.version` property in the `pom.xml` file.
+* The `CHANGELOG.md` to state that the Strimzi Access Operator files have been updated to a new version.
+
+### Announcements
+
+Announce the release on following channels:
+* Mailing lists
+* Slack
+* Social accounts (if the release is significant enough)
+
+## Rebuilding container images for base image CVEs
+
+In case of a CVE in the base container image, we might need to rebuild the Access Operator container image.
+This can be done using the `access-operator-cve-rebuild` pipeline.
+This pipeline will take previously built binaries and use them to build a new container image.
+It will also automatically run the system tests and push the container image to the container registry with the suffixed tag (e.g. `1.2.0-2`).
+Afterwards, it will wait for manual approval.
+This gives additional time to manually test the new container image.
+After the manual approval, the image will be also pushed under the tag without suffix (e.g. `1.2.0`).
+
+The suffix can be specified when starting the re-build pipeline.
+You should always check what the previous suffix was and increment it.
+That way, the older images will still be available in the container registry under their own suffixes and only the latest rebuild will be available under the un-suffixed tag.
+
+When starting the pipeline, it will ask for several parameters which you need to fill in:
+
+* Release version (for example `1.2.0`).
+* Release suffix (for example `0` - used to create the suffixed images such as `strimzi/strimzi-access-operator:1.2.0-2` to identify different builds done for different CVEs).
+* Source pipeline ID (Currently, only the build pipeline with ID `51` can be used).
+* Source build ID (the ID of the build from which the artifacts should be used - use the long build ID from the URL and not the shorter build number)
+
+This process should be used only for CVEs in the base images.
+Any CVEs in our code or in the Java dependencies require new patch (or minor) release.
