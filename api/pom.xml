@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.strimzi.access-operator</groupId>
         <artifactId>kafka-access-operator</artifactId>
-        <version>0.2.0-SNAPSHOT</version>
+        <version>0.3.0-SNAPSHOT</version>
     </parent>
     <name>Strimzi Access Operator - API</name>
     <artifactId>api</artifactId>

@@ -1,5 +1,9 @@
 image:
-  tag: 0.1.1
+  registry: quay.io
+  repository: strimzi
+  name: access-operator
+  tag: 0.2.0
+  imagePullSecrets: []
 
 resources:
   limits:
