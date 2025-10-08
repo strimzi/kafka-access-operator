@@ -117,7 +117,8 @@ You can contribute by:
 
 All bugs, tasks or enhancements are tracked as [GitHub issues](https://github.com/strimzi/kafka-access-operator/issues).
 
-The [dev guide](https://github.com/strimzi/kafka-access-operator/blob/main/development-docs/DEV_GUIDE.md) describes how to build the operator and how to test your changes before submitting a patch or opening a PR.
+The [dev guide](development-docs/DEV_GUIDE.md) describes how to build the operator and how to test your changes before submitting a patch or opening a PR.
+The [releasing guide](development-docs/RELEASING.md) describes how to create new releases of the Access Operator.
 
 If you want to get in touch with us first before contributing, you can use:
 
