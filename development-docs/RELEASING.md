@@ -52,7 +52,7 @@ The release pipeline is named `access-operator-release`.
 
 When starting the new run, it will ask for several parameters which you need to fill:
 
-* Release version (for example `1.2.0` GA releases, or 1.2.0-rc1 for RCs).
+* Release version (for example `1.2.0` GA releases, or `1.2.0-rc1` for RCs).
 * Release suffix (for example `0` - used to create the suffixed images such as `strimzi/strimzi-access-operator:1.2.0-0` to identify different builds done for example due to base image CVEs. For release candidate pipelines, you should skip the suffixed build since it is not needed).
 * Source pipeline ID (currently, only the build pipeline with ID `51` can be used).
 * Source build ID (the ID of the build from the release branch - use the long build ID from the URL and not the shorter build number).
@@ -67,7 +67,9 @@ Once it completes, mark the build in the Azure Pipelines UI to be retained forev
 
 After the release pipeline is finished, it is always a good idea to do some smoke tests of the images to double-check they were pushed correctly.
 Also check the helm chart using the helm show command, e.g.:
+```shell
 helm show chart oci://quay.io/strimzi-helm/strimzi-access-operator:1.2.0
+```
 
 ### Creating the release
 
