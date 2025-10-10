@@ -71,6 +71,7 @@
         <!-- Runtime dependencies -->
         <javaoperatorsdk.version>5.1.2</javaoperatorsdk.version>
         <fabric8.version>7.2.0</fabric8.version>
+        <fabric8-client.version>7.4.0</fabric8-client.version>
         <sundrio.version>0.200.0</sundrio.version>
         <strimzi.version>0.48.0</strimzi.version>
         <kafka.clients.version>4.1.0</kafka.clients.version>
@@ -391,7 +392,6 @@
                                 <ignoredDependency>io.fabric8:kubernetes-httpclient-jdk:jar:${fabric8.version}</ignoredDependency>
                                 <ignoredDependency>org.apache.logging.log4j:log4j-slf4j-impl</ignoredDependency>
                                 <ignoredDependency>io.sundr:builder-annotations:jar:${sundrio.version}</ignoredDependency>
-                                <ignoredDependency>io.javaoperatorsdk:operator-framework-core</ignoredDependency>
                             </ignoredDependencies>
                         </configuration>
                     </execution>

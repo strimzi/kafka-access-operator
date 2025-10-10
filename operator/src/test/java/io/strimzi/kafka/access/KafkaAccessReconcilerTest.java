@@ -318,12 +318,12 @@ public class KafkaAccessReconcilerTest {
                 List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
         );
         Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
+
         final Secret secret = ResourceProvider.getEmptyKafkaAccessSecret(NAME, NAMESPACE, NAME);
         final Map<String, String> customAnnotation = new HashMap<>();
         customAnnotation.put("my-custom", "annotation");
         secret.setMetadata(new ObjectMetaBuilder(secret.getMetadata()).addToAnnotations(customAnnotation).build());
         client.secrets().inNamespace(NAMESPACE).resource(secret).create();
-
         client.resources(KafkaAccess.class).resource(kafkaAccess).create();
         client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
             final Optional<String> bindingName = Optional.ofNullable(updatedKafkaAccess)
