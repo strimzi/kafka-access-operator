@@ -37,7 +37,7 @@ import java.util.Optional;
 /**
  * The custom reconciler of Strimzi Access Operator
  */
-@SuppressWarnings({"ClassFanOutComplexity"})
+@SuppressWarnings("ClassFanOutComplexity")
 @ControllerConfiguration
 public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
 
@@ -141,7 +141,8 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
     }
 
     /**
-     * Prepares the event sources required for triggering the reconciliation. This tells the JOSDK framework which resources the operator needs to watch.
+     * Prepares the event sources required for triggering the reconciliation.
+     * It configures the JOSDK framework with resources the operator needs to watch.
      *
      * @param context       The EventSourceContext for KafkaAccess resource
      *

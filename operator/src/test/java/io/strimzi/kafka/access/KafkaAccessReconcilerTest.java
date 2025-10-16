@@ -72,7 +72,12 @@ public class KafkaAccessReconcilerTest {
     @BeforeEach
     void beforeEach() {
         operator = new Operator(overrider -> overrider.withKubernetesClient(client)
-                .withUseSSAToPatchPrimaryResource(false)); // Motivation: mock Kubernetes client doesn't fully support some SSA features.
+                /**
+                 * Disables the use of Server-Side Apply for patching the primary resource.
+                 * Motivation: Mock Kubernetes client doesn't fully support SSA features.
+                 * See: <a href="https://github.com/fabric8io/kubernetes-client/issues/5337">fabric8io/kubernetes-client Issue #5337</a>
+                 **/
+                .withUseSSAToPatchPrimaryResource(false));
         operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()));
         operator.start();
     }
@@ -323,6 +328,7 @@ public class KafkaAccessReconcilerTest {
         customAnnotation.put("my-custom", "annotation");
         secret.setMetadata(new ObjectMetaBuilder(secret.getMetadata()).addToAnnotations(customAnnotation).build());
         client.secrets().inNamespace(NAMESPACE).resource(secret).create();
+
         client.resources(KafkaAccess.class).resource(kafkaAccess).create();
         client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
             final Optional<String> bindingName = Optional.ofNullable(updatedKafkaAccess)
