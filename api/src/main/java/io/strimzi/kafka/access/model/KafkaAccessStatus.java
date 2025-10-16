@@ -83,11 +83,11 @@ public class KafkaAccessStatus {
      *
      * @return The observed generation.
      */
-    public Long getObservedGeneration() {
+    public long getObservedGeneration() {
         return observedGeneration;
     }
 
-    public void setObservedGeneration(Long observedGeneration) {
+    public void setObservedGeneration(long observedGeneration) {
         this.observedGeneration = observedGeneration;
     }
 }
