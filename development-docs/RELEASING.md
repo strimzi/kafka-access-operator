@@ -58,7 +58,8 @@ When starting the new run, it will ask for several parameters which you need to 
 * Source build ID (the ID of the build from the release branch - use the long build ID from the URL and not the shorter build number).
 
 In addition, you can configure other variables used in the release pipeline.
-To customize them, click the `Variables` section below the parameters mentioned previously.
+Each of these has a default value that can be used for regular releases.
+If you need to customize them, click the `Variables` section below the required parameters mentioned previously.
 You can configure:
 
 - `CENTRAL_USERNAME`: The username or token name of your user token. You can generate the user token at https://central.sonatype.com/usertoken (after logging in).
