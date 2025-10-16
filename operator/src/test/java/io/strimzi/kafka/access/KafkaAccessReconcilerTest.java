@@ -318,7 +318,6 @@ public class KafkaAccessReconcilerTest {
                 List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
         );
         Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
-
         final Secret secret = ResourceProvider.getEmptyKafkaAccessSecret(NAME, NAMESPACE, NAME);
         final Map<String, String> customAnnotation = new HashMap<>();
         customAnnotation.put("my-custom", "annotation");

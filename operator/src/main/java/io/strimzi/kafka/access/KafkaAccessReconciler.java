@@ -4,14 +4,11 @@
  */
 package io.strimzi.kafka.access;
 
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.dsl.base.PatchContext;
-import io.fabric8.kubernetes.client.dsl.base.PatchType;
 import io.javaoperatorsdk.operator.api.config.informer.InformerEventSourceConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
@@ -40,13 +37,12 @@ import java.util.Optional;
 /**
  * The custom reconciler of Strimzi Access Operator
  */
-@SuppressWarnings({"ClassFanOutComplexity", "ClassDataAbstractionCoupling"})
+@SuppressWarnings({"ClassFanOutComplexity"})
 @ControllerConfiguration
 public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
 
     private final KubernetesClient kubernetesClient;
     private InformerEventSource<Secret, KafkaAccess> kafkaAccessSecretEventSource;
-
     private final SecretDependentResource secretDependentResource;
     private final Map<String, String> commonSecretLabels = new HashMap<>();
     private static final String SECRET_TYPE = "servicebinding.io/kafka";
@@ -88,18 +84,16 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
 
         createOrUpdateSecret(secretDependentResource.desired(kafkaAccess.getSpec(), kafkaAccessNamespace, context), kafkaAccess, secretName);
         deleteOldSecretIfRenamed(kafkaAccess.getStatus(), secretName, kafkaAccessNamespace, kafkaAccessName);
-        KafkaAccess statusPatch = new KafkaAccess();
-        statusPatch.setMetadata(new ObjectMetaBuilder()
-                .withName(kafkaAccessName)
-                .withNamespace(kafkaAccessNamespace)
-                .build());
 
-        final KafkaAccessStatus kafkaAccessStatus = new KafkaAccessStatus();
+        final KafkaAccessStatus kafkaAccessStatus = Optional.ofNullable(kafkaAccess.getStatus())
+                .orElseGet(() -> {
+                    final KafkaAccessStatus status = new KafkaAccessStatus();
+                    kafkaAccess.setStatus(status);
+                    return status;
+                });
 
         kafkaAccessStatus.setBinding(new BindingStatus(secretName));
         kafkaAccessStatus.setReadyCondition(true, "Ready", "Ready");
-        kafkaAccessStatus.setObservedGeneration(kafkaAccess.getMetadata().getGeneration());
-        kafkaAccess.setStatus(kafkaAccessStatus);
 
         return UpdateControl.patchStatus(kafkaAccess);
     }
@@ -114,24 +108,10 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
                 .ifPresentOrElse(secret -> {
                     final Map<String, String> currentData = secret.getData();
                     if (!data.equals(currentData)) {
-                        Secret desiredSecret = new SecretBuilder(secret).withData(data).build();
-                        try {
-                            LOGGER.info("Patching Secret {}/{} using SSA, force=false", kafkaAccessNamespace, secretName);
-                            kubernetesClient.secrets()
-                                    .inNamespace(kafkaAccessNamespace)
-                                    .withName(secretName)
-                                    .patch(serverSideApplyPatchContext(false), desiredSecret); // force=false
-                        } catch (KubernetesClientException e) {
-                            if (e.getCode() == 409) {
-                                LOGGER.warn("Conflict detected, patching with force (SSA) for Secret {}/{}", kafkaAccessNamespace, secretName);
-                                kubernetesClient.secrets()
-                                        .inNamespace(kafkaAccessNamespace)
-                                        .withName(secretName)
-                                        .patch(serverSideApplyPatchContext(true), desiredSecret); // force=true
-                            } else {
-                                throw e;
-                            }
-                        }
+                        kubernetesClient.secrets()
+                                .inNamespace(kafkaAccessNamespace)
+                                .withName(secretName)
+                                .edit(s -> new SecretBuilder(s).withData(data).build());
                     }
                 }, () -> kubernetesClient
                         .secrets()
@@ -159,7 +139,6 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
                         .create()
             );
     }
-
 
     /**
      * Prepares the event sources required for triggering the reconciliation. This tells the JOSDK framework which resources the operator needs to watch.
@@ -267,13 +246,5 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
             LOGGER.error("Encountered error when deleting old secret '{}' for KafkaAccess {}/{}. Secret must be deleted manually. Exception: {}",
                     oldSecretName, namespace, kafkaAccessName, e.getMessage());
         }
-    }
-
-    private static PatchContext serverSideApplyPatchContext(boolean useForce) {
-        return new PatchContext.Builder()
-                .withFieldManager("kafka-access-operator")
-                .withForce(useForce)
-                .withPatchType(PatchType.SERVER_SIDE_APPLY)
-                .build();
     }
 }
