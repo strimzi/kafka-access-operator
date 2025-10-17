@@ -94,7 +94,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
 
         kafkaAccessStatus.setBinding(new BindingStatus(secretName));
         kafkaAccessStatus.setReadyCondition(true, "Ready", "Ready");
-
+        kafkaAccessStatus.setObservedGeneration(kafkaAccess.getMetadata().getGeneration());
         return UpdateControl.patchStatus(kafkaAccess);
     }
 
@@ -202,6 +202,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
             reason = "InvalidUserKind";
         }
         status.setReadyCondition(false, e.getMessage(), reason);
+        status.setObservedGeneration(kafkaAccess.getMetadata().getGeneration());
 
         return ErrorStatusUpdateControl.patchStatus(kafkaAccess);
     }
