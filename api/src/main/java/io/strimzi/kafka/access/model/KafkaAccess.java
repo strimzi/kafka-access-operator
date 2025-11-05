@@ -45,9 +45,4 @@ public class KafkaAccess extends CustomResource<KafkaAccessSpec, KafkaAccessStat
      * The `kind` definition of the KafkaAccess custom resource
      */
     public static final String KIND = "KafkaAccess";
-
-    @Override
-    protected KafkaAccessStatus initStatus() {
-        return new KafkaAccessStatus();
-    }
 }

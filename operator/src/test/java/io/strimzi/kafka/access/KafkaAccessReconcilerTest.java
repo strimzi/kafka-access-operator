@@ -71,7 +71,13 @@ public class KafkaAccessReconcilerTest {
 
     @BeforeEach
     void beforeEach() {
-        operator = new Operator(overrider -> overrider.withKubernetesClient(client));
+        operator = new Operator(overrider -> overrider.withKubernetesClient(client)
+                /**
+                 * Disables the use of Server-Side Apply for patching the primary resource.
+                 * Motivation: Mock Kubernetes client doesn't fully support SSA features.
+                 * See: <a href="https://github.com/fabric8io/kubernetes-client/issues/5337">fabric8io/kubernetes-client Issue #5337</a>
+                 **/
+                .withUseSSAToPatchPrimaryResource(false));
         operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()));
         operator.start();
     }
@@ -566,7 +572,7 @@ public class KafkaAccessReconcilerTest {
                     .map(KafkaAccessStatus::getBinding)
                     .map(BindingStatus::getName);
             return bindingName.isPresent() && NEW_USER_PROVIDED_SECRET_NAME.equals(bindingName.get());
-        }, 100, TimeUnit.MILLISECONDS);
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
         Secret oldSecretAfterRename = client.secrets().inNamespace(NAMESPACE).withName(USER_PROVIDED_SECRET_NAME).get();
         assertThat(oldSecretAfterRename).isNull();
