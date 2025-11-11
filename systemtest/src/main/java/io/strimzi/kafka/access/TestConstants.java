@@ -19,13 +19,14 @@ public interface TestConstants {
     // Strimzi related constants
     //--------------------------
     // in case of change in the pom.xml, update this one as well please
-    String STRIMZI_API_VERSION = "0.41.0";
+    String STRIMZI_API_VERSION = "0.48.0";
 
     //--------------------------
     // Resource types
     //--------------------------
     String NAMESPACE = "Namespace";
     String DEPLOYMENT = "Deployment";
+    String SECRET = "Secret";
     String SERVICE_ACCOUNT = "ServiceAccount";
     String CLUSTER_ROLE = "ClusterRole";
     String CLUSTER_ROLE_BINDING = "ClusterRoleBinding";
@@ -56,4 +57,10 @@ public interface TestConstants {
     //--------------------------
     long GLOBAL_POLL_INTERVAL_SHORT_MS = Duration.ofSeconds(1).toMillis();
     long GLOBAL_TIMEOUT_SHORT_MS = Duration.ofMinutes(2).toMillis();
+
+    //--------------------------
+    // Test labeling
+    //--------------------------
+    String TEST_CASE_NAME_LABEL = "test.case";
+    String TEST_SUITE_NAME_LABEL = "test.suite";
 }

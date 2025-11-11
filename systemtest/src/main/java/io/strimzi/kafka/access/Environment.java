@@ -10,6 +10,7 @@ import io.skodjob.testframe.environment.TestEnvironmentVariables;
 public class Environment {
 
     private static final TestEnvironmentVariables ENVIRONMENT_VARIABLES = new TestEnvironmentVariables();
+    public static final String USER_PATH = System.getProperty("user.dir");
 
     //---------------------------------------
     // Env variables initialization
@@ -25,6 +26,9 @@ public class Environment {
 
     private static final String OPERATOR_TAG_ENV = "DOCKER_TAG";
     public static final String OPERATOR_TAG = ENVIRONMENT_VARIABLES.getOrDefault(OPERATOR_TAG_ENV, null);
+
+    private static final String TEST_LOG_DIR_ENV = "TEST_LOG_DIR";
+    public static final String TEST_LOG_DIR = ENVIRONMENT_VARIABLES.getOrDefault(TEST_LOG_DIR_ENV, USER_PATH + "/../systemtest/target/logs/");
 
     static {
         ENVIRONMENT_VARIABLES.logEnvironmentVariables();

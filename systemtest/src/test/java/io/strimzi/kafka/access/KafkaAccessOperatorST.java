@@ -95,6 +95,7 @@ public class KafkaAccessOperatorST extends AbstractST {
         );
 
         assertListenerAndUserValuesInAccessSecret(testStorage.getKafkaAccessName(), ListenerUtils.bootstrapServer(defaultHost, nodePortListenerPort), SecurityProtocol.SSL, tlsUserSecret.getData());
+        assertThat(true, is(false));
     }
 
     @Test

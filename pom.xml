@@ -91,6 +91,7 @@
         <test-frame.version>1.0.0</test-frame.version>
         <helm-client.version>0.0.13</helm-client.version>
         <hamcrest.version>2.2</hamcrest.version>
+        <opentest4j.version>1.2.0</opentest4j.version>
 
         <javadoc.fail.on.warnings>true</javadoc.fail.on.warnings>
 
@@ -207,7 +208,6 @@
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-api</artifactId>
                 <version>${junit-jupiter.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -249,6 +249,11 @@
                 <version>${test-frame.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.skodjob</groupId>
+                <artifactId>test-frame-log-collector</artifactId>
+                <version>${test-frame.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.fabric8</groupId>
                 <artifactId>kubernetes-model-apiextensions</artifactId>
                 <version>${fabric8.version}</version>
@@ -273,6 +278,17 @@
                 <artifactId>hamcrest</artifactId>
                 <version>${hamcrest.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.opentest4j</groupId>
+                <artifactId>opentest4j</artifactId>
+                <version>${opentest4j.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>${log4j.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
