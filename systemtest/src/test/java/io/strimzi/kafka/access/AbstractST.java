@@ -5,6 +5,7 @@
 package io.strimzi.kafka.access;
 
 import io.fabric8.kubernetes.api.model.Namespace;
+import io.skodjob.testframe.annotations.MustGather;
 import io.skodjob.testframe.annotations.ResourceManager;
 import io.skodjob.testframe.annotations.TestVisualSeparator;
 import io.skodjob.testframe.resources.ClusterRoleBindingType;
@@ -15,18 +16,17 @@ import io.skodjob.testframe.resources.KubeResourceManager;
 import io.skodjob.testframe.resources.NamespaceType;
 import io.skodjob.testframe.utils.KubeUtils;
 import io.strimzi.kafka.access.installation.SetupAccessOperator;
-import io.strimzi.kafka.access.log.TestExecutionWatcher;
+import io.strimzi.kafka.access.log.MustGatherImpl;
 import io.strimzi.kafka.access.resources.KafkaAccessType;
 import io.strimzi.kafka.access.utils.TestUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 @ResourceManager
 @TestVisualSeparator
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@ExtendWith(TestExecutionWatcher.class)
+@MustGather(config = MustGatherImpl.class)
 @SuppressWarnings("ClassDataAbstractionCoupling")
 public abstract class AbstractST {
     protected final KubeResourceManager resourceManager = KubeResourceManager.get();
