@@ -91,7 +91,6 @@
         <test-frame.version>1.0.0</test-frame.version>
         <helm-client.version>0.0.13</helm-client.version>
         <hamcrest.version>2.2</hamcrest.version>
-        <opentest4j.version>1.2.0</opentest4j.version>
 
         <javadoc.fail.on.warnings>true</javadoc.fail.on.warnings>
 

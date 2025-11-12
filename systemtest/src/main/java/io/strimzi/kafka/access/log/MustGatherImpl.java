@@ -33,13 +33,15 @@ public class MustGatherImpl implements MustGatherSupplier {
             .withKubeClient(new KubeClient())
             .withKubeCmdClient(new Kubectl())
             .withRootFolderPath(Environment.TEST_LOG_DIR)
-            .withNamespacedResources(List.of(
-                TestConstants.SECRET.toLowerCase(Locale.ROOT),
-                TestConstants.DEPLOYMENT.toLowerCase(Locale.ROOT),
-                Kafka.RESOURCE_SINGULAR,
-                KafkaUser.RESOURCE_SINGULAR,
-                KafkaAccess.KIND
-            ).toArray(new String[0]))
+            .withNamespacedResources(
+                List.of(
+                    TestConstants.SECRET.toLowerCase(Locale.ROOT),
+                    TestConstants.DEPLOYMENT.toLowerCase(Locale.ROOT),
+                    Kafka.RESOURCE_SINGULAR,
+                    KafkaUser.RESOURCE_SINGULAR,
+                    KafkaAccess.KIND
+                ).toArray(new String[0])
+            )
             .withCollectPreviousLogs()
             .build();
 
