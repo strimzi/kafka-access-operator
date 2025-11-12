@@ -5,6 +5,8 @@
 package io.strimzi.kafka.access.utils;
 
 public class TestUtils {
+    private TestUtils() {}
+
     /**
      * Method for cutting the length of the test case in case that it's too long for having it as label in the particular resource.
      *

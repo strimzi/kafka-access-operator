@@ -28,7 +28,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class MustGatherImpl implements MustGatherSupplier {
+/**
+ * Implementation class for {@link io.skodjob.testframe.annotations.MustGather}, containing handling
+ * of the log collection in case of test failure.
+ */
+public final class MustGatherImpl implements MustGatherSupplier {
     private final LogCollector defaultLogCollector = new LogCollectorBuilder()
             .withKubeClient(new KubeClient())
             .withKubeCmdClient(new Kubectl())
