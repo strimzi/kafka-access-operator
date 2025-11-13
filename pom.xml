@@ -207,7 +207,6 @@
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-api</artifactId>
                 <version>${junit-jupiter.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -246,6 +245,11 @@
             <dependency>
                 <groupId>io.skodjob</groupId>
                 <artifactId>test-frame-kubernetes</artifactId>
+                <version>${test-frame.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.skodjob</groupId>
+                <artifactId>test-frame-log-collector</artifactId>
                 <version>${test-frame.version}</version>
             </dependency>
             <dependency>
