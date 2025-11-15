@@ -21,6 +21,7 @@ public class KafkaAccessSpec {
     private KafkaReference kafka;
     private KafkaUserReference user;
     private String secretName;
+    private KafkaAccessTemplate template;
 
     /**
      * Gets the KafkaReference instance
@@ -74,5 +75,23 @@ public class KafkaAccessSpec {
      */
     public void setSecretName(String secretName) {
         this.secretName = secretName;
+    }
+
+    /**
+     * Gets the template for customizing generated resources
+     *
+     * @return The KafkaAccessTemplate instance
+     */
+    public KafkaAccessTemplate getTemplate() {
+        return template;
+    }
+
+    /**
+     * Sets the template for customizing generated resources
+     *
+     * @param template The KafkaAccessTemplate model
+     */
+    public void setTemplate(final KafkaAccessTemplate template) {
+        this.template = template;
     }
 }

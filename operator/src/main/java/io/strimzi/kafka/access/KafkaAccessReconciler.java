@@ -60,6 +60,8 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
     public static final String KAFKA_USER_SECRET_EVENT_SOURCE = "KAFKA_USER_SECRET_EVENT_SOURCE";
 
     /**
+     * Constructs a new KafkaAccessReconciler with the specified Kubernetes client.
+     *
      * @param kubernetesClient      The Kubernetes client
      */
     public KafkaAccessReconciler(final KubernetesClient kubernetesClient) {
@@ -105,14 +107,38 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
         if (kafkaAccessSecretEventSource == null) {
             throw new IllegalStateException("Event source for Kafka Access Secret not initialized, cannot reconcile");
         }
+
+        final Map<String, String> templateAnnotations = getTemplateAnnotations(kafkaAccess);
+        final Map<String, String> templateLabels = getTemplateLabels(kafkaAccess);
+
         kafkaAccessSecretEventSource.get(new ResourceID(secretName, kafkaAccessNamespace))
                 .ifPresentOrElse(secret -> {
                     final Map<String, String> currentData = secret.getData();
-                    if (!data.equals(currentData)) {
+                    final Map<String, String> currentAnnotations = Optional.ofNullable(secret.getMetadata().getAnnotations()).orElse(new HashMap<>());
+                    final Map<String, String> currentLabels = Optional.ofNullable(secret.getMetadata().getLabels()).orElse(new HashMap<>());
+
+                    // Merge template annotations/labels with existing ones (template takes precedence)
+                    final Map<String, String> mergedAnnotations = new HashMap<>(currentAnnotations);
+                    mergedAnnotations.putAll(templateAnnotations);
+
+                    final Map<String, String> mergedLabels = new HashMap<>(currentLabels);
+                    mergedLabels.putAll(templateLabels);
+
+                    final boolean dataChanged = !data.equals(currentData);
+                    final boolean annotationsChanged = !mergedAnnotations.equals(currentAnnotations);
+                    final boolean labelsChanged = !mergedLabels.equals(currentLabels);
+
+                    if (dataChanged || annotationsChanged || labelsChanged) {
                         kubernetesClient.secrets()
                                 .inNamespace(kafkaAccessNamespace)
                                 .withName(secretName)
-                                .edit(s -> new SecretBuilder(s).withData(data).build());
+                                .edit(s -> new SecretBuilder(s)
+                                        .withData(data)
+                                        .editOrNewMetadata()
+                                            .withAnnotations(mergedAnnotations)
+                                            .withLabels(mergedLabels)
+                                        .endMetadata()
+                                        .build());
                     }
                 }, () -> kubernetesClient
                         .secrets()
@@ -122,7 +148,8 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                                         .withType(SECRET_TYPE)
                                         .withNewMetadata()
                                         .withName(secretName)
-                                        .withLabels(commonSecretLabels)
+                                        .withLabels(templateLabels)
+                                        .withAnnotations(templateAnnotations)
                                         .withOwnerReferences(
                                                 new OwnerReferenceBuilder()
                                                         .withApiVersion(kafkaAccess.getApiVersion())
@@ -139,6 +166,39 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess>, EventSour
                         )
                         .create()
             );
+    }
+
+    /**
+     * Extracts annotations from the KafkaAccess spec template that should be applied to the Secret.
+     *
+     * @param kafkaAccess The KafkaAccess custom resource.
+     * @return A map of annotations to apply to the Secret.
+     */
+    private Map<String, String> getTemplateAnnotations(final KafkaAccess kafkaAccess) {
+        return Optional.ofNullable(kafkaAccess.getSpec().getTemplate())
+                .map(template -> template.getSecret())
+                .map(secret -> secret.getMetadata())
+                .map(metadata -> metadata.getAnnotations())
+                .orElse(new HashMap<>());
+    }
+
+    /**
+     * Extracts labels from the KafkaAccess spec template that should be applied to the Secret.
+     * These are merged with the common secret labels.
+     *
+     * @param kafkaAccess The KafkaAccess custom resource.
+     * @return A map of labels to apply to the Secret (includes common labels).
+     */
+    private Map<String, String> getTemplateLabels(final KafkaAccess kafkaAccess) {
+        final Map<String, String> labels = new HashMap<>(commonSecretLabels);
+
+        Optional.ofNullable(kafkaAccess.getSpec().getTemplate())
+                .map(template -> template.getSecret())
+                .map(secret -> secret.getMetadata())
+                .map(metadata -> metadata.getLabels())
+                .ifPresent(labels::putAll);
+
+        return labels;
     }
 
     /**

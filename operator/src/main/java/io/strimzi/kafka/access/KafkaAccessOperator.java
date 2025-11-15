@@ -12,9 +12,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The main operator class for Strimzi Access Operator
+ * The main operator class for Strimzi Access Operator.
+ * This class initializes and runs the Kubernetes operator for managing KafkaAccess resources.
  */
 public class KafkaAccessOperator {
+
+    /**
+     * Creates a new KafkaAccessOperator instance.
+     * Explicit constructor added to satisfy Javadoc plugin warning on default constructor.
+     */
+    public KafkaAccessOperator() {
+        // Intentionally empty.
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAccessOperator.class);
     private static final int HEALTH_CHECK_PORT = 8080;

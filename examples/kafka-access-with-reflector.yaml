@@ -1,0 +1,30 @@
+# Example KafkaAccess using reflector/replicator annotations for secret replication
+# This demonstrates how to use the template field to add annotations for
+# Kubernetes secret replication tools like reflector and replicator
+apiVersion: access.strimzi.io/v1alpha1
+kind: KafkaAccess
+metadata:
+  name: my-replicated-kafka-access
+spec:
+  kafka:
+    name: data-stream-serv
+    namespace: kafka
+  user:
+    kind: KafkaUser
+    apiGroup: kafka.strimzi.io
+    name: my-app-user
+    namespace: kafka
+  template:
+    secret:
+      metadata:
+        annotations:
+          # Replicator annotations (mittwald)
+          replicator.v1.mittwald.de/replicate-to: "namespace1,namespace2,namespace3"
+          # Reflector annotations (emberstack)
+          reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+          reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
+          reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: "namespace1,namespace2,namespace3"
+        labels:
+          environment: production
+          team: platform
+
