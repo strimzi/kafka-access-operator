@@ -53,23 +53,6 @@ spec:
                   type: object
                 secretName:
                   type: string
-                template:
-                  properties:
-                    secret:
-                      properties:
-                        metadata:
-                          properties:
-                            annotations:
-                              additionalProperties:
-                                type: string
-                              type: object
-                            labels:
-                              additionalProperties:
-                                type: string
-                              type: object
-                          type: object
-                      type: object
-                  type: object
                 user:
                   properties:
                     apiGroup:
