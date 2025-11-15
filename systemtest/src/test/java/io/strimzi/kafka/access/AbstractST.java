@@ -4,6 +4,8 @@
  */
 package io.strimzi.kafka.access;
 
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.skodjob.testframe.annotations.MustGather;
 import io.skodjob.testframe.annotations.ResourceManager;
 import io.skodjob.testframe.annotations.TestVisualSeparator;
 import io.skodjob.testframe.resources.ClusterRoleBindingType;
@@ -12,8 +14,11 @@ import io.skodjob.testframe.resources.CustomResourceDefinitionType;
 import io.skodjob.testframe.resources.DeploymentType;
 import io.skodjob.testframe.resources.KubeResourceManager;
 import io.skodjob.testframe.resources.NamespaceType;
+import io.skodjob.testframe.utils.KubeUtils;
 import io.strimzi.kafka.access.installation.SetupAccessOperator;
+import io.strimzi.kafka.access.log.MustGatherImpl;
 import io.strimzi.kafka.access.resources.KafkaAccessType;
+import io.strimzi.kafka.access.utils.TestUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
@@ -21,6 +26,7 @@ import org.junit.jupiter.api.TestInstance;
 @ResourceManager
 @TestVisualSeparator
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@MustGather(config = MustGatherImpl.class)
 @SuppressWarnings("ClassDataAbstractionCoupling")
 public abstract class AbstractST {
     protected final KubeResourceManager resourceManager = KubeResourceManager.get();
@@ -38,6 +44,30 @@ public abstract class AbstractST {
             new NamespaceType(),
             new KafkaAccessType()
         );
+
+        KubeResourceManager.get().addCreateCallback(resource -> {
+            if (resource instanceof Namespace namespace) {
+                String testClass = TestUtils.removePackageName(KubeResourceManager.get().getTestContext().getRequiredTestClass().getName());
+
+                KubeUtils.labelNamespace(
+                    namespace.getMetadata().getName(),
+                    TestConstants.TEST_SUITE_NAME_LABEL,
+                    testClass
+                );
+
+                if (KubeResourceManager.get().getTestContext().getTestMethod().isPresent()) {
+                    String testCaseName = KubeResourceManager.get().getTestContext().getRequiredTestMethod().getName();
+
+                    KubeUtils.labelNamespace(
+                        namespace.getMetadata().getName(),
+                        TestConstants.TEST_CASE_NAME_LABEL,
+                        TestUtils.trimTestCaseBaseOnItsLength(testCaseName)
+                    );
+                }
+            }
+        });
+
+        KubeResourceManager.get().setStoreYamlPath(Environment.TEST_LOG_DIR);
     }
 
     @BeforeAll

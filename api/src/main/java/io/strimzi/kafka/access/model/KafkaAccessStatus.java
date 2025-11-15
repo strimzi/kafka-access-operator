@@ -4,7 +4,6 @@
  */
 package io.strimzi.kafka.access.model;
 
-import io.javaoperatorsdk.operator.api.ObservedGenerationAwareStatus;
 import io.strimzi.api.kafka.model.common.Constants;
 import io.strimzi.api.kafka.model.common.Condition;
 import io.strimzi.kafka.access.internal.StatusUtils;
@@ -20,9 +19,10 @@ import java.util.List;
     editableEnabled = false,
     builderPackage = Constants.FABRIC8_KUBERNETES_API
 )
-public class KafkaAccessStatus extends ObservedGenerationAwareStatus {
+public class KafkaAccessStatus {
 
     private BindingStatus binding;
+    private long observedGeneration;
     private final List<Condition> conditions = new ArrayList<>();
 
     /**
@@ -76,5 +76,18 @@ public class KafkaAccessStatus extends ObservedGenerationAwareStatus {
             this.conditions,
             StatusUtils.buildReadyCondition(ready, reason, message)
         );
+    }
+
+    /**
+     * Gets the observed generation of the KafkaAccess resource.
+     *
+     * @return The observed generation.
+     */
+    public long getObservedGeneration() {
+        return observedGeneration;
+    }
+
+    public void setObservedGeneration(long observedGeneration) {
+        this.observedGeneration = observedGeneration;
     }
 }

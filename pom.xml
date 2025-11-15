@@ -69,7 +69,7 @@
         <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
 
         <!-- Runtime dependencies -->
-        <javaoperatorsdk.version>4.4.2</javaoperatorsdk.version>
+        <javaoperatorsdk.version>5.1.2</javaoperatorsdk.version>
         <fabric8.version>7.2.0</fabric8.version>
         <sundrio.version>0.200.0</sundrio.version>
         <strimzi.version>0.48.0</strimzi.version>
@@ -207,7 +207,6 @@
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-api</artifactId>
                 <version>${junit-jupiter.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -246,6 +245,11 @@
             <dependency>
                 <groupId>io.skodjob</groupId>
                 <artifactId>test-frame-kubernetes</artifactId>
+                <version>${test-frame.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.skodjob</groupId>
+                <artifactId>test-frame-log-collector</artifactId>
                 <version>${test-frame.version}</version>
             </dependency>
             <dependency>

@@ -35,7 +35,8 @@ public class KafkaAccessOperator {
      */
     public static void main(final String[] args) {
         LOGGER.info("Kafka Access operator starting");
-        final Operator operator = new Operator();
+        final Operator operator = new Operator(overrider -> overrider
+                .withUseSSAToPatchPrimaryResource(false));
         operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()));
         operator.start();
         Server server = new Server(HEALTH_CHECK_PORT);

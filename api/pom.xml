@@ -22,16 +22,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.javaoperatorsdk</groupId>
-            <artifactId>operator-framework-core</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.fabric8</groupId>
-                    <artifactId>kubernetes-httpclient-vertx</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-httpclient-jdk</artifactId>
         </dependency>
