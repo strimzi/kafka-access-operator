@@ -18,3 +18,11 @@ spec:
     apiGroup: kafka.strimzi.io
     name: my-user
     namespace: kafka
+  # Optional: template to customize the generated Secret
+  template:
+    secret:
+      metadata:
+        annotations:
+          example.com/custom-annotation: "value"
+        labels:
+          example.com/custom-label: "value"

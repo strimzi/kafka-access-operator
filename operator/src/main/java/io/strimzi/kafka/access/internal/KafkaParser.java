@@ -27,9 +27,17 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * Representation of a Kafka parser that gets the relevant Kafka listener from different sources
+ * Representation of a Kafka parser that gets the relevant Kafka listener from different sources.
+ * This utility class parses Kafka resources and extracts listener configuration.
  */
 public class KafkaParser {
+
+    /**
+     * Utility class - prevent instantiation.
+     */
+    private KafkaParser() {
+        // Intentionally empty.
+    }
 
     /**
      *  The constant for listener authentication type
