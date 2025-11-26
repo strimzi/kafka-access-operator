@@ -6,6 +6,9 @@ package io.strimzi.kafka.access;
 
 import io.javaoperatorsdk.operator.Operator;
 import io.strimzi.kafka.access.server.HealthServlet;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.slf4j.Logger;
@@ -28,7 +31,16 @@ public class KafkaAccessOperator {
         LOGGER.info("Kafka Access operator starting");
         final Operator operator = new Operator(overrider -> overrider
                 .withUseSSAToPatchPrimaryResource(false));
-        operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()));
+
+        String strimziNamespace = System.getenv("STRIMZI_NAMESPACE");
+        Set<String> namespaces =
+                strimziNamespace == null ? Set.of() :
+                        Arrays.stream(strimziNamespace.split(","))
+                                .map(String::trim)
+                                .collect(Collectors.toSet());
+
+        operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()),
+                o -> o.settingNamespaces(namespaces));
         operator.start();
         Server server = new Server(HEALTH_CHECK_PORT);
         ServletHandler handler = new ServletHandler();
