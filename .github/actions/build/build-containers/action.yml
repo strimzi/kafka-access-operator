@@ -54,7 +54,7 @@ runs:
       shell: bash
       run: |
         tar -cvpf containers-${{ inputs.architecture }}.tar \
-          kafka-access-operator-container-${{ inputs.architecture }}.tar.gz
+          access-operator-container-${{ inputs.architecture }}.tar.gz
 
     - name: Upload container artifact
       uses: actions/upload-artifact@v4
