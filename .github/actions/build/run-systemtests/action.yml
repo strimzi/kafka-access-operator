@@ -58,7 +58,7 @@ runs:
       env:
         DOCKER_ORG: strimzi
         DOCKER_TAG: latest-${{ inputs.architecture }}
-        INSTALL_TYPE: ${{ inputsinstallType }}
+        INSTALL_TYPE: ${{ inputs.installType }}
         TEST_LOG_DIR: target/logs
 
     - name: Publish test logs
