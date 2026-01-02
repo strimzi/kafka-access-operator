@@ -78,7 +78,7 @@ jobs:
       - build-kafka-access-operator
       - build-containers
       - run-systemtests
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.ref == 'refs/heads/gha-migration' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
