@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     branches:
-      - "main"
+      - "gha-migration"
       - "release-*"
   pull_request:
     branches:
@@ -85,7 +85,7 @@ jobs:
       id-token: write
     env:
       DOCKER_REGISTRY: "quay.io"
-      DOCKER_ORG: "strimzi"
+      DOCKER_ORG: "jstejska"
       DOCKER_TAG: "latest"
     steps:
       - uses: actions/checkout@v5
@@ -96,20 +96,20 @@ jobs:
           quayUser: ${{ secrets.QUAY_USER }}
           quayPass: ${{ secrets.QUAY_PASS }}
 
-  deploy-java:
-    name: Deploy Java artifacts
-    needs:
-      - build-kafka-access-operator
-      - build-containers
-      - run-systemtests
-    if: ${{ github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: ./.github/actions/build/deploy-java
-        with:
-          runnerArch: "amd64"
-          gpgPassphrase: ${{ secrets.GPG_PASSPHRASE }}
-          gpgSigningKey: ${{ secrets.GPG_SIGNING_KEY }}
-          centralUsername: ${{ secrets.CENTRAL_USERNAME }}
-          centralPassword: ${{ secrets.CENTRAL_PASSWORD }}
+  # deploy-java:
+  #   name: Deploy Java artifacts
+  #   needs:
+  #     - build-kafka-access-operator
+  #     - build-containers
+  #     - run-systemtests
+  #   if: ${{ github.ref == 'refs/heads/main' }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v5
+  #     - uses: ./.github/actions/build/deploy-java
+  #       with:
+  #         runnerArch: "amd64"
+  #         gpgPassphrase: ${{ secrets.GPG_PASSPHRASE }}
+  #         gpgSigningKey: ${{ secrets.GPG_SIGNING_KEY }}
+  #         centralUsername: ${{ secrets.CENTRAL_USERNAME }}
+  #         centralPassword: ${{ secrets.CENTRAL_PASSWORD }}
