@@ -51,10 +51,10 @@ jobs:
       - name: Setup ORAS
         uses: oras-project/setup-oras@v1
 
-      - name: Download strimzi binaries from source build
+      - name: Download access-operator binaries from source build
         uses: actions/download-artifact@v4
         with:
-          name: drain-cleaner-binaries.tar
+          name: access-operator-binaries.tar
           run-id: ${{ inputs.sourceBuildRunId }}
           github-token: ${{ github.token }}
 
@@ -63,10 +63,10 @@ jobs:
 
       - name: Push Java artifacts to GHCR
         run: |
-          oras push ghcr.io/${{ env.REPOSITORY }}/drain-cleaner-binaries:${{ env.TAG }} drain-cleaner-binaries.tar:application/x-tar
+          oras push ghcr.io/${{ env.REPOSITORY }}/access-operator-binaries:${{ env.TAG }} access-operator-binaries.tar:application/x-tar
         env:
           TAG: ${{ inputs.releaseVersion }}-${{ inputs.sourceBuildRunId }}
-          REPOSITORY: "strimzi"
+          REPOSITORY: "frawless"
 
   push-containers-with-suffix:
     name: Push Containers with suffix

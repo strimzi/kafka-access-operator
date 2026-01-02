@@ -52,13 +52,13 @@ runs:
 
     - name: Create tarball with target directory
       shell: bash
-      run: tar -cvpf kafka-access-operator-binaries.tar ./operator/target
+      run: tar -cvpf access-operator-binaries.tar ./operator/target
 
     - name: Upload binaries artifact
       uses: actions/upload-artifact@v4
       with:
-        name: kafka-access-operator-binaries.tar
-        path: kafka-access-operator-binaries.tar
+        name: access-operator-binaries.tar
+        path: access-operator-binaries.tar
 
     - name: Clean external SNAPSHOT dependencies from Maven repository
       if: github.ref == 'refs/heads/main'
