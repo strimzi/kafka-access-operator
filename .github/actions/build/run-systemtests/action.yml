@@ -67,3 +67,12 @@ runs:
       with:
         name: systemtest-logs-${{ inputs.architecture }}-${{ inputs.installType }}
         path: systemtest/target/logs
+
+    - name: Publish test results
+      uses: dorny/test-reporter@v2
+      if: always()
+      with:
+        name: 'System Tests'
+        path: 'systemtest/**/TEST-*.xml'
+        reporter: java-junit
+        fail-on-error: false
