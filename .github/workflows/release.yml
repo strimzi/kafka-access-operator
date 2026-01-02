@@ -33,6 +33,10 @@ jobs:
         with:
           releaseVersion: ${{ inputs.releaseVersion }}
           runnerArch: "amd64"
+          gpgPassphrase: ${{ secrets.GPG_PASSPHRASE }}
+          gpgSigningKey: ${{ secrets.GPG_SIGNING_KEY }}
+          centralUsername: ${{ secrets.CENTRAL_USERNAME }}
+          centralPassword: ${{ secrets.CENTRAL_PASSWORD }}
 
   # Push Java artifacts to GHCR for long-term storage (for CVE rebuilds)
   push-java-artifacts-to-ghcr:
