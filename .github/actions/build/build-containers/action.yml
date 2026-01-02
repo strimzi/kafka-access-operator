@@ -25,19 +25,19 @@ runs:
       if: ${{ inputs.buildRunId == '' }}
       uses: actions/download-artifact@v4
       with:
-        name: kafka-access-operator-binaries.tar
+        name: access-operator-binaries.tar
 
     - name: Download binaries from external build
       if: ${{ inputs.buildRunId != '' }}
       uses: actions/download-artifact@v4
       with:
-        name: kafka-access-operator-binaries.tar
+        name: access-operator-binaries.tar
         run-id: ${{ inputs.buildRunId }}
         github-token: ${{ github.token }}
 
     - name: Untar binaries
       shell: bash
-      run: tar -xvf kafka-access-operator-binaries.tar
+      run: tar -xvf access-operator-binaries.tar
 
     - name: Build and save containers
       shell: bash
