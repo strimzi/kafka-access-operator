@@ -22,8 +22,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # We uses default Java and Maven versions defined in the action
-    # To change Java and Maven Version change them directly in the action
     - name: Setup Java and Maven
       uses: strimzi/strimzi-kafka-operator/.github/actions/dependencies/setup-java@main
 

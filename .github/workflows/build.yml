@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     branches:
-      - "gha-migration"
+      - "main"
       - "release-*"
   pull_request:
     branches:
@@ -56,12 +56,12 @@ jobs:
           - architecture: amd64
             installType: Helm
             runner: ubuntu-latest
-          # - architecture: arm64
-          #   installType: Bundle
-          #   runner: oracle-vm-4cpu-16gb-arm64
-          # - architecture: arm64
-          #   installType: Helm
-          #   runner: oracle-vm-4cpu-16gb-arm64
+          - architecture: arm64
+            installType: Bundle
+            runner: oracle-vm-4cpu-16gb-arm64
+          - architecture: arm64
+            installType: Helm
+            runner: oracle-vm-4cpu-16gb-arm64
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v5
@@ -77,14 +77,14 @@ jobs:
       - build-kafka-access-operator
       - build-containers
       - run-systemtests
-    if: ${{ github.ref == 'refs/heads/gha-migration' }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     env:
       DOCKER_REGISTRY: "quay.io"
-      DOCKER_ORG: "jstejska"
+      DOCKER_ORG: "strimzi"
       DOCKER_TAG: "latest"
     steps:
       - uses: actions/checkout@v5
@@ -95,20 +95,20 @@ jobs:
           quayUser: ${{ secrets.QUAY_USER }}
           quayPass: ${{ secrets.QUAY_PASS }}
 
-  # deploy-java:
-  #   name: Deploy Java artifacts
-  #   needs:
-  #     - build-kafka-access-operator
-  #     - build-containers
-  #     - run-systemtests
-  #   if: ${{ github.ref == 'refs/heads/main' }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v5
-  #     - uses: ./.github/actions/build/deploy-java
-  #       with:
-  #         runnerArch: "amd64"
-  #         gpgPassphrase: ${{ secrets.GPG_PASSPHRASE }}
-  #         gpgSigningKey: ${{ secrets.GPG_SIGNING_KEY }}
-  #         centralUsername: ${{ secrets.CENTRAL_USERNAME }}
-  #         centralPassword: ${{ secrets.CENTRAL_PASSWORD }}
+  deploy-java:
+    name: Deploy Java artifacts
+    needs:
+      - build-kafka-access-operator
+      - build-containers
+      - run-systemtests
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/build/deploy-java
+        with:
+          runnerArch: "amd64"
+          gpgPassphrase: ${{ secrets.GPG_PASSPHRASE }}
+          gpgSigningKey: ${{ secrets.GPG_SIGNING_KEY }}
+          centralUsername: ${{ secrets.CENTRAL_USERNAME }}
+          centralPassword: ${{ secrets.CENTRAL_PASSWORD }}
