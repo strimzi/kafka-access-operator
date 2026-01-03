@@ -1,5 +1,5 @@
-name: "Push Drain Cleaner Helm Chart"
-description: "Push drain-cleaner Helm chart as OCI artifact"
+name: "Push Access-Operator Helm Chart"
+description: "Push access-operator Helm chart as OCI artifact"
 
 inputs:
   releaseVersion:
@@ -19,7 +19,7 @@ runs:
       uses: strimzi/strimzi-kafka-operator/.github/actions/dependencies/install-helm@main
 
     - name: Download release archives artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         name: release.tar
         path: ./
