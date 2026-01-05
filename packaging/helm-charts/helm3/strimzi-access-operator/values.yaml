@@ -5,6 +5,9 @@ image:
   tag: latest
   imagePullSecrets: []
 
+podSecurityContext: {}
+securityContext: {}
+
 resources:
   limits:
     memory: 256Mi
