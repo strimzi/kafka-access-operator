@@ -40,7 +40,6 @@ The regular workflow will build the release ZIP / TAR.GZ files as well as the do
 Note the GitHub Actions Run ID from the URL (e.g., `https://github.com/strimzi/kafka-access-operator/actions/runs/1234567890` - the Run ID is `1234567890`).
 
 Then run the release workflow manually from the GitHub Actions UI:
-Then run the release workflow manually from the GitHub Actions UI:
 1. Go to the **Actions** tab in the GitHub repository
 2. Select the **Release** workflow from the left sidebar
 3. Click **Run workflow** button
@@ -126,7 +125,7 @@ Announce the release on following channels:
 
 ## Rebuilding container images for base image CVEs
 
-In case of a CVE in the base container image, we might need to rebuild the Kafka Bridge container image.
+In case of a CVE in the base container image, we might need to rebuild the Access Operator container image.
 This can be done using the **CVE Container Rebuild** workflow.
 This workflow will take previously built binaries from GHCR and use them to build a new container image.
 It will push the container image to the container registry with the suffixed tag (e.g. `1.2.0-2`).
