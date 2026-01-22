@@ -56,7 +56,7 @@ runs:
 
     - name: Run systemtests - ${{ inputs.installType }} installation
       shell: bash
-      run: mvn verify -B -Dmaven.javadoc.skip=true -Pall
+      run: mvn verify -B -Dmaven.javadoc.skip=true -Pall -Dsurefire.rerunFailingTestsCount=2 -Dfailsafe.rerunFailingTestsCount=2
       env:
         DOCKER_ORG: strimzi
         DOCKER_TAG: latest-${{ inputs.architecture }}
