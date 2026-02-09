@@ -59,6 +59,8 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
     public static final String KAFKA_USER_SECRET_EVENT_SOURCE = "KAFKA_USER_SECRET_EVENT_SOURCE";
 
     /**
+     * Creates a new KafkaAccessReconciler.
+     *
      * @param kubernetesClient      The Kubernetes client
      */
     public KafkaAccessReconciler(final KubernetesClient kubernetesClient) {

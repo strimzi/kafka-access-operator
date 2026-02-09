@@ -102,6 +102,12 @@
 
         <module name="IllegalToken"/>
 
+        <!-- Javadoc -->
+        <module name="JavadocStyle">
+            <property name="checkEmptyJavadoc" value="true"/>
+            <property name="checkFirstSentence" value="false"/>
+        </module>
+
         <!-- Make the @SuppressWarnings annotations available to Checkstyle -->
         <module name="SuppressWarningsHolder" />
     </module>

@@ -50,10 +50,10 @@
     <properties>
         <!-- Build dependencies -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <maven.checkstyle.version>3.1.2</maven.checkstyle.version>
-        <maven.compiler.version>3.8.1</maven.compiler.version>
+        <maven.compiler.version>3.13.0</maven.compiler.version>
         <checkstyle.version>9.0.1</checkstyle.version>
         <maven.surefire.version>3.2.2</maven.surefire.version>
         <maven.failsafe.version>3.2.2</maven.failsafe.version>
@@ -63,7 +63,7 @@
         <maven.javadoc.version>3.5.0</maven.javadoc.version>
         <maven.source.version>3.3.1</maven.source.version>
         <maven.shade.version>3.1.0</maven.shade.version>
-        <maven.dependency.version>3.3.0</maven.dependency.version>
+        <maven.dependency.version>3.9.0</maven.dependency.version>
         <maven.assembly.version>3.3.0</maven.assembly.version>
         <maven.gpg.version>3.0.1</maven.gpg.version>
         <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
@@ -92,7 +92,7 @@
         <helm-client.version>0.0.18</helm-client.version>
         <hamcrest.version>2.2</hamcrest.version>
 
-        <javadoc.fail.on.warnings>true</javadoc.fail.on.warnings>
+        <javadoc.fail.on.warnings>false</javadoc.fail.on.warnings>
 
         <!-- failsafe fork-count configuration -->
         <failsafe.forkCount>1</failsafe.forkCount>

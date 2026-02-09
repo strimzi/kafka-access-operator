@@ -4,7 +4,7 @@ metadata:
   name: strimzi-access-operator
   labels:
     app: strimzi-access-operator
-  namespace: strimzi-access-operator
+  namespace: myproject
 spec:
   replicas: 1
   selector:
@@ -27,7 +27,7 @@ spec:
             sizeLimit: 1Mi
       containers:
         - name: access-operator
-          image: quay.io/strimzi/access-operator:0.2.0
+          image: quay.io/rh_ee_ocorriga/access-operator:latest
           ports:
             - containerPort: 8080
               name: http
