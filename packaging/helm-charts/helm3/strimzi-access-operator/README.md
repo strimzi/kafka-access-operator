@@ -55,6 +55,8 @@ The following table lists the available configurable parameters of the Strimzi c
 | `livenessProbe.periodSeconds`        | Liveness probe period (in seconds)                         | `30`      |
 | `readinessProbe.initialDelaySeconds` | Readiness probe initial delay (in seconds)                 | `10`      |
 | `readinessProbe.periodSeconds`       | Readiness probe period (in seconds)                        | `30`      |
+| `annotations`                        | Additional annotations to apply to Access Operator Pod     | `{}`      |
+| `labels`                             | Additional labels to apply to Access Operator Pod          | `{}`      |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
