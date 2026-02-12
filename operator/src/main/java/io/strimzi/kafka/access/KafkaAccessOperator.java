@@ -33,14 +33,20 @@ public class KafkaAccessOperator {
                 .withUseSSAToPatchPrimaryResource(false));
 
         String strimziNamespace = System.getenv("STRIMZI_NAMESPACE");
-        Set<String> namespaces =
-                strimziNamespace == null ? Set.of() :
-                        Arrays.stream(strimziNamespace.split(","))
-                                .map(String::trim)
-                                .collect(Collectors.toSet());
-
-        operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()),
-                o -> o.settingNamespaces(namespaces));
+        if (strimziNamespace != null && strimziNamespace.matches("\\*")) {
+            LOGGER.info("Watching all namespaces");
+            operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()),
+                    o -> o.watchingAllNamespaces());
+        } else {
+            Set<String> namespaces =
+                    strimziNamespace == null ? Set.of() :
+                            Arrays.stream(strimziNamespace.split(","))
+                                    .map(String::trim)
+                                    .collect(Collectors.toSet());
+            LOGGER.info("Watching specific namespaces: {}", namespaces);
+            operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()),
+                    o -> o.settingNamespaces(namespaces));
+        }
         operator.start();
         Server server = new Server(HEALTH_CHECK_PORT);
         ServletHandler handler = new ServletHandler();

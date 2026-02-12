@@ -36,6 +36,11 @@ spec:
           volumeMounts:
             - name: strimzi-tmp
               mountPath: /tmp
+          env:
+            - name: STRIMZI_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
           resources:
             limits:
               cpu: 500m
