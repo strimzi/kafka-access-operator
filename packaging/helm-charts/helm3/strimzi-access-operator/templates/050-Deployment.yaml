@@ -56,6 +56,19 @@ spec:
           volumeMounts:
             - name: strimzi-tmp
               mountPath: /tmp
+          env:
+            - name: STRIMZI_NAMESPACE
+              {{- if .Values.watchAnyNamespace }}
+              value: "*"
+              {{- else }}
+              {{- if .Values.watchNamespaces }}
+              value: "{{ include "strimzi.watchNamespacesList" . }}"
+              {{- else }}
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+              {{- end }}
+              {{- end }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
           livenessProbe:

@@ -1,3 +1,7 @@
+# Contains `.Release.Namespace` by default
+watchNamespaces: []
+watchAnyNamespace: false
+
 image:
   registry: quay.io
   repository: strimzi
