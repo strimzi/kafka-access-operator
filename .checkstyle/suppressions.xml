@@ -14,4 +14,8 @@
          In all other cases, you should use the annotations on the methods or classes affected by it. -->
     <suppress checks=".*"
               files="io[/\\]strimzi[/\\]kafka[/\\]access[/\\]model[/\\].*(Builder|Fluent|FluentImpl)\.java"/>
+    <suppress checks=".*"
+              files="systemtest[/\\].*\.java"/>
+    <!-- Skip Javadoc checks for tests-->
+    <suppress checks="[JavadocMethod|JavaDocType|JavaDocVariable|MissingJavadocType|MissingJavadocMethod]" files="src[/\\]test[/\\]java[/\\].*"/>
 </suppressions>

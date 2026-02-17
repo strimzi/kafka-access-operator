@@ -52,9 +52,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <maven.checkstyle.version>3.1.2</maven.checkstyle.version>
+        <maven.checkstyle.version>3.5.0</maven.checkstyle.version>
         <maven.compiler.version>3.13.0</maven.compiler.version>
-        <checkstyle.version>9.0.1</checkstyle.version>
+        <checkstyle.version>10.18.1</checkstyle.version>
         <maven.surefire.version>3.2.2</maven.surefire.version>
         <maven.failsafe.version>3.2.2</maven.failsafe.version>
         <maven.license.version>2.11</maven.license.version>
@@ -370,7 +370,7 @@
                         <configuration>
                             <sourcepath>${project.build.sourceDirectory}:${project.build.directory}/generated-sources/annotations</sourcepath>
                             <show>public</show>
-                            <failOnError>false</failOnError>
+                            <failOnError>true</failOnError>
                             <failOnWarnings>${javadoc.fail.on.warnings}</failOnWarnings>
                         </configuration>
                     </execution>

@@ -87,6 +87,11 @@ public class KafkaAccessStatus {
         return observedGeneration;
     }
 
+    /**
+     * Sets the observed generation of the KafkaAccess resource.
+     *
+     * @param observedGeneration The observed generation to set.
+     */
     public void setObservedGeneration(long observedGeneration) {
         this.observedGeneration = observedGeneration;
     }
