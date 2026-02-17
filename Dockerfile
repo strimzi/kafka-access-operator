@@ -9,7 +9,7 @@ RUN microdnf update -y \
     && microdnf clean all -y
 
 # Set JAVA_HOME env var
-ENV JAVA_HOME=/usr/lib/jvm/${JAVA_VERSION}
+ENV JAVA_HOME=/usr/lib/jvm/jre-${JAVA_VERSION}
 
 # Add strimzi user with UID 1001
 # The user is in the group 0 to have access to the mounted volumes and storage

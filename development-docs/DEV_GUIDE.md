@@ -173,10 +173,7 @@ the `strimzi` organization with the tag latest).
 
 ### Java versions
 
-To use different Java version for the Maven build, you can specify the environment variable `JAVA_VERSION_BUILD` and set
-it to the desired Java version. For example, for building with Java 21 you can use `export JAVA_VERSION_BUILD=21`.
-
-> *Note*: Operator currently developed and tested with Java 21.
+The operator requires Java 21 for building. The build uses Java 21 by default.
 
 ### Java build options
 
@@ -192,11 +189,9 @@ example:
 
 When building the Docker images you can use an alternative JRE or use an alternate base image.
 
-#### Alternative Docker image JRE
+#### Docker image JRE
 
-The docker images can be built with an alternative Java version by setting the environment variable `JAVA_VERSION`. For
-example, to build docker images that have the Java 21 JRE installed use `JAVA_VERSION=21 make docker_build`. If not
-present, the container images will use Java **21** by default.
+The container images use Java **21**.
 
 #### Alternative `docker` command
 
