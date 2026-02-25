@@ -673,23 +673,16 @@ public class KafkaAccessReconcilerTest {
         assertThat(oldSecretBeforeRename).isNotNull();
         assertThat(oldSecretBeforeRename.getType()).isEqualTo("servicebinding.io/kafka");
 
-        // Retry update to handle race condition with reconciler status updates
-        boolean updated = false;
-        for (int i = 0; i < 5 && !updated; i++) {
-            try {
-                KafkaAccess currentKafkaAccess = client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get();
-                assertThat(currentKafkaAccess).isNotNull();
-                currentKafkaAccess.getSpec().setSecretName(NEW_USER_PROVIDED_SECRET_NAME);
-                client.resources(KafkaAccess.class).resource(currentKafkaAccess).update();
-                updated = true;
-            } catch (io.fabric8.kubernetes.client.KubernetesClientException e) {
-                if (e.getCode() != 409) {
-                    throw e;
-                }
-                // Retry on 409 conflict
-            }
-        }
-        assertThat(updated).as("Failed to update KafkaAccess after retries").isTrue();
+        KafkaAccess currentKafkaAccess = client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get();
+        assertThat(currentKafkaAccess).isNotNull();
+
+        client.resources(KafkaAccess.class)
+                .inNamespace(NAMESPACE)
+                .withName(NAME)
+                .edit(ka -> {
+                    ka.getSpec().setSecretName(NEW_USER_PROVIDED_SECRET_NAME);
+                    return ka;
+                });
 
         client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
             final Optional<String> bindingName = Optional.ofNullable(updatedKafkaAccess)
