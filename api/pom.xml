@@ -12,14 +12,6 @@
     <name>Strimzi Access Operator - API</name>
     <artifactId>api</artifactId>
 
-    <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <javadoc.fail.on.warnings>false</javadoc.fail.on.warnings>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>io.fabric8</groupId>
