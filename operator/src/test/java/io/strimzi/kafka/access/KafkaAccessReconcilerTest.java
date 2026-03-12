@@ -72,11 +72,11 @@ public class KafkaAccessReconcilerTest {
     @BeforeEach
     void beforeEach() {
         operator = new Operator(overrider -> overrider.withKubernetesClient(client)
-                /**
+                /*
                  * Disables the use of Server-Side Apply for patching the primary resource.
                  * Motivation: Mock Kubernetes client doesn't fully support SSA features.
                  * See: <a href="https://github.com/fabric8io/kubernetes-client/issues/5337">fabric8io/kubernetes-client Issue #5337</a>
-                 **/
+                 */
                 .withUseSSAToPatchPrimaryResource(false));
         operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()));
         operator.start();
