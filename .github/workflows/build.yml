@@ -20,12 +20,29 @@ concurrency:
 jobs:
   build-kafka-access-operator:
     name: Build Kafka Access Operator
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        # Java 21 is used as default version
+        # In case of adding new version make sure that build-containers and deploy-java has correct static version set
+        java:
+          - version: "21"
+            mainBuild: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/build/build-binaries
+
+      - name: Setup Java and Maven
+        uses: strimzi/github-actions/.github/actions/dependencies/setup-java@v1
         with:
-          runnerArch: "amd64"
+          javaVersion: ${{ matrix.java.version }}
+
+      - name: Build binaries using build-binaries action
+        uses: strimzi/github-actions/.github/actions/build/build-binaries@v1
+        with:
+          mainJavaBuild: ${{ matrix.java.mainBuild }}
+          artifactSuffix: "kafka-access-operator"
+          clusterOperatorBuild: "false"
 
   build-containers:
     name: Build Containers
@@ -41,10 +58,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/build/build-containers
+
+      - uses: strimzi/github-actions/.github/actions/dependencies/install-docker@v1
+
+      - uses: strimzi/github-actions/.github/actions/build/build-containers@v1
         with:
           architecture: ${{ matrix.architecture }}
-          runnerArch: "amd64"
+          artifactSuffix: "kafka-access-operator"
+          containerRegistry: "quay.io"
+          containerOrg: "strimzi"
+          containerTag: "latest"
+          imagesDir: "access-operator-container-${{ matrix.architecture }}.tar.gz"
 
   run-systemtests:
     name: Run System Tests
@@ -86,18 +110,22 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    env:
-      DOCKER_REGISTRY: "quay.io"
-      DOCKER_ORG: "strimzi"
-      DOCKER_TAG: "latest"
     steps:
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/build/push-containers
+
+      - uses: strimzi/github-actions/.github/actions/dependencies/install-docker@v1
+
+      - uses: strimzi/github-actions/.github/actions/dependencies/install-syft@v1
+
+      - uses: strimzi/github-actions/.github/actions/build/push-containers@v1
         with:
           architectures: "amd64,arm64,ppc64le,s390x"
-          runnerArch: "amd64"
-          quayUser: ${{ secrets.QUAY_USER }}
-          quayPass: ${{ secrets.QUAY_PASS }}
+          containerRegistry: "quay.io"
+          containerOrg: "strimzi"
+          containerTag: "latest"
+          registryUser: ${{ secrets.QUAY_USER }}
+          registryPassword: ${{ secrets.QUAY_PASS }}
+          artifactSuffix: "kafka-access-operator"
 
   deploy-java:
     name: Deploy Java artifacts
@@ -109,10 +137,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/build/deploy-java
+
+      - uses: strimzi/github-actions/.github/actions/dependencies/setup-java@v1
         with:
-          runnerArch: "amd64"
+          javaVersion: "21"
+
+      - uses: strimzi/github-actions/.github/actions/build/deploy-java@v1
+        with:
           gpgPassphrase: ${{ secrets.GPG_PASSPHRASE }}
           gpgSigningKey: ${{ secrets.GPG_SIGNING_KEY }}
           centralUsername: ${{ secrets.CENTRAL_USERNAME }}
           centralPassword: ${{ secrets.CENTRAL_PASSWORD }}
+          modules: "./,api"
