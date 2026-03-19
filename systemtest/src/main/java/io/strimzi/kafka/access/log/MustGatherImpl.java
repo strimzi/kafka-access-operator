@@ -125,7 +125,7 @@ public final class MustGatherImpl implements MustGatherSupplier {
                 // check if there is actually something in the list of folders
                 if (!indexes.isEmpty()) {
                     // take the highest index and increase it by one for a new directory
-                    index = Integer.parseInt(indexes.get(indexes.size() - 1)) + 1;
+                    index = Integer.parseInt(indexes.getLast()) + 1;
                 }
             }
         }

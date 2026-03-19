@@ -5,7 +5,7 @@
 package io.strimzi.kafka.access.internal;
 
 /**
- * The class for exception when Kuberentes resources are missing
+ * The class for exception when Kubernetes resources are missing
  */
 public class MissingKubernetesResourceException extends RuntimeException {
     /**

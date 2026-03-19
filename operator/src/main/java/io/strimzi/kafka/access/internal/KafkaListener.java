@@ -138,20 +138,12 @@ public class KafkaListener {
     }
 
     private SecurityProtocol getSecurityProtocol() {
-        final SecurityProtocol securityProtocol;
-        switch (this.authenticationType) {
-            case LISTENER_AUTH_NONE:
-                securityProtocol = this.tls ? SecurityProtocol.SSL : SecurityProtocol.PLAINTEXT;
-                break;
-            case KafkaListenerAuthenticationTls.TYPE_TLS:
-                securityProtocol = SecurityProtocol.SSL;
-                break;
-            case KafkaListenerAuthenticationScramSha512.SCRAM_SHA_512:
-                securityProtocol = this.tls ? SecurityProtocol.SASL_SSL : SecurityProtocol.SASL_PLAINTEXT;
-                break;
-            default:
-                securityProtocol = SecurityProtocol.PLAINTEXT;
-        }
-        return securityProtocol;
+        return switch (this.authenticationType) {
+            case LISTENER_AUTH_NONE -> this.tls ? SecurityProtocol.SSL : SecurityProtocol.PLAINTEXT;
+            case KafkaListenerAuthenticationTls.TYPE_TLS -> SecurityProtocol.SSL;
+            case KafkaListenerAuthenticationScramSha512.SCRAM_SHA_512 ->
+                    this.tls ? SecurityProtocol.SASL_SSL : SecurityProtocol.SASL_PLAINTEXT;
+            default -> SecurityProtocol.PLAINTEXT;
+        };
     }
 }

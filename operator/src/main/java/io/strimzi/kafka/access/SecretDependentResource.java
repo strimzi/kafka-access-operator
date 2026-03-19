@@ -89,7 +89,7 @@ public class SecretDependentResource {
         try {
             listener = KafkaParser.getKafkaListener(kafka, spec, kafkaUserType);
         } catch (CustomResourceParseException e) {
-            LOGGER.error("Reconcile failed due to ParserException " + e.getMessage());
+            LOGGER.error("Reconcile failed due to ParserException {}", e.getMessage(), e);
             throw e;
         }
         if (listener.isTls()) {
