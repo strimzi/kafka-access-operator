@@ -21,3 +21,5 @@ livenessProbe:
 readinessProbe:
   initialDelaySeconds: 10
   periodSeconds: 30
+annotations: {}
+labels: {}
