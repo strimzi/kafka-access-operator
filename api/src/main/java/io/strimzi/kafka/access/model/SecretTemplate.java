@@ -8,7 +8,7 @@ import io.strimzi.api.kafka.model.common.Constants;
 import io.sundr.builder.annotations.Buildable;
 
 /**
- * Template for Secret metadata (labels, annotations)
+ * Template for Secret
  */
 @Buildable(
     editableEnabled = false,

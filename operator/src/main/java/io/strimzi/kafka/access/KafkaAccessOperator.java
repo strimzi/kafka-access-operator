@@ -19,7 +19,6 @@ public class KafkaAccessOperator {
 
     /**
      * Creates a new KafkaAccessOperator instance.
-     * Explicit constructor added to satisfy Javadoc plugin warning on default constructor.
      */
     public KafkaAccessOperator() {
         // Intentionally empty.
