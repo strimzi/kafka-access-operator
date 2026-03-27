@@ -25,8 +25,11 @@ import io.strimzi.api.kafka.model.common.Condition;
 import io.strimzi.kafka.access.model.BindingStatus;
 import io.strimzi.kafka.access.model.KafkaAccess;
 import io.strimzi.kafka.access.model.KafkaAccessStatus;
+import io.strimzi.kafka.access.model.KafkaAccessTemplate;
 import io.strimzi.kafka.access.model.KafkaReference;
+import io.strimzi.kafka.access.model.MetadataTemplate;
 import io.strimzi.kafka.access.model.KafkaUserReference;
+import io.strimzi.kafka.access.model.SecretTemplate;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -342,6 +345,116 @@ public class KafkaAccessReconcilerTest {
         assertThat(updatedSecret.getData()).contains(entry("type", encodeUtf8("kafka")),
                 entry("provider", encodeUtf8("strimzi")));
         assertThat(updatedSecret.getMetadata().getAnnotations()).containsAllEntriesOf(customAnnotation);
+    }
+
+    @Test
+    @DisplayName("When reconcile is called with an existing secret and template metadata, then template metadata " +
+        "is merged without overriding existing keys")
+    void testReconcileWithExistingSecretAndTemplateMetadata() {
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference);
+
+        final Map<String, String> templateAnnotations = new HashMap<>();
+        templateAnnotations.put("existing-annotation", "template-value");
+        templateAnnotations.put("template-annotation", "template-only");
+
+        final Map<String, String> templateLabels = new HashMap<>();
+        templateLabels.put("existing-label", "template-value");
+        templateLabels.put("template-label", "template-only");
+
+        final MetadataTemplate metadataTemplate = new MetadataTemplate();
+        metadataTemplate.setAnnotations(templateAnnotations);
+        metadataTemplate.setLabels(templateLabels);
+
+        final SecretTemplate secretTemplate = new SecretTemplate();
+        secretTemplate.setMetadata(metadataTemplate);
+
+        final KafkaAccessTemplate kafkaAccessTemplate = new KafkaAccessTemplate();
+        kafkaAccessTemplate.setSecret(secretTemplate);
+        kafkaAccess.getSpec().setTemplate(kafkaAccessTemplate);
+
+        final Kafka kafka = ResourceProvider.getKafka(
+                KAFKA_NAME,
+                KAFKA_NAMESPACE,
+                List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false)),
+                List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
+        );
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
+
+        final Secret secret = ResourceProvider.getEmptyKafkaAccessSecret(NAME, NAMESPACE, NAME);
+        secret.setMetadata(new ObjectMetaBuilder(secret.getMetadata())
+                .addToAnnotations("existing-annotation", "existing-value")
+                .addToLabels("existing-label", "existing-value")
+                .build());
+        client.secrets().inNamespace(NAMESPACE).resource(secret).create();
+
+        client.resources(KafkaAccess.class).resource(kafkaAccess).create();
+        client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
+            final Optional<String> bindingName = Optional.ofNullable(updatedKafkaAccess)
+                    .map(KafkaAccess::getStatus)
+                    .map(KafkaAccessStatus::getBinding)
+                    .map(BindingStatus::getName);
+            return bindingName.isPresent() && NAME.equals(bindingName.get());
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        final Secret updatedSecret = client.secrets().inNamespace(NAMESPACE).withName(NAME).get();
+
+        assertThat(updatedSecret.getMetadata().getAnnotations())
+                .containsEntry("existing-annotation", "existing-value")
+                .containsEntry("template-annotation", "template-only");
+        assertThat(updatedSecret.getMetadata().getLabels())
+                .containsEntry("existing-label", "existing-value")
+                .containsEntry("template-label", "template-only");
+    }
+
+    @Test
+    @DisplayName("Reconcile applies template metadata to new secrets without overriding the operator managed-by label")
+    void testReconcileCreatesSecretWithTemplateMetadata() {
+        final KafkaReference kafkaReference = ResourceProvider.getKafkaReference(KAFKA_NAME, KAFKA_NAMESPACE);
+        final KafkaAccess kafkaAccess = ResourceProvider.getKafkaAccess(NAME, NAMESPACE, kafkaReference);
+
+        final Map<String, String> templateAnnotations = new HashMap<>();
+        templateAnnotations.put("template-annotation", "template-only");
+
+        final Map<String, String> templateLabels = new HashMap<>();
+        templateLabels.put("template-label", "template-only");
+        templateLabels.put("app.kubernetes.io/managed-by", "not-the-operator");
+
+        final MetadataTemplate metadataTemplate = new MetadataTemplate();
+        metadataTemplate.setAnnotations(templateAnnotations);
+        metadataTemplate.setLabels(templateLabels);
+
+        final SecretTemplate secretTemplate = new SecretTemplate();
+        secretTemplate.setMetadata(metadataTemplate);
+
+        final KafkaAccessTemplate kafkaAccessTemplate = new KafkaAccessTemplate();
+        kafkaAccessTemplate.setSecret(secretTemplate);
+        kafkaAccess.getSpec().setTemplate(kafkaAccessTemplate);
+
+        final Kafka kafka = ResourceProvider.getKafka(
+                KAFKA_NAME,
+                KAFKA_NAMESPACE,
+                List.of(ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, false)),
+                List.of(ResourceProvider.getListenerStatus(LISTENER_1, BOOTSTRAP_HOST, BOOTSTRAP_PORT_9092))
+        );
+        Crds.kafkaOperation(client).inNamespace(KAFKA_NAMESPACE).resource(kafka).create();
+
+        client.resources(KafkaAccess.class).resource(kafkaAccess).create();
+        client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
+            final Optional<String> bindingName = Optional.ofNullable(updatedKafkaAccess)
+                    .map(KafkaAccess::getStatus)
+                    .map(KafkaAccessStatus::getBinding)
+                    .map(BindingStatus::getName);
+            return bindingName.isPresent() && NAME.equals(bindingName.get());
+        }, TEST_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        final Secret createdSecret = client.secrets().inNamespace(NAMESPACE).withName(NAME).get();
+        assertThat(createdSecret).isNotNull();
+        assertThat(createdSecret.getMetadata().getAnnotations())
+                .containsEntry("template-annotation", "template-only");
+        assertThat(createdSecret.getMetadata().getLabels())
+                .containsEntry("template-label", "template-only")
+                .containsEntry("app.kubernetes.io/managed-by", "kafka-access-operator");
     }
 
     @Test

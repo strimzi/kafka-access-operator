@@ -11,18 +11,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.Serial;
 
 /**
- * Servlet class for health checking of the operator.
- * This servlet provides a simple health check endpoint.
+ * Servlet class for health checking of the operator
  */
 public class HealthServlet extends HttpServlet {
-
-    /**
-     * Creates a new HealthServlet.
-     * This explicit constructor documents the default servlet instantiation.
-     */
-    public HealthServlet() {
-        super();
-    }
 
     @Serial
     private static final long serialVersionUID = 1L;

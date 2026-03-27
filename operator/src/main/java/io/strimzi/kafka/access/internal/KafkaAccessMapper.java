@@ -29,17 +29,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Maps Strimzi and Kubernetes resources to and from KafkaAccess resources.
- * This utility class provides mapping functions for primary and secondary resources.
+ * Maps Strimzi and Kubernetes resources to and from KafkaAccess resources
  */
 public class KafkaAccessMapper {
-
-    /**
-     * Utility class - prevent instantiation.
-     */
-    private KafkaAccessMapper() {
-        // Intentionally empty.
-    }
 
     /**
      *  The constant for managed-by label

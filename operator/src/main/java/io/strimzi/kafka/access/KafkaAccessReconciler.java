@@ -111,60 +111,72 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
         final Map<String, String> templateLabels = getTemplateLabels(kafkaAccess);
 
         kafkaAccessSecretEventSource.get(new ResourceID(secretName, kafkaAccessNamespace))
-                .ifPresentOrElse(secret -> {
-                    final Map<String, String> currentData = secret.getData();
-                    final Map<String, String> currentAnnotations = Optional.ofNullable(secret.getMetadata().getAnnotations()).orElse(new HashMap<>());
-                    final Map<String, String> currentLabels = Optional.ofNullable(secret.getMetadata().getLabels()).orElse(new HashMap<>());
-
-                    // Merge template annotations/labels with existing ones (template takes precedence)
-                    final Map<String, String> mergedAnnotations = new HashMap<>(currentAnnotations);
-                    mergedAnnotations.putAll(templateAnnotations);
-
-                    final Map<String, String> mergedLabels = new HashMap<>(currentLabels);
-                    mergedLabels.putAll(templateLabels);
-
-                    final boolean dataChanged = !data.equals(currentData);
-                    final boolean annotationsChanged = !mergedAnnotations.equals(currentAnnotations);
-                    final boolean labelsChanged = !mergedLabels.equals(currentLabels);
-
-                    if (dataChanged || annotationsChanged || labelsChanged) {
-                        kubernetesClient.secrets()
-                                .inNamespace(kafkaAccessNamespace)
-                                .withName(secretName)
-                                .edit(s -> new SecretBuilder(s)
-                                        .withData(data)
-                                        .editOrNewMetadata()
-                                            .withAnnotations(mergedAnnotations)
-                                            .withLabels(mergedLabels)
-                                        .endMetadata()
-                                        .build());
-                    }
-                }, () -> kubernetesClient
-                        .secrets()
-                        .inNamespace(kafkaAccessNamespace)
-                        .resource(
-                                new SecretBuilder()
-                                        .withType(SECRET_TYPE)
-                                        .withNewMetadata()
-                                        .withName(secretName)
-                                        .withLabels(templateLabels)
-                                        .withAnnotations(templateAnnotations)
-                                        .withOwnerReferences(
-                                                new OwnerReferenceBuilder()
-                                                        .withApiVersion(kafkaAccess.getApiVersion())
-                                                        .withKind(kafkaAccess.getKind())
-                                                        .withName(kafkaAccessName)
-                                                        .withUid(kafkaAccess.getMetadata().getUid())
-                                                        .withBlockOwnerDeletion(false)
-                                                        .withController(false)
-                                                        .build()
-                                        )
-                                        .endMetadata()
-                                        .withData(data)
-                                        .build()
-                        )
-                        .create()
+                .ifPresentOrElse(
+                    secret -> updateSecretIfChanged(secret, data, templateAnnotations, templateLabels, kafkaAccessNamespace, secretName),
+                    () -> createSecret(data, kafkaAccess, secretName, kafkaAccessNamespace, kafkaAccessName, templateAnnotations, templateLabels)
             );
+    }
+
+    private void updateSecretIfChanged(Secret secret, Map<String, String> data, Map<String, String> templateAnnotations,
+                                       Map<String, String> templateLabels, String namespace, String secretName) {
+        Map<String, String> currentData = Optional.ofNullable(secret.getData()).orElse(new HashMap<>());
+        Map<String, String> currentAnnotations = Optional.ofNullable(secret.getMetadata().getAnnotations()).orElse(new HashMap<>());
+        Map<String, String> currentLabels = Optional.ofNullable(secret.getMetadata().getLabels()).orElse(new HashMap<>());
+
+        Map<String, String> mergedAnnotations = mergeWithoutOverwritingCurrent(currentAnnotations, templateAnnotations);
+        Map<String, String> mergedLabels = mergeWithoutOverwritingCurrent(currentLabels, templateLabels);
+
+        boolean dataChanged = !data.equals(currentData);
+        boolean annotationsChanged = !mergedAnnotations.equals(currentAnnotations);
+        boolean labelsChanged = !mergedLabels.equals(currentLabels);
+
+        if (dataChanged || annotationsChanged || labelsChanged) {
+            kubernetesClient.secrets()
+                    .inNamespace(namespace)
+                    .withName(secretName)
+                    .edit(s -> new SecretBuilder(s)
+                            .withData(data)
+                            .editOrNewMetadata()
+                                .withAnnotations(mergedAnnotations)
+                                .withLabels(mergedLabels)
+                            .endMetadata()
+                            .build());
+        }
+    }
+
+    private Map<String, String> mergeWithoutOverwritingCurrent(Map<String, String> current, Map<String, String> template) {
+        Map<String, String> merged = new HashMap<>(template);
+        merged.putAll(current);
+        return merged;
+    }
+
+    private void createSecret(Map<String, String> data, KafkaAccess kafkaAccess, String secretName, String namespace,
+                              String kafkaAccessName, Map<String, String> templateAnnotations, Map<String, String> templateLabels) {
+        kubernetesClient
+                .secrets()
+                .inNamespace(namespace)
+                .resource(
+                        new SecretBuilder()
+                                .withType(SECRET_TYPE)
+                                .withNewMetadata()
+                                .withName(secretName)
+                                .withLabels(templateLabels)
+                                .withAnnotations(templateAnnotations)
+                                .withOwnerReferences(
+                                        new OwnerReferenceBuilder()
+                                                .withApiVersion(kafkaAccess.getApiVersion())
+                                                .withKind(kafkaAccess.getKind())
+                                                .withName(kafkaAccessName)
+                                                .withUid(kafkaAccess.getMetadata().getUid())
+                                                .withBlockOwnerDeletion(false)
+                                                .withController(false)
+                                                .build()
+                                )
+                                .endMetadata()
+                                .withData(data)
+                                .build()
+                )
+                .create();
     }
 
     /**
@@ -174,11 +186,11 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
      * @return A map of annotations to apply to the Secret.
      */
     private Map<String, String> getTemplateAnnotations(final KafkaAccess kafkaAccess) {
-        return Optional.ofNullable(kafkaAccess.getSpec().getTemplate())
+        return new HashMap<>(Optional.ofNullable(kafkaAccess.getSpec().getTemplate())
                 .map(template -> template.getSecret())
                 .map(secret -> secret.getMetadata())
                 .map(metadata -> metadata.getAnnotations())
-                .orElse(new HashMap<>());
+                .orElse(new HashMap<>()));
     }
 
     /**
@@ -189,13 +201,15 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
      * @return A map of labels to apply to the Secret (includes common labels).
      */
     private Map<String, String> getTemplateLabels(final KafkaAccess kafkaAccess) {
-        final Map<String, String> labels = new HashMap<>(commonSecretLabels);
-
-        Optional.ofNullable(kafkaAccess.getSpec().getTemplate())
+        Map<String, String> labels = Optional.ofNullable(kafkaAccess.getSpec().getTemplate())
                 .map(template -> template.getSecret())
                 .map(secret -> secret.getMetadata())
                 .map(metadata -> metadata.getLabels())
-                .ifPresent(labels::putAll);
+                .map(HashMap::new)
+                .orElse(new HashMap<>());
+
+        // Keep operator default labels authoritative.
+        labels.putAll(commonSecretLabels);
 
         return labels;
     }
