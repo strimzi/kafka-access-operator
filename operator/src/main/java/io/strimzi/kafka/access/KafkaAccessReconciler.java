@@ -119,16 +119,16 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
 
     private void updateSecretIfChanged(Secret secret, Map<String, String> data, Map<String, String> templateAnnotations,
                                        Map<String, String> templateLabels, String namespace, String secretName) {
-        Map<String, String> currentData = Optional.ofNullable(secret.getData()).orElse(new HashMap<>());
-        Map<String, String> currentAnnotations = Optional.ofNullable(secret.getMetadata().getAnnotations()).orElse(new HashMap<>());
-        Map<String, String> currentLabels = Optional.ofNullable(secret.getMetadata().getLabels()).orElse(new HashMap<>());
+        final Map<String, String> currentData = Optional.ofNullable(secret.getData()).orElse(new HashMap<>());
+        final Map<String, String> currentAnnotations = Optional.ofNullable(secret.getMetadata().getAnnotations()).orElse(new HashMap<>());
+        final Map<String, String> currentLabels = Optional.ofNullable(secret.getMetadata().getLabels()).orElse(new HashMap<>());
 
-        Map<String, String> mergedAnnotations = mergeWithoutOverwritingCurrent(currentAnnotations, templateAnnotations);
-        Map<String, String> mergedLabels = mergeWithoutOverwritingCurrent(currentLabels, templateLabels);
+        final Map<String, String> mergedAnnotations = mergeWithoutOverwritingCurrent(currentAnnotations, templateAnnotations);
+        final Map<String, String> mergedLabels = mergeWithoutOverwritingCurrent(currentLabels, templateLabels);
 
-        boolean dataChanged = !data.equals(currentData);
-        boolean annotationsChanged = !mergedAnnotations.equals(currentAnnotations);
-        boolean labelsChanged = !mergedLabels.equals(currentLabels);
+        final boolean dataChanged = !data.equals(currentData);
+        final boolean annotationsChanged = !mergedAnnotations.equals(currentAnnotations);
+        final boolean labelsChanged = !mergedLabels.equals(currentLabels);
 
         if (dataChanged || annotationsChanged || labelsChanged) {
             kubernetesClient.secrets()
@@ -144,7 +144,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
         }
     }
 
-    private Map<String, String> mergeWithoutOverwritingCurrent(Map<String, String> current, Map<String, String> template) {
+    private static Map<String, String> mergeWithoutOverwritingCurrent(Map<String, String> current, Map<String, String> template) {
         Map<String, String> merged = new HashMap<>(template);
         merged.putAll(current);
         return merged;
