@@ -108,7 +108,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
         }
 
         final Map<String, String> templateAnnotations = getTemplateAnnotations(kafkaAccess);
-        final Map<String, String> templateLabels = getTemplateLabels(kafkaAccess);
+        final Map<String, String> templateLabels = getTemplateAndCommonLabels(kafkaAccess);
 
         kafkaAccessSecretEventSource.get(new ResourceID(secretName, kafkaAccessNamespace))
                 .ifPresentOrElse(
@@ -204,7 +204,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
      * @param kafkaAccess The KafkaAccess custom resource.
      * @return A map of labels to apply to the Secret, including operator-required common labels.
      */
-    private Map<String, String> getTemplateLabels(final KafkaAccess kafkaAccess) {
+    private Map<String, String> getTemplateAndCommonLabels(final KafkaAccess kafkaAccess) {
         Map<String, String> labels = Optional.ofNullable(kafkaAccess.getSpec().getTemplate())
                 .map(template -> template.getSecret())
                 .map(secret -> secret.getMetadata())
