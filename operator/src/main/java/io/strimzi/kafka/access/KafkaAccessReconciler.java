@@ -119,16 +119,19 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
 
     private void updateSecretIfChanged(Secret secret, Map<String, String> data, Map<String, String> templateAnnotations,
                                        Map<String, String> templateLabels, String namespace, String secretName) {
-        final Map<String, String> currentData = Optional.ofNullable(secret.getData()).orElse(new HashMap<>());
-        final Map<String, String> currentAnnotations = Optional.ofNullable(secret.getMetadata().getAnnotations()).orElse(new HashMap<>());
-        final Map<String, String> currentLabels = Optional.ofNullable(secret.getMetadata().getLabels()).orElse(new HashMap<>());
+        final Map<String, String> mergedAnnotations = mergeWithoutOverwritingCurrent(
+                Optional.ofNullable(secret.getMetadata().getAnnotations()).orElse(Map.of()),
+                templateAnnotations);
 
-        final Map<String, String> mergedAnnotations = mergeWithoutOverwritingCurrent(currentAnnotations, templateAnnotations);
-        final Map<String, String> mergedLabels = mergeWithoutOverwritingCurrent(currentLabels, templateLabels);
+        final Map<String, String> mergedLabels = mergeWithoutOverwritingCurrent(
+                Optional.ofNullable(secret.getMetadata().getLabels()).orElse(Map.of()),
+                templateLabels);
 
-        final boolean dataChanged = !data.equals(currentData);
-        final boolean annotationsChanged = !mergedAnnotations.equals(currentAnnotations);
-        final boolean labelsChanged = !mergedLabels.equals(currentLabels);
+        final boolean dataChanged = !data.equals(Optional.ofNullable(secret.getData()).orElse(Map.of()));
+        final boolean annotationsChanged = !mergedAnnotations.equals(
+                Optional.ofNullable(secret.getMetadata().getAnnotations()).orElse(Map.of()));
+        final boolean labelsChanged = !mergedLabels.equals(
+                Optional.ofNullable(secret.getMetadata().getLabels()).orElse(Map.of()));
 
         if (dataChanged || annotationsChanged || labelsChanged) {
             kubernetesClient.secrets()
@@ -194,11 +197,12 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
     }
 
     /**
-     * Extracts labels from the KafkaAccess spec template that should be applied to the Secret.
-     * These are merged with the common secret labels.
+     * Builds the desired Secret labels from the KafkaAccess template.
+     * Template-provided labels are included, then operator-required common labels are added.
+     * On key conflicts, operator-required common labels take precedence.
      *
      * @param kafkaAccess The KafkaAccess custom resource.
-     * @return A map of labels to apply to the Secret (includes common labels).
+     * @return A map of labels to apply to the Secret, including operator-required common labels.
      */
     private Map<String, String> getTemplateLabels(final KafkaAccess kafkaAccess) {
         Map<String, String> labels = Optional.ofNullable(kafkaAccess.getSpec().getTemplate())
