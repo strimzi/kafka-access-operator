@@ -106,40 +106,116 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
         if (kafkaAccessSecretEventSource == null) {
             throw new IllegalStateException("Event source for Kafka Access Secret not initialized, cannot reconcile");
         }
+
+        final Map<String, String> templateAnnotations = getTemplateAnnotations(kafkaAccess);
+        final Map<String, String> templateLabels = getTemplateAndCommonLabels(kafkaAccess);
+
         kafkaAccessSecretEventSource.get(new ResourceID(secretName, kafkaAccessNamespace))
-                .ifPresentOrElse(secret -> {
-                    final Map<String, String> currentData = secret.getData();
-                    if (!data.equals(currentData)) {
-                        kubernetesClient.secrets()
-                                .inNamespace(kafkaAccessNamespace)
-                                .withName(secretName)
-                                .edit(s -> new SecretBuilder(s).withData(data).build());
-                    }
-                }, () -> kubernetesClient
-                        .secrets()
-                        .inNamespace(kafkaAccessNamespace)
-                        .resource(
-                                new SecretBuilder()
-                                        .withType(SECRET_TYPE)
-                                        .withNewMetadata()
-                                        .withName(secretName)
-                                        .withLabels(commonSecretLabels)
-                                        .withOwnerReferences(
-                                                new OwnerReferenceBuilder()
-                                                        .withApiVersion(kafkaAccess.getApiVersion())
-                                                        .withKind(kafkaAccess.getKind())
-                                                        .withName(kafkaAccessName)
-                                                        .withUid(kafkaAccess.getMetadata().getUid())
-                                                        .withBlockOwnerDeletion(false)
-                                                        .withController(false)
-                                                        .build()
-                                        )
-                                        .endMetadata()
-                                        .withData(data)
-                                        .build()
-                        )
-                        .create()
+                .ifPresentOrElse(
+                    secret -> updateSecretIfChanged(secret, data, templateAnnotations, templateLabels, kafkaAccessNamespace, secretName),
+                    () -> createSecret(data, kafkaAccess, secretName, kafkaAccessNamespace, kafkaAccessName, templateAnnotations, templateLabels)
             );
+    }
+
+    private void updateSecretIfChanged(Secret secret, Map<String, String> data, Map<String, String> templateAnnotations,
+                                       Map<String, String> templateLabels, String namespace, String secretName) {
+        final Map<String, String> mergedAnnotations = mergeWithoutOverwritingCurrent(
+                Optional.ofNullable(secret.getMetadata().getAnnotations()).orElse(Map.of()),
+                templateAnnotations);
+
+        final Map<String, String> mergedLabels = mergeWithoutOverwritingCurrent(
+                Optional.ofNullable(secret.getMetadata().getLabels()).orElse(Map.of()),
+                templateLabels);
+
+        final boolean dataChanged = !data.equals(Optional.ofNullable(secret.getData()).orElse(Map.of()));
+        final boolean annotationsChanged = !mergedAnnotations.equals(
+                Optional.ofNullable(secret.getMetadata().getAnnotations()).orElse(Map.of()));
+        final boolean labelsChanged = !mergedLabels.equals(
+                Optional.ofNullable(secret.getMetadata().getLabels()).orElse(Map.of()));
+
+        if (dataChanged || annotationsChanged || labelsChanged) {
+            kubernetesClient.secrets()
+                    .inNamespace(namespace)
+                    .withName(secretName)
+                    .edit(s -> new SecretBuilder(s)
+                            .withData(data)
+                            .editOrNewMetadata()
+                                .withAnnotations(mergedAnnotations)
+                                .withLabels(mergedLabels)
+                            .endMetadata()
+                            .build());
+        }
+    }
+
+    private static Map<String, String> mergeWithoutOverwritingCurrent(Map<String, String> current, Map<String, String> template) {
+        Map<String, String> merged = new HashMap<>(template);
+        merged.putAll(current);
+        return merged;
+    }
+
+    private void createSecret(Map<String, String> data, KafkaAccess kafkaAccess, String secretName, String namespace,
+                              String kafkaAccessName, Map<String, String> templateAnnotations, Map<String, String> templateLabels) {
+        kubernetesClient
+                .secrets()
+                .inNamespace(namespace)
+                .resource(
+                        new SecretBuilder()
+                                .withType(SECRET_TYPE)
+                                .withNewMetadata()
+                                .withName(secretName)
+                                .withLabels(templateLabels)
+                                .withAnnotations(templateAnnotations)
+                                .withOwnerReferences(
+                                        new OwnerReferenceBuilder()
+                                                .withApiVersion(kafkaAccess.getApiVersion())
+                                                .withKind(kafkaAccess.getKind())
+                                                .withName(kafkaAccessName)
+                                                .withUid(kafkaAccess.getMetadata().getUid())
+                                                .withBlockOwnerDeletion(false)
+                                                .withController(false)
+                                                .build()
+                                )
+                                .endMetadata()
+                                .withData(data)
+                                .build()
+                )
+                .create();
+    }
+
+    /**
+     * Extracts annotations from the KafkaAccess spec template that should be applied to the Secret.
+     *
+     * @param kafkaAccess The KafkaAccess custom resource.
+     * @return A map of annotations to apply to the Secret.
+     */
+    private Map<String, String> getTemplateAnnotations(final KafkaAccess kafkaAccess) {
+        return new HashMap<>(Optional.ofNullable(kafkaAccess.getSpec().getTemplate())
+                .map(template -> template.getSecret())
+                .map(secret -> secret.getMetadata())
+                .map(metadata -> metadata.getAnnotations())
+                .orElse(new HashMap<>()));
+    }
+
+    /**
+     * Builds the desired Secret labels from the KafkaAccess template.
+     * Template-provided labels are included, then operator-required common labels are added.
+     * On key conflicts, operator-required common labels take precedence.
+     *
+     * @param kafkaAccess The KafkaAccess custom resource.
+     * @return A map of labels to apply to the Secret, including operator-required common labels.
+     */
+    private Map<String, String> getTemplateAndCommonLabels(final KafkaAccess kafkaAccess) {
+        Map<String, String> labels = Optional.ofNullable(kafkaAccess.getSpec().getTemplate())
+                .map(template -> template.getSecret())
+                .map(secret -> secret.getMetadata())
+                .map(metadata -> metadata.getLabels())
+                .map(HashMap::new)
+                .orElse(new HashMap<>());
+
+        // Keep operator default labels authoritative.
+        labels.putAll(commonSecretLabels);
+
+        return labels;
     }
 
     /**
