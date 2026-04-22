@@ -5,11 +5,12 @@
 package io.strimzi.kafka.access.log;
 
 import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
-import io.skodjob.testframe.LogCollector;
-import io.skodjob.testframe.LogCollectorBuilder;
-import io.skodjob.testframe.clients.KubeClient;
-import io.skodjob.testframe.clients.cmdClient.Kubectl;
-import io.skodjob.testframe.interfaces.MustGatherSupplier;
+import io.skodjob.kubetest4j.LogCollector;
+import io.skodjob.kubetest4j.LogCollectorBuilder;
+import io.skodjob.kubetest4j.annotations.MustGather;
+import io.skodjob.kubetest4j.clients.KubeClient;
+import io.skodjob.kubetest4j.clients.cmdClient.Kubectl;
+import io.skodjob.kubetest4j.interfaces.MustGatherSupplier;
 import io.strimzi.api.kafka.model.kafka.Kafka;
 import io.strimzi.api.kafka.model.user.KafkaUser;
 import io.strimzi.kafka.access.Environment;
@@ -29,7 +30,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Implementation class for {@link io.skodjob.testframe.annotations.MustGather}, containing handling
+ * Implementation class for {@link MustGather}, containing handling
  * of the log collection in case of test failure.
  */
 public final class MustGatherImpl implements MustGatherSupplier {

@@ -7,8 +7,8 @@ package io.strimzi.kafka.access.installation;
 import com.marcnuri.helm.Helm;
 import com.marcnuri.helm.InstallCommand;
 import com.marcnuri.helm.UninstallCommand;
-import io.skodjob.testframe.installation.InstallationMethod;
-import io.skodjob.testframe.resources.KubeResourceManager;
+import io.skodjob.kubetest4j.installation.InstallationMethod;
+import io.skodjob.kubetest4j.resources.KubeResourceManager;
 import io.strimzi.kafka.access.Environment;
 import io.strimzi.kafka.access.TestConstants;
 

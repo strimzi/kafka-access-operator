@@ -4,7 +4,7 @@
  */
 package io.strimzi.kafka.access.utils;
 
-import io.skodjob.testframe.wait.Wait;
+import io.skodjob.kubetest4j.wait.Wait;
 import io.strimzi.api.kafka.model.common.Condition;
 import io.strimzi.kafka.access.TestConstants;
 import io.strimzi.kafka.access.resources.KafkaAccessType;
