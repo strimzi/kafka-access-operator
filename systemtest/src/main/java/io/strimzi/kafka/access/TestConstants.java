@@ -30,6 +30,7 @@ public interface TestConstants {
     String SERVICE_ACCOUNT = "ServiceAccount";
     String CLUSTER_ROLE = "ClusterRole";
     String CLUSTER_ROLE_BINDING = "ClusterRoleBinding";
+    String ROLE_BINDING = "RoleBinding";
     String CUSTOM_RESOURCE_DEFINITION_SHORT = "Crd";
 
     //--------------------------
