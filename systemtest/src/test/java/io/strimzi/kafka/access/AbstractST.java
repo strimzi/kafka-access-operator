@@ -5,16 +5,16 @@
 package io.strimzi.kafka.access;
 
 import io.fabric8.kubernetes.api.model.Namespace;
-import io.skodjob.testframe.annotations.MustGather;
-import io.skodjob.testframe.annotations.ResourceManager;
-import io.skodjob.testframe.annotations.TestVisualSeparator;
-import io.skodjob.testframe.resources.ClusterRoleBindingType;
-import io.skodjob.testframe.resources.ClusterRoleType;
-import io.skodjob.testframe.resources.CustomResourceDefinitionType;
-import io.skodjob.testframe.resources.DeploymentType;
-import io.skodjob.testframe.resources.KubeResourceManager;
-import io.skodjob.testframe.resources.NamespaceType;
-import io.skodjob.testframe.utils.KubeUtils;
+import io.skodjob.kubetest4j.annotations.MustGather;
+import io.skodjob.kubetest4j.annotations.ResourceManager;
+import io.skodjob.kubetest4j.annotations.TestVisualSeparator;
+import io.skodjob.kubetest4j.resources.ClusterRoleBindingType;
+import io.skodjob.kubetest4j.resources.ClusterRoleType;
+import io.skodjob.kubetest4j.resources.CustomResourceDefinitionType;
+import io.skodjob.kubetest4j.resources.DeploymentType;
+import io.skodjob.kubetest4j.resources.KubeResourceManager;
+import io.skodjob.kubetest4j.resources.NamespaceType;
+import io.skodjob.kubetest4j.utils.KubeUtils;
 import io.strimzi.kafka.access.installation.SetupAccessOperator;
 import io.strimzi.kafka.access.log.MustGatherImpl;
 import io.strimzi.kafka.access.resources.KafkaAccessType;

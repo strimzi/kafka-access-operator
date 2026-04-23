@@ -4,8 +4,8 @@
  */
 package io.strimzi.kafka.access.installation;
 
-import io.skodjob.testframe.enums.InstallType;
-import io.skodjob.testframe.installation.InstallationMethod;
+import io.skodjob.kubetest4j.enums.InstallType;
+import io.skodjob.kubetest4j.installation.InstallationMethod;
 import io.strimzi.kafka.access.Environment;
 
 public class SetupAccessOperator {

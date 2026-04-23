@@ -13,10 +13,10 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.rbac.ClusterRole;
 import io.fabric8.kubernetes.api.model.rbac.ClusterRoleBinding;
 import io.fabric8.kubernetes.api.model.rbac.ClusterRoleBindingBuilder;
-import io.skodjob.testframe.installation.InstallationMethod;
-import io.skodjob.testframe.resources.KubeResourceManager;
-import io.skodjob.testframe.utils.ImageUtils;
-import io.skodjob.testframe.utils.TestFrameUtils;
+import io.skodjob.kubetest4j.installation.InstallationMethod;
+import io.skodjob.kubetest4j.resources.KubeResourceManager;
+import io.skodjob.kubetest4j.utils.ImageUtils;
+import io.skodjob.kubetest4j.utils.KubeTestUtils;
 import io.strimzi.kafka.access.Environment;
 import io.strimzi.kafka.access.TestConstants;
 
@@ -52,7 +52,7 @@ public class BundleInstallation implements InstallationMethod {
                     );
                     break;
                 case TestConstants.SERVICE_ACCOUNT:
-                    ServiceAccount serviceAccount = TestFrameUtils.configFromYaml(file, ServiceAccount.class);
+                    ServiceAccount serviceAccount = KubeTestUtils.configFromYaml(file, ServiceAccount.class);
                     KubeResourceManager.get().createOrUpdateResourceWithWait(new ServiceAccountBuilder(serviceAccount)
                         .editMetadata()
                             .withNamespace(installationNamespace)
@@ -61,11 +61,11 @@ public class BundleInstallation implements InstallationMethod {
                     );
                     break;
                 case TestConstants.CLUSTER_ROLE:
-                    ClusterRole clusterRole = TestFrameUtils.configFromYaml(file, ClusterRole.class);
+                    ClusterRole clusterRole = KubeTestUtils.configFromYaml(file, ClusterRole.class);
                     KubeResourceManager.get().createOrUpdateResourceWithWait(clusterRole);
                     break;
                 case TestConstants.CLUSTER_ROLE_BINDING:
-                    ClusterRoleBinding clusterRoleBinding = TestFrameUtils.configFromYaml(file, ClusterRoleBinding.class);
+                    ClusterRoleBinding clusterRoleBinding = KubeTestUtils.configFromYaml(file, ClusterRoleBinding.class);
                     KubeResourceManager.get().createOrUpdateResourceWithWait(new ClusterRoleBindingBuilder(clusterRoleBinding)
                         .editOrNewMetadata()
                             .withNamespace(installationNamespace)
@@ -77,7 +77,7 @@ public class BundleInstallation implements InstallationMethod {
                     );
                     break;
                 case TestConstants.CUSTOM_RESOURCE_DEFINITION_SHORT:
-                    CustomResourceDefinition customResourceDefinition = TestFrameUtils.configFromYaml(file, CustomResourceDefinition.class);
+                    CustomResourceDefinition customResourceDefinition = KubeTestUtils.configFromYaml(file, CustomResourceDefinition.class);
                     KubeResourceManager.get().createOrUpdateResourceWithWait(customResourceDefinition);
                     break;
                 case TestConstants.DEPLOYMENT:
@@ -97,7 +97,7 @@ public class BundleInstallation implements InstallationMethod {
     }
 
     private void deployKafkaAccessOperator(File deploymentFile) {
-        Deployment accessOperatorDeployment = TestFrameUtils.configFromYaml(deploymentFile, Deployment.class);
+        Deployment accessOperatorDeployment = KubeTestUtils.configFromYaml(deploymentFile, Deployment.class);
 
         String deploymentImage = accessOperatorDeployment
             .getSpec()
