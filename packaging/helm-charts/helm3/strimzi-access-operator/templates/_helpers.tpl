@@ -1,16 +1,33 @@
 {{/*
-Generate the watch namespaces list for STRIMZI_NAMESPACE environment variable
+Generate the watch namespaces list for ACCESS_WATCHED_NAMESPACES environment variable
 */}}
-{{- define "strimzi.watchNamespacesList" -}}
-{{- if .Values.watchNamespaces }}
-{{- if eq .Values.watchNamespaces "*" }}
+{{- define "strimzi.accessWatchNamespacesList" -}}
+{{- if .Values.accessWatchNamespaces }}
+{{- if eq .Values.accessWatchNamespaces "*" }}
 *
-{{- else if kindIs "slice" .Values.watchNamespaces }}
-{{- join "," .Values.watchNamespaces }}
+{{- else if kindIs "slice" .Values.accessWatchNamespaces }}
+{{- join "," .Values.accessWatchNamespaces }}
 {{- else }}
-{{- .Values.watchNamespaces }}
+{{- .Values.accessWatchNamespaces }}
 {{- end }}
 {{- else }}
 {{- .Release.Namespace }}
+{{- end }}
+{{- end -}}
+
+{{/*
+Generate the watch namespaces list for KAFKA_WATCHED_NAMESPACES environment variable
+*/}}
+{{- define "strimzi.kafkaWatchNamespacesList" -}}
+{{- if .Values.kafkaWatchNamespaces }}
+{{- if eq .Values.kafkaWatchNamespaces "*" }}
+*
+{{- else if kindIs "slice" .Values.kafkaWatchNamespaces }}
+{{- join "," .Values.kafkaWatchNamespaces }}
+{{- else }}
+{{- .Values.kafkaWatchNamespaces }}
+{{- end }}
+{{- else }}
+*
 {{- end }}
 {{- end -}}

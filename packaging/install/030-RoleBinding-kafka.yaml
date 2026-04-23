@@ -1,15 +1,15 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: strimzi-access-operator
-  namespace: strimzi-access-operator
+  name: strimzi-access-operator-kafka
+  namespace: kafka
   labels:
     app: strimzi-access-operator
 subjects:
   - kind: ServiceAccount
     name: strimzi-access-operator
-    namespace: strimzi-access-operator
+    namespace: kafka
 roleRef:
   kind: ClusterRole
-  name: strimzi-access-operator
+  name: strimzi-access-operator-kafka-resources
   apiGroup: rbac.authorization.k8s.io

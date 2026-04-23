@@ -57,16 +57,26 @@ spec:
             - name: strimzi-tmp
               mountPath: /tmp
           env:
-            - name: STRIMZI_NAMESPACE
-              {{- if .Values.watchAnyNamespace }}
+            - name: ACCESS_WATCHED_NAMESPACES
+              {{- if .Values.accessWatchAnyNamespace }}
               value: "*"
               {{- else }}
-              {{- if .Values.watchNamespaces }}
-              value: "{{ include "strimzi.watchNamespacesList" . }}"
+              {{- if .Values.accessWatchNamespaces }}
+              value: "{{ include "strimzi.accessWatchNamespacesList" . }}"
               {{- else }}
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+              {{- end }}
+              {{- end }}
+            - name: KAFKA_WATCHED_NAMESPACES
+              {{- if .Values.kafkaWatchAnyNamespace }}
+              value: "*"
+              {{- else }}
+              {{- if .Values.kafkaWatchNamespaces }}
+              value: "{{ include "strimzi.kafkaWatchNamespacesList" . }}"
+              {{- else }}
+              value: "*"
               {{- end }}
               {{- end }}
           resources:

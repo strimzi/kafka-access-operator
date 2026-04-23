@@ -1,6 +1,10 @@
-# Contains `.Release.Namespace` by default
-watchNamespaces: []
-watchAnyNamespace: false
+# Namespaces where the operator watches for KafkaAccess resources (contains `.Release.Namespace` by default)
+accessWatchNamespaces: []
+accessWatchAnyNamespace: false
+
+# Namespaces where the operator watches for Kafka cluster resources (Kafka, KafkaUser, Secrets)
+kafkaWatchNamespaces: []
+kafkaWatchAnyNamespace: false
 
 image:
   registry: quay.io

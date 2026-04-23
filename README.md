@@ -41,6 +41,81 @@ kubectl delete -f install
 
 This command removes all Kubernetes components associated with the Strimzi Access Operator and deletes the deployment.
 
+### Configuring Namespace Watching
+
+The Access Operator supports watching different namespaces for `KafkaAccess` resources versus Kafka cluster resources (`Kafka`, `KafkaUser`, and their `Secrets`). This allows for flexible deployment architectures where applications and Kafka clusters may reside in different namespaces.
+
+#### Environment Variables
+
+The operator uses two environment variables to control namespace watching:
+
+- **`ACCESS_WATCHED_NAMESPACES`**: Specifies the namespace(s) where the operator watches for `KafkaAccess` resources and creates the resulting binding `Secrets`. Defaults to `*` (all namespaces).
+
+- **`KAFKA_WATCHED_NAMESPACES`**: Specifies the namespace(s) where the operator watches for `Kafka`, `KafkaUser`, and `Secret` resources that are part of the Kafka cluster being accessed. Defaults to `*` (all namespaces).
+
+Both environment variables accept:
+- A single namespace: `"my-namespace"`
+- Multiple namespaces (comma-separated): `"namespace1,namespace2,namespace3"`
+- All namespaces: `"*"`
+
+#### Default Configuration
+
+The default deployment in the `install` directory is configured as follows:
+
+```yaml
+env:
+  - name: ACCESS_WATCHED_NAMESPACES
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace  # Operator's own namespace
+  - name: KAFKA_WATCHED_NAMESPACES
+    value: "*"  # All namespaces
+```
+
+This configuration allows:
+- Applications to create `KafkaAccess` resources in the same namespace as the operator
+- The operator to find and access Kafka clusters in any namespace
+
+#### Example: Multi-Namespace Setup
+
+For a setup where applications are in the `my-apps` namespace and Kafka clusters are in the `kafka` namespace:
+
+```yaml
+env:
+  - name: ACCESS_WATCHED_NAMESPACES
+    value: "my-apps"
+  - name: KAFKA_WATCHED_NAMESPACES
+    value: "kafka"
+```
+
+#### RBAC Requirements
+
+When using namespace-specific configurations, ensure appropriate RBAC permissions are configured:
+
+1. **For ACCESS_WATCHED_NAMESPACES**: The operator needs a `RoleBinding` in each watched namespace that grants the `strimzi-access-operator-access-resources` ClusterRole. This provides full CRUD permissions for `KafkaAccess` resources and `Secrets`.
+
+2. **For KAFKA_WATCHED_NAMESPACES**: The operator needs a `RoleBinding` in each watched namespace that grants the `strimzi-access-operator-kafka-resources` ClusterRole. This provides read-only permissions for `Kafka`, `KafkaUser`, and `Secret` resources.
+
+Example `RoleBinding` for the `kafka` namespace:
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: strimzi-access-operator-kafka
+  namespace: kafka
+subjects:
+  - kind: ServiceAccount
+    name: strimzi-access-operator
+    namespace: strimzi-access-operator
+roleRef:
+  kind: ClusterRole
+  name: strimzi-access-operator-kafka-resources
+  apiGroup: rbac.authorization.k8s.io
+```
+
+See the `packaging/install` directory for complete RBAC configuration examples.
+
 ## Using the Access Operator
 
 To make use of the Access Operator, create a `KafkaAccess` custom resource (CR).
