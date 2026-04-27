@@ -69,12 +69,12 @@ env:
       fieldRef:
         fieldPath: metadata.namespace  # Operator's own namespace
   - name: KAFKA_WATCHED_NAMESPACES
-    value: "*"  # All namespaces
+    value: "kafka"  # 'kafka' namespace containing Kafka cluster
 ```
 
 This configuration allows:
 - Applications to create `KafkaAccess` resources in the same namespace as the operator
-- The operator to find and access Kafka clusters in any namespace
+- The operator to find and access Kafka clusters in the `kafka` namespace
 
 #### Example: Multi-Namespace Setup
 

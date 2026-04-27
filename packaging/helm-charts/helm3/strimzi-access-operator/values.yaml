@@ -2,7 +2,7 @@
 accessWatchNamespaces: []
 accessWatchAnyNamespace: false
 
-# Namespaces where the operator watches for Kafka cluster resources (Kafka, KafkaUser, Secrets)
+# Namespaces where the operator watches for Kafka cluster resources (Kafka, KafkaUser, Secrets) (contains `.Release.Namespace` by default)
 kafkaWatchNamespaces: []
 kafkaWatchAnyNamespace: false
 

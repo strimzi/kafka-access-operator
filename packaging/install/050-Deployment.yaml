@@ -42,7 +42,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: KAFKA_WATCHED_NAMESPACES
-              value: "*"
+              value: "kafka"
           resources:
             limits:
               cpu: 500m

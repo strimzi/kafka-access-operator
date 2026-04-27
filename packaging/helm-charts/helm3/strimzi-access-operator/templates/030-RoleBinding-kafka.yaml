@@ -3,7 +3,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: strimzi-access-operator-kafka
-  namespace: kafka
+  namespace: {{ .Release.Namespace }}
   labels:
     app: strimzi-access-operator
 subjects:
