@@ -18,8 +18,7 @@ and later.
 ## Upgrade steps
 
 1. Upgrade Strimzi Cluster Operator to 0.49.0 or later, but no higher than 0.51.0.
-2. Follow the [steps to convert all Strimzi custom resources to the v1 API](https://strimzi.io/docs/operators/0.51.0/deploying.html#assembly-api-conversion-str).
-3. Upgrade the Access Operator to version 0.3.0.
-4. Wait for the Access Operator logs to include the message `Kafka Access operator is now ready`.
-5. Verify the Access Operator logs **DO NOT** include the message `The client is using resource type 'kafkas' with unstable version 'v1beta2'`.
-4. Upgrade Strimzi Cluster Operator to version 1.0.0 or later.
+2. Upgrade the Access Operator to version 0.3.0.
+3. Wait for the Access Operator logs to include the message `Kafka Access operator is now ready`.
+4. Verify the Access Operator logs **DO NOT** include the message `The client is using resource type 'kafkas' with unstable version 'v1beta2'`.
+5. Upgrade Strimzi Cluster Operator to version 1.0.0 or later.
