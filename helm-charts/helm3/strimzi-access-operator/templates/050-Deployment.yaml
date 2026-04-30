@@ -19,6 +19,13 @@ spec:
       labels:
         app: strimzi-access-operator
         strimzi.io/kind: access-operator
+        {{- if .Values.labels }}
+        {{- toYaml .Values.labels | nindent 10 }}
+        {{- end }}
+      {{- if .Values.annotations }}
+      annotations:
+        {{- toYaml .Values.annotations | nindent 10 }}
+      {{- end }}
     spec:
       serviceAccountName: strimzi-access-operator
       {{- if .Values.image.imagePullSecrets }}
@@ -26,6 +33,9 @@ spec:
         {{- with .Values.image.imagePullSecrets }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext: {{ toYaml . | nindent 8 }}
       {{- end }}
       volumes:
         - name: strimzi-tmp
@@ -60,3 +70,6 @@ spec:
               port: http
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          {{- with .Values.securityContext }}
+          securityContext: {{ toYaml .| nindent 12 }}
+          {{- end }}
