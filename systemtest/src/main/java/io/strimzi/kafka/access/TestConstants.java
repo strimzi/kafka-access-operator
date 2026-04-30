@@ -19,7 +19,7 @@ public interface TestConstants {
     // Strimzi related constants
     //--------------------------
     // in case of change in the pom.xml, update this one as well please
-    String STRIMZI_API_VERSION = "0.48.0";
+    String STRIMZI_API_VERSION = "1.0.0";
 
     //--------------------------
     // Resource types
