@@ -182,7 +182,7 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-slf4j-impl</artifactId>
+                <artifactId>log4j-slf4j2-impl</artifactId>
                 <version>${log4j.version}</version>
             </dependency>
             <dependency>
@@ -391,7 +391,7 @@
                                 <ignoredDependency>io.fabric8:crd-generator-api-v2:jar:${fabric8.version}</ignoredDependency>
                                 <ignoredDependency>io.fabric8:generator-annotations:jar:${fabric8.version}</ignoredDependency>
                                 <ignoredDependency>io.fabric8:kubernetes-httpclient-jdk:jar:${fabric8.version}</ignoredDependency>
-                                <ignoredDependency>org.apache.logging.log4j:log4j-slf4j-impl</ignoredDependency>
+                                <ignoredDependency>org.apache.logging.log4j:log4j-slf4j2-impl</ignoredDependency>
                                 <ignoredDependency>io.sundr:builder-annotations:jar:${sundrio.version}</ignoredDependency>
                             </ignoredDependencies>
                         </configuration>
