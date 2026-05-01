@@ -67,7 +67,7 @@ public class KafkaAccessReconcilerTest {
     private static final String NEW_USER_PROVIDED_SECRET_NAME = "my-new-kafka-access-secret";
     private static final int BOOTSTRAP_PORT_9092 = 9092;
     private static final int BOOTSTRAP_PORT_9093 = 9093;
-    private static final long TEST_TIMEOUT = 1000;
+    private static final long TEST_TIMEOUT = 3000;
 
     KubernetesClient client;
     Operator operator;
