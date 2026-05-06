@@ -1,3 +1,11 @@
+# Namespaces where the operator watches for KafkaAccess resources (contains `.Release.Namespace` by default)
+accessWatchNamespaces: []
+accessWatchAnyNamespace: false
+
+# Namespaces where the operator watches for Kafka cluster resources (Kafka, KafkaUser, Secrets) (contains `.Release.Namespace` by default)
+kafkaWatchNamespaces: []
+kafkaWatchAnyNamespace: false
+
 image:
   registry: quay.io
   repository: strimzi

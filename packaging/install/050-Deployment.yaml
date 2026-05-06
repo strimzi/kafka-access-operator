@@ -36,6 +36,13 @@ spec:
           volumeMounts:
             - name: strimzi-tmp
               mountPath: /tmp
+          env:
+            - name: ACCESS_WATCHED_NAMESPACES
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: KAFKA_WATCHED_NAMESPACES
+              value: "kafka"
           resources:
             limits:
               cpu: 500m

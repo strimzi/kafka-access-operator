@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -71,6 +72,7 @@ public class KafkaAccessReconcilerTest {
 
     KubernetesClient client;
     Operator operator;
+    Set<String> kafkaNamespaces = Set.of(KAFKA_NAMESPACE, NAMESPACE);
 
     @BeforeEach
     void beforeEach() {
@@ -81,7 +83,7 @@ public class KafkaAccessReconcilerTest {
                  * See: <a href="https://github.com/fabric8io/kubernetes-client/issues/5337">fabric8io/kubernetes-client Issue #5337</a>
                  */
                 .withUseSSAToPatchPrimaryResource(false));
-        operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()));
+        operator.register(new KafkaAccessReconciler(operator.getKubernetesClient(), kafkaNamespaces));
         operator.start();
     }
 
@@ -676,8 +678,13 @@ public class KafkaAccessReconcilerTest {
         KafkaAccess currentKafkaAccess = client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).get();
         assertThat(currentKafkaAccess).isNotNull();
 
-        currentKafkaAccess.getSpec().setSecretName(NEW_USER_PROVIDED_SECRET_NAME);
-        client.resources(KafkaAccess.class).resource(currentKafkaAccess).update();
+        client.resources(KafkaAccess.class)
+                .inNamespace(NAMESPACE)
+                .withName(NAME)
+                .edit(ka -> {
+                    ka.getSpec().setSecretName(NEW_USER_PROVIDED_SECRET_NAME);
+                    return ka;
+                });
 
         client.resources(KafkaAccess.class).inNamespace(NAMESPACE).withName(NAME).waitUntilCondition(updatedKafkaAccess -> {
             final Optional<String> bindingName = Optional.ofNullable(updatedKafkaAccess)
