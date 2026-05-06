@@ -42,9 +42,11 @@ The following table lists the available configurable parameters of the Strimzi c
 |--------------------------------------|------------------------------------------------------------|-----------|
 | `image.registry`                     | Override default Access Operator image registry            | `quay.io` |
 | `image.repository`                   | Override default Access Operator image repository          | `strimzi` |
-| `image.tag`                          | Override default Access Operator image tag                 | `0.2.0`  |
+| `image.tag`                          | Override default Access Operator image tag                 | `0.3.0`  |
 | `image.imagePullSecrets`             | List of container registry pull secrets                    | `[]`      |
 | `image.imagePullPolicy`              | Image pull policy for all pods deployed by Access Operator | `nil`     |
+| `podSecurityContext`                 | Cluster Operator pod's security context                    | `nil`     |
+| `securityContext`                    | Cluster Operator container's security context              | `nil`     |
 | `resources.limits.cpu`               | Configures the CPU limit for the Access Operator Pod       | `256Mi`   |
 | `resources.limits.memory`            | Configures the memory limit for the Access Operator Pod    | `500m`    |
 | `resources.requests.cpu`             | Configures the CPU request for the Access Operator Pod     | `256Mi`   |
@@ -53,6 +55,8 @@ The following table lists the available configurable parameters of the Strimzi c
 | `livenessProbe.periodSeconds`        | Liveness probe period (in seconds)                         | `30`      |
 | `readinessProbe.initialDelaySeconds` | Readiness probe initial delay (in seconds)                 | `10`      |
 | `readinessProbe.periodSeconds`       | Readiness probe period (in seconds)                        | `30`      |
+| `annotations`                        | Additional annotations to apply to Access Operator Pod     | `{}`      |
+| `labels`                             | Additional labels to apply to Access Operator Pod          | `{}`      |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
