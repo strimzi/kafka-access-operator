@@ -254,6 +254,7 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
                 InformerEventSourceConfiguration.from(Secret.class, KafkaAccess.class)
                         .withLabelSelector(String.format("%s=%s", KafkaAccessMapper.MANAGED_BY_LABEL_KEY, KafkaAccessMapper.KAFKA_ACCESS_LABEL_VALUE))
                         .withSecondaryToPrimaryMapper(secret -> KafkaAccessMapper.secretSecondaryToPrimaryMapper(context.getPrimaryCache().list(), secret))
+                        .withOnAddFilter(secret -> false)
                         .build(),
                 context);
         LOGGER.info("Finished preparing event sources");
