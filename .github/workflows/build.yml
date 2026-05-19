@@ -43,6 +43,7 @@ jobs:
           mainJavaBuild: ${{ matrix.java.mainBuild }}
           artifactSuffix: "kafka-access-operator"
           clusterOperatorBuild: "false"
+          checkReleasedFiles: "true"
 
   build-containers:
     name: Build Containers
