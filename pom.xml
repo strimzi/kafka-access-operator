@@ -79,8 +79,8 @@
 
         <!-- Used for test-frame and the systemtests-->
         <log4j.version>2.25.4</log4j.version>
-        <jetty.version>11.0.26</jetty.version>
-        <jetty.jakarta-servlet-api.version>5.0.2</jetty.jakarta-servlet-api.version>
+        <jetty.version>12.1.9</jetty.version>
+        <jakarta-servlet-api.version>6.0.0</jakarta-servlet-api.version>
 
         <!-- Test dependencies -->
         <junit-jupiter.version>5.8.2</junit-jupiter.version>
@@ -191,14 +191,14 @@
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-servlet</artifactId>
+                <groupId>org.eclipse.jetty.ee10</groupId>
+                <artifactId>jetty-ee10-servlet</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.jetty.toolchain</groupId>
-                <artifactId>jetty-jakarta-servlet-api</artifactId>
-                <version>${jetty.jakarta-servlet-api.version}</version>
+                <groupId>jakarta.servlet</groupId>
+                <artifactId>jakarta.servlet-api</artifactId>
+                <version>${jakarta-servlet-api.version}</version>
             </dependency>
             <!-- Test dependencies -->
             <dependency>

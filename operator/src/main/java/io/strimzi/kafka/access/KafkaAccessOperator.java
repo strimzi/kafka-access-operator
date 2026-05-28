@@ -6,8 +6,8 @@ package io.strimzi.kafka.access;
 
 import io.javaoperatorsdk.operator.Operator;
 import io.strimzi.kafka.access.server.HealthServlet;
+import org.eclipse.jetty.ee10.servlet.ServletHandler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
