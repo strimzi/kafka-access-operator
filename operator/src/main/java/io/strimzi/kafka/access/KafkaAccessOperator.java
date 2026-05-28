@@ -6,7 +6,7 @@ package io.strimzi.kafka.access;
 
 import io.javaoperatorsdk.operator.Operator;
 import io.strimzi.kafka.access.server.HealthServlet;
-import org.eclipse.jetty.ee10.servlet.ServletHandler;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +31,10 @@ public class KafkaAccessOperator {
         operator.register(new KafkaAccessReconciler(operator.getKubernetesClient()));
         operator.start();
         Server server = new Server(HEALTH_CHECK_PORT);
-        ServletHandler handler = new ServletHandler();
+        ServletContextHandler handler = new ServletContextHandler();
         server.setHandler(handler);
-        handler.addServletWithMapping(HealthServlet.class, "/healthy");
-        handler.addServletWithMapping(HealthServlet.class, "/ready");
+        handler.addServlet(HealthServlet.class, "/healthy");
+        handler.addServlet(HealthServlet.class, "/ready");
         try {
             server.start();
             LOGGER.info("Kafka Access operator is now ready (health server listening)");
