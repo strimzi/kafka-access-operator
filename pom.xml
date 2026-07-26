@@ -79,7 +79,7 @@
 
         <!-- Used for test-frame and the systemtests-->
         <log4j.version>2.25.4</log4j.version>
-        <jetty.version>12.1.9</jetty.version>
+        <jetty.version>12.1.10</jetty.version>
         <jakarta-servlet-api.version>6.0.0</jakarta-servlet-api.version>
 
         <!-- Test dependencies -->
