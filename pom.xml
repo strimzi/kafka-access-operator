@@ -66,7 +66,7 @@
         <maven.dependency.version>3.9.0</maven.dependency.version>
         <maven.assembly.version>3.3.0</maven.assembly.version>
         <maven.gpg.version>3.0.1</maven.gpg.version>
-        <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
+        <central-publishing-maven-plugin.version>0.11.0</central-publishing-maven-plugin.version>
 
         <!-- Runtime dependencies -->
         <javaoperatorsdk.version>5.3.3</javaoperatorsdk.version>
