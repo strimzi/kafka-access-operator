@@ -15,8 +15,12 @@ import org.apache.kafka.common.security.auth.SecurityProtocol;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static io.strimzi.kafka.access.internal.KafkaParser.LISTENER_AUTH_NONE;
 
@@ -24,6 +28,9 @@ import static io.strimzi.kafka.access.internal.KafkaParser.LISTENER_AUTH_NONE;
  * Representation of a Kafka listener that returns the connection details for the listener
  */
 public class KafkaListener {
+
+    private static final Pattern PEM_CERTIFICATE = Pattern.compile(
+            "-----BEGIN CERTIFICATE-----[\\s\\S]*?-----END CERTIFICATE-----");
 
     private final String name;
     private final KafkaListenerType type;
@@ -131,10 +138,32 @@ public class KafkaListener {
         data.put("bootstrap-servers", bootstrapServers);
         if (this.tls) {
             Optional.ofNullable(this.caCertSecret)
-                    .map(secretData -> secretData.get("ca.crt"))
-                    .ifPresent(cert -> data.put("ssl.truststore.crt", cert));
+                    .map(KafkaListener::buildCaBundle)
+                    .ifPresent(bundle -> data.put("ssl.truststore.crt", bundle));
         }
         return data;
+    }
+
+    // Bundle both current and previous Cluster CAs so clients survive CA key replacement.
+    private static String buildCaBundle(final Map<String, String> secretData) {
+        final Base64.Decoder decoder = Base64.getDecoder();
+        final List<String> leaves = secretData.entrySet().stream()
+                .filter(entry -> entry.getKey().endsWith(".crt"))
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> new String(decoder.decode(entry.getValue()), StandardCharsets.UTF_8))
+                .map(KafkaListener::firstCertificate)
+                .flatMap(Optional::stream)
+                .toList();
+        if (leaves.isEmpty()) {
+            return null;
+        }
+        final String bundle = leaves.stream().collect(Collectors.joining("\n", "", "\n"));
+        return Base64.getEncoder().encodeToString(bundle.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static Optional<String> firstCertificate(final String pem) {
+        final Matcher matcher = PEM_CERTIFICATE.matcher(pem);
+        return matcher.find() ? Optional.of(matcher.group()) : Optional.empty();
     }
 
     private SecurityProtocol getSecurityProtocol() {

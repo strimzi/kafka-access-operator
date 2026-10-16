@@ -93,6 +93,61 @@ public class KafkaListenerTest {
     }
 
     @Test
+    @DisplayName("When the Cluster CA Secret contains multiple .crt entries, then ssl.truststore.crt bundles them all")
+    void testTLSKafkaListenerBundlesAllClusterCas() {
+        final String certA = "-----BEGIN CERTIFICATE-----\nMIIFAAAAAA\n-----END CERTIFICATE-----\n";
+        final String certB = "-----BEGIN CERTIFICATE-----\nMIIFBBBBBB\n-----END CERTIFICATE-----\n";
+        final Map<String, String> certSecretData = new HashMap<>();
+        certSecretData.put("ca.crt", encodeToString(certA));
+        certSecretData.put("ca-2026-01-01T00-00-00Z.crt", encodeToString(certB));
+        certSecretData.put("ca.p12", encodeToString("ignored-binary"));
+        certSecretData.put("ca.password", encodeToString("ignored-password"));
+        final GenericKafkaListener genericKafkaListener = ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, true);
+        final KafkaListener listener = new KafkaListener(genericKafkaListener).withBootstrapServer(BOOTSTRAP_SERVER_9092)
+                .withCaCertSecret(certSecretData);
+
+        final Map<String, String> secretData = listener.getConnectionSecretData();
+
+        // Sorted key order: ca-<date>.crt precedes ca.crt.
+        final String expectedBundle = encodeToString("-----BEGIN CERTIFICATE-----\nMIIFBBBBBB\n-----END CERTIFICATE-----\n"
+                + "-----BEGIN CERTIFICATE-----\nMIIFAAAAAA\n-----END CERTIFICATE-----\n");
+        assertThat(secretData).containsEntry("ssl.truststore.crt", expectedBundle);
+    }
+
+    @Test
+    @DisplayName("When a .crt entry contains a certificate chain, then only the leaf CA cert (first in the file) is included in the trust bundle")
+    void testTLSKafkaListenerCollapsesChainToLeafCert() {
+        final String chain = "-----BEGIN CERTIFICATE-----\nLEAFCERT\n-----END CERTIFICATE-----\n"
+                + "-----BEGIN CERTIFICATE-----\nINTERMED\n-----END CERTIFICATE-----\n"
+                + "-----BEGIN CERTIFICATE-----\nROOTCERT\n-----END CERTIFICATE-----\n";
+        final Map<String, String> certSecretData = new HashMap<>();
+        certSecretData.put("ca.crt", encodeToString(chain));
+        final GenericKafkaListener genericKafkaListener = ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, true);
+        final KafkaListener listener = new KafkaListener(genericKafkaListener).withBootstrapServer(BOOTSTRAP_SERVER_9092)
+                .withCaCertSecret(certSecretData);
+
+        final Map<String, String> secretData = listener.getConnectionSecretData();
+
+        final String expectedBundle = encodeToString("-----BEGIN CERTIFICATE-----\nLEAFCERT\n-----END CERTIFICATE-----\n");
+        assertThat(secretData).containsEntry("ssl.truststore.crt", expectedBundle);
+    }
+
+    @Test
+    @DisplayName("When the Cluster CA Secret contains no .crt entry, then ssl.truststore.crt is not set")
+    void testTLSKafkaListenerNoCertEntry() {
+        final Map<String, String> certSecretData = new HashMap<>();
+        certSecretData.put("ca.p12", encodeToString("ignored-binary"));
+        certSecretData.put("ca.password", encodeToString("ignored-password"));
+        final GenericKafkaListener genericKafkaListener = ResourceProvider.getListener(LISTENER_1, KafkaListenerType.INTERNAL, true);
+        final KafkaListener listener = new KafkaListener(genericKafkaListener).withBootstrapServer(BOOTSTRAP_SERVER_9092)
+                .withCaCertSecret(certSecretData);
+
+        final Map<String, String> secretData = listener.getConnectionSecretData();
+
+        assertThat(secretData).doesNotContainKey("ssl.truststore.crt");
+    }
+
+    @Test
     @DisplayName("When a Kafka listener with SASL auth and TLS enabled is created, then the connection data is correct and has security protocol SASL_SSL")
     void testKafkaListenerWithSaslAuthAndTls() {
         final String cert = encodeToString("-----BEGIN CERTIFICATE-----\nMIIFLTCCAx\n-----END CERTIFICATE-----\n");
