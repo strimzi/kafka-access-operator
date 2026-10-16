@@ -5,15 +5,15 @@
 package io.strimzi.kafka.access.internal;
 
 import io.strimzi.api.kafka.model.kafka.Kafka;
+import io.strimzi.api.kafka.model.kafka.listener.GenericKafkaListener;
+import io.strimzi.api.kafka.model.kafka.listener.KafkaListenerAuthenticationCustom;
+import io.strimzi.api.kafka.model.kafka.listener.KafkaListenerAuthenticationScramSha512;
+import io.strimzi.api.kafka.model.kafka.listener.KafkaListenerAuthenticationTls;
+import io.strimzi.api.kafka.model.kafka.listener.KafkaListenerType;
+import io.strimzi.api.kafka.model.kafka.listener.ListenerStatus;
 import io.strimzi.api.kafka.model.user.KafkaUserScramSha512ClientAuthentication;
 import io.strimzi.api.kafka.model.user.KafkaUserTlsClientAuthentication;
 import io.strimzi.api.kafka.model.user.KafkaUserTlsExternalClientAuthentication;
-import io.strimzi.api.kafka.model.kafka.listener.KafkaListenerAuthenticationOAuth;
-import io.strimzi.api.kafka.model.kafka.listener.KafkaListenerAuthenticationScramSha512;
-import io.strimzi.api.kafka.model.kafka.listener.KafkaListenerAuthenticationTls;
-import io.strimzi.api.kafka.model.kafka.listener.GenericKafkaListener;
-import io.strimzi.api.kafka.model.kafka.listener.KafkaListenerType;
-import io.strimzi.api.kafka.model.kafka.listener.ListenerStatus;
 import io.strimzi.kafka.access.ResourceProvider;
 import io.strimzi.kafka.access.model.KafkaAccessSpec;
 import io.strimzi.kafka.access.model.KafkaAccessSpecBuilder;
@@ -47,8 +47,8 @@ public class KafkaParserWithUserTest {
     private static final GenericKafkaListener SCRAM_LISTENER = ResourceProvider.getListener("scram-listener", KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationScramSha512());
     private static final GenericKafkaListener SCRAM_LISTENER_WITH_TLS = ResourceProvider.getListener("scram-listener-with-tls", KafkaListenerType.INTERNAL, true, new KafkaListenerAuthenticationScramSha512());
     private static final GenericKafkaListener TLS_LISTENER = ResourceProvider.getListener("tls-listener", KafkaListenerType.INTERNAL, true, new KafkaListenerAuthenticationTls());
-    private static final GenericKafkaListener OAUTH_LISTENER = ResourceProvider.getListener("oauth-listener", KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationOAuth());
-    private static final GenericKafkaListener OAUTH_LISTENER_WITH_TLS = ResourceProvider.getListener("oauth-listener-with-tls", KafkaListenerType.INTERNAL, true, new KafkaListenerAuthenticationOAuth());
+    private static final GenericKafkaListener OAUTH_LISTENER = ResourceProvider.getListener("oauth-listener", KafkaListenerType.INTERNAL, false, new KafkaListenerAuthenticationCustom());
+    private static final GenericKafkaListener OAUTH_LISTENER_WITH_TLS = ResourceProvider.getListener("oauth-listener-with-tls", KafkaListenerType.INTERNAL, true, new KafkaListenerAuthenticationCustom());
 
     static Stream<Arguments> listenerSpecifiedWithMatchingAuthProvider() {
         return Stream.of(
