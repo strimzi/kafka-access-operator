@@ -6,7 +6,17 @@ image:
   imagePullSecrets: []
 
 podSecurityContext: {}
-securityContext: {}
+securityContext:
+  # Specifies container security context. Defaults to a security context that matches the Restricted Kubernetes
+  # Pod Security Standard (https://kubernetes.io/docs/concepts/security/pod-security-standards/).
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
 
 resources:
   limits:
