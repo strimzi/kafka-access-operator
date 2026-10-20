@@ -255,14 +255,13 @@ public class KafkaAccessReconciler implements Reconciler<KafkaAccess> {
                         .withLabelSelector(String.format("%s=%s", KafkaAccessMapper.MANAGED_BY_LABEL_KEY, KafkaAccessMapper.KAFKA_ACCESS_LABEL_VALUE))
                         .withSecondaryToPrimaryMapper(secret -> KafkaAccessMapper.secretSecondaryToPrimaryMapper(context.getPrimaryCache().list(), secret))
                         .withOnAddFilter(secret -> false)
-                        .build(),
-                context);
+                        .build());
         LOGGER.info("Finished preparing event sources");
         return List.of(
-                new InformerEventSource<>(kafkaEventSource, context),
-                new InformerEventSource<>(kafkaUserEventSource, context),
-                new InformerEventSource<>(strimziSecretEventSource, context),
-                new InformerEventSource<>(strimziKafkaUserSecretEventSource, context),
+                new InformerEventSource<>(kafkaEventSource),
+                new InformerEventSource<>(kafkaUserEventSource),
+                new InformerEventSource<>(strimziSecretEventSource),
+                new InformerEventSource<>(strimziKafkaUserSecretEventSource),
                 kafkaAccessSecretEventSource);
     }
 
