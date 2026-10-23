@@ -33,3 +33,12 @@ readinessProbe:
   periodSeconds: 30
 annotations: {}
 labels: {}
+
+# Node selector for the Access Operator Pod
+nodeSelector: {}
+
+# Affinity rules for the Access Operator Pod
+affinity: {}
+
+# Tolerations for the Access Operator Pod
+tolerations: []
