@@ -57,6 +57,8 @@ The following table lists the available configurable parameters of the Strimzi c
 | `readinessProbe.periodSeconds`       | Readiness probe period (in seconds)                        | `30`      |
 | `annotations`                        | Additional annotations to apply to Access Operator Pod     | `{}`      |
 | `labels`                             | Additional labels to apply to Access Operator Pod          | `{}`      |
+| `affinity`                           | Affinity rules to apply to the Access Operator Pod         | `{}`      |
+| `tolerations`                        | Tolerations to apply to the Access Operator Pod            | `[]`      |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
