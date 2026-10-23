@@ -34,6 +34,9 @@ readinessProbe:
 annotations: {}
 labels: {}
 
+# Node selector for the Access Operator Pod
+nodeSelector: {}
+
 # Affinity rules for the Access Operator Pod
 affinity: {}
 
