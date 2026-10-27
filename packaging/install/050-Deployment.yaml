@@ -45,7 +45,7 @@ spec:
             sizeLimit: 1Mi
       containers:
         - name: access-operator
-          image: quay.io/strimzi/access-operator:latest
+          image: quay.io/strimzi/access-operator:0.4.0
           ports:
             - containerPort: 8080
               name: http
