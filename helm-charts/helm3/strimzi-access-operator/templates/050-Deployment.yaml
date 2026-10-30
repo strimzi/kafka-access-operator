@@ -28,6 +28,7 @@ spec:
       {{- end }}
     spec:
       serviceAccountName: strimzi-access-operator
+      automountServiceAccountToken: false
       {{- if .Values.image.imagePullSecrets }}
       imagePullSecrets:
         {{- with .Values.image.imagePullSecrets }}
@@ -37,7 +38,36 @@ spec:
       {{- with .Values.podSecurityContext }}
       securityContext: {{ toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
+        - name: kube-api-access
+          projected:
+            defaultMode: 420
+            sources:
+              - serviceAccountToken:
+                  path: token
+              - configMap:
+                  name: kube-root-ca.crt
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+              - downwardAPI:
+                  items:
+                    - path: namespace
+                      fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace
         - name: strimzi-tmp
           emptyDir:
             medium: Memory
@@ -56,6 +86,9 @@ spec:
           volumeMounts:
             - name: strimzi-tmp
               mountPath: /tmp
+            - name: kube-api-access
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              readOnly: true
           resources:
 {{ toYaml .Values.resources | indent 12 }}
           livenessProbe:

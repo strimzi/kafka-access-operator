@@ -2,11 +2,21 @@ image:
   registry: quay.io
   repository: strimzi
   name: access-operator
-  tag: 0.3.0
+  tag: 0.4.0
   imagePullSecrets: []
 
 podSecurityContext: {}
-securityContext: {}
+securityContext:
+  # Specifies container security context. Defaults to a security context that matches the Restricted Kubernetes
+  # Pod Security Standard (https://kubernetes.io/docs/concepts/security/pod-security-standards/).
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
 
 resources:
   limits:
@@ -23,3 +33,12 @@ readinessProbe:
   periodSeconds: 30
 annotations: {}
 labels: {}
+
+# Node selector for the Access Operator Pod
+nodeSelector: {}
+
+# Affinity rules for the Access Operator Pod
+affinity: {}
+
+# Tolerations for the Access Operator Pod
+tolerations: []
