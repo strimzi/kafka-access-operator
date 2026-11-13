@@ -76,11 +76,11 @@ spec:
               port: http
             initialDelaySeconds: 10
             periodSeconds: 30
-          securityContext: 
+          securityContext:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-              - ALL
+                - ALL
             readOnlyRootFilesystem: true
             runAsNonRoot: true
             seccompProfile:
