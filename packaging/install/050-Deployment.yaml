@@ -57,15 +57,6 @@ spec:
             - name: kube-api-access
               mountPath: /var/run/secrets/kubernetes.io/serviceaccount
               readOnly: true
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            seccompProfile:
-              type: RuntimeDefault
           resources:
             limits:
               cpu: 500m
@@ -85,3 +76,12 @@ spec:
               port: http
             initialDelaySeconds: 10
             periodSeconds: 30
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
