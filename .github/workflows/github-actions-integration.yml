@@ -38,5 +38,5 @@ jobs:
       releaseVersion: "6.6.6"
       imagesLocation: "access-operator-container-amd64.tar.gz"
       clusterOperatorBuild: false
-      githubActionsRef: "v1"
+      githubActionsRef: "v3"
     secrets: inherit
