@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   test-github-actions-integration:
-    uses: strimzi/github-actions/.github/workflows/reusable-test-integrations.yml@8a88edc07beb03fbd99d6d72f59c86d7d7aadda4
+    uses: strimzi/github-actions/.github/workflows/reusable-test-integrations.yml@bb4758d4afacd9c0ff8f426395bbbece41fd142a # v4.0
     with:
       repo: ${{ github.repository }}
       ref: ${{ github.sha }}
@@ -37,6 +37,6 @@ jobs:
       helmChartName: "strimzi-access-operator-helm-3-chart"
       releaseVersion: "6.6.6"
       imagesLocation: "access-operator-container-amd64.tar.gz"
-      clusterOperatorBuild: false
-      githubActionsRef: "v3"
+      helmVersion: "v4.3.2"
+      helmUnitTestVersion: "v1.2.1"
     secrets: inherit
