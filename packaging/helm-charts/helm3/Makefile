@@ -24,6 +24,9 @@ helm_install:
 	helm template --namespace strimzi-access-operator --output-dir $(CHART_RENDERED_TEMPLATES_TMP) $(CHART_PATH)
 	$(FIND) $(CHART_RENDERED_TEMPLATES_TMP) -type f -name '*.yaml' -exec $(SED) -i '/^---/d' {} \;
 	$(FIND) $(CHART_RENDERED_TEMPLATES_TMP) -type f -name '*.yaml' -exec $(SED) -i '/^# Source: /d' {} \;
+	# Normalize the YAML formatting so the rendered output does not depend on the Helm version
+	# (for example, Helm 4.2.0+ appends an extra newline to every rendered manifest)
+	$(FIND) $(CHART_RENDERED_TEMPLATES_TMP) -type f -name '*.yaml' -exec yq eval -i '.' {} \;
 	$(FIND) $(CHART_RENDERED_TEMPLATES_TMP) -type f -name '*.yaml' \
 	    | xargs -IFILE $(CP) FILE $(CHART_RENDERED_TEMPLATES_INSTALL)
 	rm -rf $(CHART_RENDERED_TEMPLATES_TMP)
