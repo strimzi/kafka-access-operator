@@ -98,6 +98,9 @@ After the release workflow is finished, the release has to be created:
 1. Tag the right commit from the release branch with the release name (e.g. `git tag 1.2.0`) and push it to GitHub.
 2. Go to **Maven Central** > **Publish** to publish the release artifacts.
 3. On GitHub, create the release and attach the ZIP / TAR.GZ artifacts from the build workflow artifacts.
+   * Also attach the attestation bundle `release-<version>.intoto.jsonl` and the `sbom.tar.gz` archive from the `release-kafka-access-operator-<version>.tar` artifact of the release workflow.
+     The `attest` job adds these files to that artifact. Attach them **without changing the file names**:
+     the `.intoto.jsonl` name is what the OpenSSF Scorecard `Signed-Releases` check looks for, and the README tells users to verify the release archives with `gh attestation verify <archive> --bundle release-<version>.intoto.jsonl`.
 
 ### Post release (_only for GA, not for RCs_)
 
