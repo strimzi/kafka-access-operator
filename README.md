@@ -1,6 +1,7 @@
 [![Build Status](https://github.com/strimzi/kafka-access-operator/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/strimzi/kafka-access-operator/actions/workflows/build.yml?query=branch%3Amain)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Twitter Follow](https://img.shields.io/twitter/follow/strimziio?style=social)](https://twitter.com/strimziio)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fstrimzi%2Fkafka-access-operator.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fstrimzi%2Fkafka-access-operator?ref=badge_shield)
 
 # Access Operator for Strimzi
 
@@ -133,6 +134,9 @@ Learn more on how you can contribute on our [Join Us](https://strimzi.io/join-us
 ## License
 
 Strimzi Access Operator is licensed under the [Apache License](./LICENSE), Version 2.0
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fstrimzi%2Fkafka-access-operator.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fstrimzi%2Fkafka-access-operator?ref=badge_large)
 
 ## Container signatures
 
